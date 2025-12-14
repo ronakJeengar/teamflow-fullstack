@@ -9,7 +9,7 @@ datasource db {
 model Project {
   id        String   @id @default(uuid())
   name      String
-  ownerId  String
+  ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
   createdAt DateTime @default(now())
 }
