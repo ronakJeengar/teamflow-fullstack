@@ -24,3 +24,5 @@ Thumbs.db
 # Optional: temp files
 *.tmp
 *.swp
+
+/src/generated/prisma
