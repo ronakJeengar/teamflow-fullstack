@@ -6,13 +6,22 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
+model Project {
   id        String   @id @default(uuid())
   name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
+  ownerId  String
+  owner     User     @relation(fields: [ownerId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  projects  Project[]
+  createdAt DateTime  @default(now())
 }
 
 enum Role {
