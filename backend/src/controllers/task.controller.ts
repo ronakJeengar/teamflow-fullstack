@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { prisma } from '../prisma/client.js';
 import { AuthRequest } from '../middleware/auth.middleware.js';
 import { createTaskSchema } from '../utils/task.schema.js';
+import { io } from '../server.js';
 
 export const createTask = async (req: AuthRequest, res: Response) => {
     const data = createTaskSchema.parse(req.body);
@@ -10,6 +11,7 @@ export const createTask = async (req: AuthRequest, res: Response) => {
         data,
     });
 
+    io.emit('task:created', task); 
     res.status(201).json(task);
 };
 
