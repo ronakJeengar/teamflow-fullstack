@@ -41,6 +41,14 @@ model User {
   createdAt DateTime  @default(now())
 }
 
+model ActivityLog {
+  id        String   @id @default(uuid())
+  action    String
+  userId    String
+  projectId String?
+  createdAt DateTime @default(now())
+}
+
 enum Role {
   USER
   ADMIN

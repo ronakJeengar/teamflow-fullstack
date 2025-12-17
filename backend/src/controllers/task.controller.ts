@@ -11,7 +11,15 @@ export const createTask = async (req: AuthRequest, res: Response) => {
         data,
     });
 
-    io.emit('task:created', task); 
+    await prisma.activityLog.create({
+        data: {
+            action: `Created task ${task.title}`,
+            userId: req.user!.userId,
+            projectId: task.projectId,
+        },
+    });
+
+    io.emit('task:created', task);
     res.status(201).json(task);
 };
 
