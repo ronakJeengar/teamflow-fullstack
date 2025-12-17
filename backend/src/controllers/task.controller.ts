@@ -24,9 +24,44 @@ export const createTask = async (req: AuthRequest, res: Response) => {
 };
 
 export const getTasks = async (req: AuthRequest, res: Response) => {
+    const { projectId } = req.params;
+    const { page = '1', q = '' } = req.query;
+
+    const pageNumber = Number(page);
+    const pageSize = 10;
+
     const tasks = await prisma.task.findMany({
-        where: { projectId: req.params.projectId },
+        where: {
+            projectId,
+            title: {
+                contains: q as string,
+                mode: 'insensitive',
+            },
+        },
+        skip: (pageNumber - 1) * pageSize,
+        take: pageSize,
+        orderBy: {
+            createdAt: 'desc',
+        },
     });
 
-    res.json(tasks);
+    const total = await prisma.task.count({
+        where: {
+            projectId,
+            title: {
+                contains: q as string,
+                mode: 'insensitive',
+            },
+        },
+    });
+
+    res.json({
+        data: tasks,
+        meta: {
+            page: pageNumber,
+            pageSize,
+            total,
+            totalPages: Math.ceil(total / pageSize),
+        },
+    });
 };
