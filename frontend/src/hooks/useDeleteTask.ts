@@ -16,17 +16,22 @@ export const useDeleteTask = (projectId: string) => {
 
     // Optimistic UI
     onMutate: async (taskId) => {
-      await queryClient.cancelQueries({
-        queryKey: ["tasks", projectId],
-      });
+      await queryClient.cancelQueries({ queryKey: ["tasks", projectId] });
 
-      const previous = queryClient.getQueryData<Task[]>([
+      const previous = queryClient.getQueryData<{ data: Task[] }>([
         "tasks",
         projectId,
-      ]);
+      ])?.data;
 
-      queryClient.setQueryData<Task[]>(["tasks", projectId], (old) =>
-        old?.filter((t) => t.id !== taskId)
+      queryClient.setQueryData<{ data: Task[] } | undefined>(
+        ["tasks", projectId],
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.filter((t) => t.id !== taskId),
+          };
+        }
       );
 
       return { previous };
@@ -34,14 +39,16 @@ export const useDeleteTask = (projectId: string) => {
 
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
-        queryClient.setQueryData(["tasks", projectId], ctx.previous);
+        queryClient.setQueryData<{ data: Task[] }>(["tasks", projectId], (old) => ({
+          ...old!,
+          data: ctx.previous!,
+        }));
       }
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ["tasks", projectId],
-      });
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
     },
   });
 };
+

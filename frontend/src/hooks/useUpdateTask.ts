@@ -18,15 +18,24 @@ export const useUpdateTask = (projectId: string) => {
         onMutate: async (updatedTask) => {
             await queryClient.cancelQueries({ queryKey: ["tasks", projectId] });
 
-            const previous = queryClient.getQueryData<Task[]>([
+            // Get previous tasks from the cache
+            const previous = queryClient.getQueryData<{ data: Task[] }>([
                 "tasks",
                 projectId,
-            ]);
+            ])?.data;
 
-            queryClient.setQueryData<Task[]>(["tasks", projectId], (old) =>
-                old?.map((task) =>
-                    task.id === updatedTask.id ? { ...task, ...updatedTask } : task
-                )
+            // Optimistically update cache
+            queryClient.setQueryData<{ data: Task[] } | undefined>(
+                ["tasks", projectId],
+                (old) => {
+                    if (!old?.data) return old;
+                    return {
+                        ...old,
+                        data: old.data.map((task) =>
+                            task.id === updatedTask.id ? { ...task, ...updatedTask } : task
+                        ),
+                    };
+                }
             );
 
             return { previous };
@@ -34,7 +43,10 @@ export const useUpdateTask = (projectId: string) => {
 
         onError: (_err, _vars, ctx) => {
             if (ctx?.previous) {
-                queryClient.setQueryData(["tasks", projectId], ctx.previous);
+                queryClient.setQueryData<{ data: Task[] }>(["tasks", projectId], (old) => ({
+                    ...old!,
+                    data: ctx.previous!,
+                }));
             }
         },
 

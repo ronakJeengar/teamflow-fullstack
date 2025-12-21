@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client.js";
-import type { Project } from "../types/Project.js";
+import type { Project } from "../types/Project";
 
 export type UpdateProject = {
   id: string;

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useProjects } from "../hooks/useProjects";
-import type { Project } from "../types/Project";
 import CreateProjectModal from "../components/CreateProjectModel";
 import { useNavigate } from "react-router-dom";
 import { useUpdateProject } from "../hooks/useUpdateProject";
 import { useDeleteProject } from "../hooks/useDeleteProject";
+import type { Project } from "../types/Project";
 
 export default function Projects() {
   const { data, isLoading, error } = useProjects();
@@ -271,8 +271,8 @@ export default function Projects() {
               Delete Project?
             </h2>
             <p className="mb-6">
-              This will permanently delete{" "}
-              <strong>{deleteProject.name}</strong> and all tasks.
+              This will permanently delete <strong>{deleteProject.name}</strong>{" "}
+              and all tasks.
             </p>
 
             <div className="flex justify-end gap-3">

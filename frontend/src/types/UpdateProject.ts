@@ -1,4 +1,4 @@
-import type { Project } from "./Project.js";
+import type { Project } from "./Project";
 
 export type UpdateProject = {
   id: string;
