@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./auth/AuthProvider";
+import { ToastProvider } from "./context/ToastProvider";
 
 const queryClient = new QueryClient();
 
@@ -15,7 +16,9 @@ root.render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <App />
+        <ToastProvider>
+          <App />
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>
   </React.StrictMode>
