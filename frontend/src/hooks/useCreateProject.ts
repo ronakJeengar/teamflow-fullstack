@@ -1,31 +1,24 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 
-type CreateTaskPayload = {
-  title: string;
-  description?: string;
-};
-
-export const useCreateTask = (projectId: string) => {
+export const useCreateProject = () => {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ title, description }: CreateTaskPayload) => {
+    mutationFn: async ({ name }: { name: string }) => {
       const token = localStorage.getItem("token")!;
       const res = await api.post(
-        "/tasks/create",
-        { title, description, projectId },
+        "/projects",
+        { name },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data;
     },
 
-
     onSuccess: () => {
       qc.invalidateQueries({
-        queryKey: ["tasks", projectId],
+        queryKey: ["projects"],
       });
     },
   });
 };
-

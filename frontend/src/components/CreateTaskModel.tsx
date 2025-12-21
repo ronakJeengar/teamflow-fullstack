@@ -10,13 +10,12 @@ export default function CreateTaskModal({
 }) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const createTask = useCreateTask();
+  const createTask = useCreateTask(projectId);
 
   const submit = async () => {
     await createTask.mutateAsync({
       title,
       description,
-      projectId,
     });
     onClose();
   };
