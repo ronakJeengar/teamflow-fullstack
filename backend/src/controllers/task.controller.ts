@@ -65,3 +65,69 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
         },
     });
 };
+
+export const updateTask = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const { title, description, status } = req.body;
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+  });
+
+  if (!task) {
+    return res.status(404).json({ message: 'Task not found' });
+  }
+
+  const updatedTask = await prisma.task.update({
+    where: { id },
+    data: {
+      title,
+      description,
+      status,
+    },
+  });
+
+  // activity log
+  await prisma.activityLog.create({
+    data: {
+      action: `Updated task ${updatedTask.title}`,
+      userId: req.user!.userId,
+      projectId: updatedTask.projectId,
+    },
+  });
+
+  // realtime event
+  io.emit('task:updated', updatedTask);
+
+  res.json(updatedTask);
+};
+
+export const deleteTask = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const task = await prisma.task.findUnique({
+    where: { id },
+  });
+
+  if (!task) {
+    return res.status(404).json({ message: 'Task not found' });
+  }
+
+  await prisma.task.delete({
+    where: { id },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      action: `Deleted task ${task.title}`,
+      userId: req.user!.userId,
+      projectId: task.projectId,
+    },
+  });
+
+  io.emit('task:deleted', { id });
+
+  res.status(204).send();
+};
+
+

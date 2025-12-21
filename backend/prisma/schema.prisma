@@ -12,8 +12,10 @@ model Task {
   description String?
   status      TaskStatus @default(TODO)
   projectId   String
+  createdById String
   project     Project    @relation(fields: [projectId], references: [id])
   createdAt   DateTime   @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum TaskStatus {
