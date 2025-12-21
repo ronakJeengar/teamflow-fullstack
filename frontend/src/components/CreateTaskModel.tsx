@@ -45,7 +45,7 @@ export default function CreateTaskModal({
           <button
             className="bg-blue-600 text-white px-4 py-2 rounded"
             onClick={submit}
-            disabled={createTask.isLoading}
+            disabled={createTask.isPending}
           >
             Create
           </button>
