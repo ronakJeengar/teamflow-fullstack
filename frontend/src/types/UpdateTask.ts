@@ -1,6 +1,5 @@
-export interface UpdateTask {
+import type { Task } from "./Task.js";
+
+export type UpdateTask = {
   id: string;
-  title?: string;
-  description?: string;
-  status?: string;
-};
+} & Partial<Omit<Task, "id">>;
