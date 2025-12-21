@@ -3,11 +3,14 @@ import { useTasks } from "../hooks/useTasks";
 import CreateTaskModal from "../components/CreateTaskModel";
 import EditTaskModal from "../components/EditTaskModel";
 import type { Task } from "../types/Task";
+import { useParams } from "react-router-dom";
 
-export default function Tasks({ projectId }: { projectId: string }) {
+export default function Tasks() {
+  const { projectId } = useParams<{ projectId: string }>(); // <- get param from URL
   const [open, setOpen] = useState(false);
-  const { data: tasks, isPending } = useTasks(projectId);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const { data: tasks, isPending } = useTasks(projectId || "");
 
   return (
     <div className="p-6">
@@ -25,7 +28,7 @@ export default function Tasks({ projectId }: { projectId: string }) {
       {!isPending && tasks?.length === 0 && <p>No tasks yet</p>}
 
       <div className="space-y-2">
-        {tasks?.map((task : Task) => (
+        {tasks?.map((task: Task) => (
           <div
             key={task.id}
             className="border p-3 rounded cursor-pointer"
@@ -38,13 +41,16 @@ export default function Tasks({ projectId }: { projectId: string }) {
       </div>
 
       {open && (
-        <CreateTaskModal projectId={projectId} onClose={() => setOpen(false)} />
+        <CreateTaskModal
+          projectId={projectId!}
+          onClose={() => setOpen(false)}
+        />
       )}
 
       {editingTask && (
         <EditTaskModal
           task={editingTask}
-          projectId={projectId}
+          projectId={projectId!}
           onClose={() => setEditingTask(null)}
         />
       )}
