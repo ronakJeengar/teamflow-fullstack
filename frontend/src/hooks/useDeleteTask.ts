@@ -7,10 +7,7 @@ export const useDeleteTask = (projectId: string) => {
 
   return useMutation<string, Error, string, { previous?: Task[] }>({
     mutationFn: async (id) => {
-      const token = localStorage.getItem("token")!;
-      await api.delete(`/tasks/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/tasks/${id}`);
       return id;
     },
 

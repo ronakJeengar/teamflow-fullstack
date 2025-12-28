@@ -12,10 +12,7 @@ export const useUpdateProject = () => {
 
   return useMutation<Project, Error, UpdateProject, { previous?: Project[] }>({
     mutationFn: async ({ id, ...payload }) => {
-      const token = localStorage.getItem("token")!;
-      const res = await api.patch(`/projects/${id}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.patch(`/projects/${id}`, payload);
 
       return res.data;
     },

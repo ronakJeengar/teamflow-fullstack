@@ -7,10 +7,7 @@ export const useDeleteProject = () => {
 
   return useMutation<string, Error, string, { previous?: Project[] }>({
     mutationFn: async (id) => {
-      const token = localStorage.getItem("token")!;
-      await api.delete(`/projects/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await api.delete(`/projects/${id}`);
       return id;
     },
 

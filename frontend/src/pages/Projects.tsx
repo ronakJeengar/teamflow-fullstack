@@ -4,10 +4,12 @@ import CreateProjectModal from "../components/CreateProjectModel";
 import { useNavigate } from "react-router-dom";
 import { useUpdateProject } from "../hooks/useUpdateProject";
 import { useDeleteProject } from "../hooks/useDeleteProject";
+import { useAuth } from "../auth/AuthContext";
 import type { Project } from "../types/Project";
 
 export default function Projects() {
   const { data, isLoading, error } = useProjects();
+  const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
@@ -16,6 +18,15 @@ export default function Projects() {
 
   const updateMutation = useUpdateProject();
   const deleteMutation = useDeleteProject();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -84,7 +95,7 @@ export default function Projects() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header with User Info and Logout */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -93,25 +104,61 @@ export default function Projects() {
               </h1>
               <p className="text-gray-600">Manage and organize your projects</p>
             </div>
-            <button
-              onClick={() => setOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all shadow-sm hover:shadow-md"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <div className="flex items-center gap-4">
+              {/* User Info */}
+              <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
+                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+                <div className="text-sm">
+                  <p className="font-medium text-gray-900">{user?.name}</p>
+                  <p className="text-gray-500 text-xs">{user?.email}</p>
+                </div>
+              </div>
+
+              {/* Create Project Button */}
+              <button
+                onClick={() => setOpen(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all shadow-sm hover:shadow-md"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Create Project
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create Project
+              </button>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all shadow-sm hover:shadow-md"
+                title="Logout"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
@@ -224,10 +271,93 @@ export default function Projects() {
           </div>
         )}
 
-        {/* Stats (unchanged) */}
+        {/* Stats */}
         {projects.length > 0 && (
           <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* same stats block you already have */}
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-blue-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {projects.length}
+                  </p>
+                  <p className="text-sm text-gray-500">Total Projects</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {projects.reduce(
+                      (sum: number, p: Project) => sum + (p._count?.tasks || 0),
+                      0
+                    )}
+                  </p>
+                  <p className="text-sm text-gray-500">Total Tasks</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <svg
+                    className="w-6 h-6 text-purple-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {
+                      projects.filter(
+                        (p: Project) => (p._count?.tasks || 0) > 0
+                      ).length
+                    }
+                  </p>
+                  <p className="text-sm text-gray-500">Active Projects</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -237,7 +367,7 @@ export default function Projects() {
 
       {/* Edit Modal */}
       {editingProject && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Edit Project</h2>
             <input
@@ -248,13 +378,13 @@ export default function Projects() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setEditingProject(null)}
-                className="px-4 py-2 border rounded"
+                className="px-4 py-2 border rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={saveProject}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
                 Save
               </button>
@@ -265,7 +395,7 @@ export default function Projects() {
 
       {/* Delete Confirm */}
       {deleteProject && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4 text-red-600">
               Delete Project?
@@ -278,13 +408,13 @@ export default function Projects() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteProject(null)}
-                className="px-4 py-2 border rounded"
+                className="px-4 py-2 border rounded hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded"
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Delete
               </button>

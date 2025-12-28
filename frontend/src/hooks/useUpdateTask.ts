@@ -8,10 +8,7 @@ export const useUpdateTask = (projectId: string) => {
 
     return useMutation<Task, Error, UpdateTask, { previous?: Task[] }>({
         mutationFn: async ({ id, ...payload }) => {
-            const token = localStorage.getItem("token")!;
-            const res = await api.patch(`/tasks/${id}`, payload, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
+            const res = await api.patch(`/tasks/${id}`, payload);
             return res.data;
         },
 

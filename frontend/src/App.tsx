@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import Register from "./pages/Register";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         {/* Public route */}
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
         {/* Protected routes */}
         <Route

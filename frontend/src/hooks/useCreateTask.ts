@@ -11,11 +11,9 @@ export const useCreateTask = (projectId: string) => {
 
   return useMutation({
     mutationFn: async ({ title, description }: CreateTaskPayload) => {
-      const token = localStorage.getItem("token")!;
       const res = await api.post(
         "/tasks/create",
         { title, description, projectId },
-        { headers: { Authorization: `Bearer ${token}` } }
       );
       return res.data;
     },

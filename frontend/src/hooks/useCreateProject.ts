@@ -6,12 +6,9 @@ export const useCreateProject = () => {
 
   return useMutation({
     mutationFn: async ({ name }: { name: string }) => {
-      const token = localStorage.getItem("token")!;
       const res = await api.post(
-        "/projects",
-        { name },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+        "/projects/create",
+        { name });
       return res.data;
     },
 
