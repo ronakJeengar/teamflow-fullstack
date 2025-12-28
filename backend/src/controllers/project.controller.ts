@@ -5,13 +5,23 @@ import { AuthRequest } from '../middleware/auth.middleware.js';
 export const createProject = async (req: AuthRequest, res: Response) => {
 
   const { name } = req.body;
+  const { teamId } = req.params;
 
   if (!name) return res.status(400).json({ message: "Name is required" });
+
+  const userId = req.user!.userId;
+
+  const member = await prisma.teamMember.findFirst({
+    where: { teamId, userId },
+  });
+
+  if (!member) return res.status(403).json({ message: "Not a team member" });
 
   const project = await prisma.project.create({
     data: {
       name,
-      ownerId: req.user!.userId,
+      teamId,
+      ownerId: userId,
     },
   });
 
@@ -19,12 +29,20 @@ export const createProject = async (req: AuthRequest, res: Response) => {
 };
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
+
+  const { teamId } = req.params;
+  const userId = req.user!.userId;
+
+  const member = await prisma.teamMember.findFirst({
+    where: { teamId, userId },
+  });
+
+  if (!member) return res.status(403).json({ message: "Not a team member" });
+
   const projects = await prisma.project.findMany({
-    where: { ownerId: req.user!.userId },
+    where: { teamId },
     include: {
-      _count: {
-        select: { tasks: true }
-      }
+      _count: { select: { tasks: true } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -36,10 +54,16 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { name } = req.body;
 
+  const userId = req.user!.userId;
+
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.ownerId !== req.user!.userId)
+  const member = await prisma.teamMember.findFirst({
+    where: { teamId: project.teamId, userId },
+  });
+
+  if (!member || !["OWNER", "ADMIN"].includes(member.role) && project.ownerId !== userId)
     return res.status(403).json({ message: "Not allowed" });
 
   const updatedProject = await prisma.project.update({
@@ -52,11 +76,16 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
 
 export const deleteProject = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
+  const userId = req.user!.userId;
 
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) return res.status(404).json({ message: "Project not found" });
 
-  if (project.ownerId !== req.user!.userId)
+  const member = await prisma.teamMember.findFirst({
+    where: { teamId: project.teamId, userId },
+  });
+
+  if (!member || !["OWNER", "ADMIN"].includes(member.role) && project.ownerId !== userId)
     return res.status(403).json({ message: "Not allowed" });
 
   await prisma.project.delete({ where: { id } });

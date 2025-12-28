@@ -14,6 +14,8 @@ model Task {
   projectId   String
   createdById String
   createdBy   User       @relation("UserTasks", fields: [createdById], references: [id])
+  assignedToId String?
+  assignedTo   User? @relation("AssignedTasks", fields: [assignedToId], references: [id])
   project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
@@ -28,10 +30,36 @@ enum TaskStatus {
 model Project {
   id        String   @id @default(uuid())
   name      String
+  description String?
+  avatar      String?      
+  color       String?      
+  teamId    String
+  team      Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
+  status      ProjectStatus @default(ACTIVE)
+  visibility  Visibility    @default(PRIVATE)
   tasks     Task[]
+  startDate   DateTime?
+  dueDate     DateTime?
   createdAt DateTime @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([teamId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ARCHIVED
+  ON_HOLD
+  COMPLETED
+}
+
+enum Visibility {
+  PRIVATE   
+  PUBLIC
 }
 
 model User {
@@ -39,10 +67,16 @@ model User {
   name      String
   email     String    @unique
   password  String
+  avatar    String?   // profile picture URL
+  bio       String?
   role      Role      @default(USER)
+  ownedTeams   Team[]       @relation("TeamOwner")
+  teamMembers  TeamMember[]
   projects  Project[]
   tasks     Task[]    @relation("UserTasks")
+  assignedTasks Task[]      @relation("AssignedTasks")
   createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model ActivityLog {
@@ -56,4 +90,72 @@ model ActivityLog {
 enum Role {
   USER
   ADMIN
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  avatar      String?  // team logo/avatar URL
+  
+  ownerId     String
+  owner       User     @relation("TeamOwner", fields: [ownerId], references: [id])
+  
+  members     TeamMember[]
+  projects    Project[]
+  invitations TeamInvitation[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id       String         @id @default(uuid())
+  teamId   String
+  userId   String
+  role     TeamMemberRole @default(MEMBER)
+  
+  team     Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  joinedAt DateTime @default(now())
+  
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+}
+
+enum TeamMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model TeamInvitation {
+  id        String           @id @default(uuid())
+  teamId    String
+  email     String
+  role      TeamMemberRole   @default(MEMBER)
+  token     String           @unique
+  status    InvitationStatus @default(PENDING)
+  
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy String
+  
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([teamId])
+  @@index([email])
+  @@index([token])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  CANCELLED
 }
