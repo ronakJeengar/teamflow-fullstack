@@ -18,7 +18,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      navigate("/projects", { replace: true });
+      navigate("/teams", { replace: true });
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       const errorMessage = error.response?.data?.message || "Login failed";
