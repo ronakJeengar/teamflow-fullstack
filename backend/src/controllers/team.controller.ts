@@ -2,6 +2,8 @@ import { Response } from "express";
 import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
 
+export type TeamMemberRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+
 // Create a new team
 export const createTeam = async (req: AuthRequest, res: Response) => {
   const { name, description, avatar } = req.body;
@@ -15,7 +17,11 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
       description,
       avatar,
       ownerId: userId,
-      members: { create: { userId, role: "OWNER" } },
+      members: {
+        create: {
+          userId, role: "OWNER" as TeamMemberRole,
+        }
+      },
     },
     include: { members: true },
   });
