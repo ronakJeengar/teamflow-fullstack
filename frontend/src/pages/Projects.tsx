@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useProjects } from "../hooks/useProjects";
-import CreateProjectModal from "../components/CreateProjectModel";
+// import CreateProjectModal from "../components/CreateProjectModel";
 import { useNavigate } from "react-router-dom";
 import { useUpdateProject } from "../hooks/useUpdateProject";
 import { useDeleteProject } from "../hooks/useDeleteProject";
@@ -10,7 +10,7 @@ import type { Project } from "../types/Project";
 export default function Projects() {
   const { data, isLoading, error } = useProjects();
   const { user, logout } = useAuth();
-  const [open, setOpen] = useState(false);
+  // const [open, setOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteProject, setDeleteProject] = useState<Project | null>(null);
   const [editName, setEditName] = useState("");
@@ -363,7 +363,7 @@ export default function Projects() {
       </div>
 
       {/* Create Modal */}
-      {open && <CreateProjectModal onClose={() => setOpen(false)} />}
+      {/* {open && <CreateProjectModal onClose={() => setOpen(false)} />} */}
 
       {/* Edit Modal */}
       {editingProject && (

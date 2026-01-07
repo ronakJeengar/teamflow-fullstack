@@ -6,6 +6,7 @@ export const useTeams = () =>
     queryKey: ["teams"],
     queryFn: async () => {
       const res = await api.get("/teams");
+      console.log("Fetched teams:", res.data);
       return res.data;
     },
   });

@@ -1,27 +1,30 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
-import type { Project } from "../types/Project";
+import type { Team } from "../types/Team";
 
-export const useDeleteProject = () => {
+export const useDeleteProject = (teamId: string) => {
   const queryClient = useQueryClient();
 
-  return useMutation<string, Error, string, { previous?: Project[] }>({
+  return useMutation<string, Error, string, { previous?: Team }>({
     mutationFn: async (id) => {
-      await api.delete(`/projects/${id}`);
+      await api.delete(`/projects/${teamId}/${id}`);
       return id;
     },
 
     // --- Optimistic UI ---
     onMutate: async (projectId) => {
-      await queryClient.cancelQueries({
-        queryKey: ["projects"],
+      await queryClient.cancelQueries({ queryKey: ["team", teamId] });
+
+      const previous = queryClient.getQueryData<Team>(["team", teamId]);
+
+      queryClient.setQueryData<Team>(["team", teamId], (old) => {
+        if (!old) return old;
+
+        return {
+          ...old,
+          projects: old.projects.filter((project) => project.id !== projectId),
+        };
       });
-
-      const previous = queryClient.getQueryData<Project[]>(["projects"]);
-
-      queryClient.setQueryData<Project[]>(["projects"], (old) =>
-        old?.filter((p) => p.id !== projectId)
-      );
 
       return { previous };
     },
@@ -29,14 +32,14 @@ export const useDeleteProject = () => {
     // --- Rollback on error ---
     onError: (_err, _vars, ctx) => {
       if (ctx?.previous) {
-        queryClient.setQueryData(["projects"], ctx.previous);
+        queryClient.setQueryData(["team", teamId], ctx.previous);
       }
     },
 
     // --- Always refresh ---
     onSettled: () => {
       queryClient.invalidateQueries({
-        queryKey: ["projects"],
+        queryKey: ["team", teamId],
       });
     },
   });

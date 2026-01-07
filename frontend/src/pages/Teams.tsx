@@ -153,7 +153,9 @@ export default function Teams() {
               className="bg-white p-6 rounded-xl shadow-sm hover:shadow-lg cursor-pointer border border-gray-200"
             >
               <div className="flex justify-between items-start mb-4">
-                <div onClick={() => navigate(`/teams/${team.id}`)}>
+                <div
+                  onClick={() => navigate(`/teams/${team.id}`)}
+                >
                   <h3 className="text-lg font-semibold">{team.name}</h3>
                   <p className="text-gray-500">{team.description}</p>
                 </div>

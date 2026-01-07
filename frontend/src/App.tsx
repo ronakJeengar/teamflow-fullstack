@@ -5,6 +5,7 @@ import Tasks from "./pages/Tasks";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import Register from "./pages/Register";
 import Teams from "./pages/Teams";
+import TeamDetails from "./pages/TeamDetails";
 
 function App() {
   return (
@@ -20,6 +21,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Teams />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teams/:teamId"
+          element={
+            <ProtectedRoute>
+              <TeamDetails />
             </ProtectedRoute>
           }
         />

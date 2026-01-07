@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useCreateProject } from "../hooks/useCreateProject";
 
-export default function CreateProjectModal({ onClose }: { onClose: () => void}) {
+export default function CreateProjectModal({ teamId, onClose }: { teamId: string; onClose: () => void }) {
   const [name, setName] = useState("");
-  const createProject = useCreateProject();
+  const createProject = useCreateProject(teamId);
 
   const submit = async () => {
     if (!name) return alert("Project name required");
@@ -20,15 +20,15 @@ export default function CreateProjectModal({ onClose }: { onClose: () => void}) 
           placeholder="Project name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-        />
-        <div className="flex justify-end gap-2">
-          <button onClick={onClose}>Cancel</button>
-          <button
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-            onClick={submit}
-          >
-            Create
-          </button>
+          />
+          <div className="flex justify-end gap-2">
+            <button onClick={onClose}>Cancel</button>
+            <button
+              className="bg-blue-600 text-white px-4 py-2 rounded"
+              onClick={submit}
+            >
+              Create
+            </button>
         </div>
       </div>
     </div>

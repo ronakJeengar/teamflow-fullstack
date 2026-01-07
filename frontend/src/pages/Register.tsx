@@ -29,7 +29,7 @@ export default function Register() {
     try {
       setLoading(true);
       await register(name, email, password);
-      navigate("/projects", { replace: true });
+      navigate("/teams", { replace: true });
     } catch (err) {
       const error = err as AxiosError<{ message: string }>;
       alert(error.response?.data?.message || "Registration failed");

@@ -7,6 +7,7 @@ export const useDeleteTeam = () => {
 
   return useMutation<string, Error, string, { previous?: Team[] }>({
     mutationFn: async (id) => {
+      console.log("Deleting team with id:", id);
       await api.delete(`/teams/${id}`);
       return id;
     },
