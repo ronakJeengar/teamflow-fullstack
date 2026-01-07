@@ -23,11 +23,11 @@ app.use(cookieParser());
 app.use(express.json());
 
 app.use("/api/v1/auth", authRoutes);
-app.use('/api/v1/teams', projectRoutes);  
-app.use("/api/v1/tasks", taskRoutes);
 app.use('/api/v1/teams', teamRoutes);
-app.use('/api/v1/teams', memberRoutes);      
-app.use('/api/v1/teams', invitationRoutes);  
+app.use('/api/v1/projects', projectRoutes);  
+app.use("/api/v1/tasks", taskRoutes);
+app.use('/api/v1/members', memberRoutes);      
+app.use('/api/v1/invitations', invitationRoutes);  
 
 app.use(errorHandler);
 

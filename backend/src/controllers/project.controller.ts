@@ -1,9 +1,8 @@
-import { Response } from 'express';
-import { prisma } from '../prisma/client.js';
-import { AuthRequest } from '../middleware/auth.middleware.js';
+import { Response } from "express";
+import { prisma } from "../prisma/client.js";
+import { AuthRequest } from "../middleware/auth.middleware.js";
 
 export const createProject = async (req: AuthRequest, res: Response) => {
-
   const { name } = req.body;
   const { teamId } = req.params;
 
@@ -29,7 +28,6 @@ export const createProject = async (req: AuthRequest, res: Response) => {
 };
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
-
   const { teamId } = req.params;
   const userId = req.user!.userId;
 
@@ -63,8 +61,12 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
     where: { teamId: project.teamId, userId },
   });
 
-  if (!member || !["OWNER", "ADMIN"].includes(member.role) && project.ownerId !== userId)
+  const isProjectOwner = project.ownerId === userId;
+  const isPrivilegedMember = member && ["OWNER", "ADMIN"].includes(member.role);
+
+  if (!isProjectOwner && !isPrivilegedMember) {
     return res.status(403).json({ message: "Not allowed" });
+  }
 
   const updatedProject = await prisma.project.update({
     where: { id },
@@ -77,6 +79,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
 export const deleteProject = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const userId = req.user!.userId;
+  console.log("Delete project request for ID:", id, "by user:", userId);
 
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) return res.status(404).json({ message: "Project not found" });
@@ -85,8 +88,12 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
     where: { teamId: project.teamId, userId },
   });
 
-  if (!member || !["OWNER", "ADMIN"].includes(member.role) && project.ownerId !== userId)
+  const isProjectOwner = project.ownerId === userId;
+  const isTeamAdminOrOwner = member && ["OWNER", "ADMIN"].includes(member.role);
+
+  if (!isProjectOwner && !isTeamAdminOrOwner) {
     return res.status(403).json({ message: "Not allowed" });
+  }
 
   await prisma.project.delete({ where: { id } });
 

@@ -9,7 +9,7 @@ router.use(authenticate);
 
 router.post('/:teamId/create', requireTeamRole(['OWNER', 'ADMIN', 'MEMBER']), createProject);
 router.get('/:teamId', requireTeamRole(['OWNER', 'ADMIN', 'MEMBER', 'VIEWER']), getProjects);
-router.patch("/:id", updateProject);
-router.delete("/:id", deleteProject);
+router.patch("/:teamId/:id", updateProject);
+router.delete("/:teamId/:id", deleteProject);
 
 export default router;
