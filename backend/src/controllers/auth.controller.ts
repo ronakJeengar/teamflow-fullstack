@@ -84,11 +84,9 @@ export const login = async (req: Request, res: Response) => {
       { expiresIn: "15m" }
     );
 
-    const refreshToken = jwt.sign(
-      { userId: user.id },
-      JWT_REFRESH_SECRET,
-      { expiresIn: "7d" }
-    );
+    const refreshToken = jwt.sign({ userId: user.id }, JWT_REFRESH_SECRET, {
+      expiresIn: "7d",
+    });
 
     // Set access token cookie
     res.cookie("accessToken", accessToken, {
@@ -106,7 +104,6 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-
     return res.json({
       message: "Login successful",
       user: {
@@ -114,7 +111,7 @@ export const login = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-      }
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
@@ -127,7 +124,7 @@ export const login = async (req: Request, res: Response) => {
 export const getCurrentUser = async (req: AuthRequest, res: Response) => {
   try {
     if (!req.user) {
-      return res.sendStatus(401);
+      return res.sendStatus(204);
     }
 
     const user = await prisma.user.findUnique({
@@ -157,7 +154,7 @@ export const refresh = (req: Request, res: Response) => {
   const token = req.cookies?.refreshToken;
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.sendStatus(204);
   }
 
   try {

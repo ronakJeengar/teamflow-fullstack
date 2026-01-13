@@ -8,7 +8,7 @@ import {
 } from "../controllers/member.controller.js";
 import { requireTeamRole } from "../middleware/team.role.middleware.js";
 
-const router = Router();
+const router = Router({ mergeParams: true });
 router.use(authenticate);
 
 router.get(
@@ -19,8 +19,12 @@ router.get(
 
 router.post("/", requireTeamRole(["OWNER", "ADMIN"]), addMember);
 
-router.patch("/:memberId", requireTeamRole(["OWNER"]), updateMemberRole);
+router.patch(
+  "/:memberId",
+  requireTeamRole(["OWNER", "ADMIN"]),
+  updateMemberRole
+);
 
-router.delete("/:memberId", requireTeamRole(["OWNER"]), removeMember);
+router.delete("/:memberId", requireTeamRole(["OWNER", "ADMIN"]), removeMember);
 
 export default router;
