@@ -10,6 +10,7 @@ import type { Project } from "../types/Project";
 import { useUpdateProject } from "../hooks/useUpdateProject";
 import { useDeleteProject } from "../hooks/useDeleteProject";
 import CreateProjectModal from "../components/CreateProjectModel";
+import InviteMemberModal from "../components/TeamInviteModel";
 
 export default function TeamDetails() {
   const { teamId } = useParams<{ teamId: string }>();
@@ -24,6 +25,7 @@ export default function TeamDetails() {
     "overview" | "projects" | "members"
   >("overview");
   const [openCreateProject, setOpenCreateProject] = useState(false);
+  const [openInviteModal, setOpenInviteModal] = useState(false);
 
   const { data: members, isLoading: membersLoading } = useTeamMembers(teamId!);
 
@@ -643,10 +645,7 @@ export default function TeamDetails() {
                 {isOwner && (
                   <button
                     className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all flex items-center gap-2"
-                    onClick={() => {
-                      // Add invite functionality here
-                      console.log("Invite member");
-                    }}
+                    onClick={() => setOpenInviteModal(true)}
                   >
                     <svg
                       className="w-5 h-5"
@@ -725,8 +724,7 @@ export default function TeamDetails() {
                                 <option value="MEMBER">Member</option>
                                 <option value="VIEWER">Viewer</option>
                               </select>
-                            )
-                              : (
+                            ) : (
                               <span
                                 className={`inline-block text-xs px-2 py-1 rounded ${
                                   member.role === "OWNER"
@@ -857,6 +855,13 @@ export default function TeamDetails() {
         <CreateProjectModal
           teamId={team.id}
           onClose={() => setOpenCreateProject(false)}
+        />
+      )}
+
+      {openInviteModal && (
+        <InviteMemberModal
+          teamId={team.id}
+          onClose={() => setOpenInviteModal(false)}
         />
       )}
     </div>
