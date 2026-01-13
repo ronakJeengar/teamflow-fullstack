@@ -10,5 +10,4 @@ router.post('/refresh', refresh);
 router.get('/me', authenticate, getCurrentUser);
 router.get('/logout', authenticate, logout);
 
-
 export default router;

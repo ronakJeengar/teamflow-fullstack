@@ -27,7 +27,7 @@ app.use("/api/v1/teams", teamRoutes);
 app.use("/api/v1/projects", projectRoutes);
 app.use("/api/v1/tasks", taskRoutes);
 app.use("/api/v1/teams/:teamId/members", memberRoutes);
-app.use("/api/v1/invitations", invitationRoutes);
+app.use("/api/v1/teams", invitationRoutes);
 
 app.use(errorHandler);
 
