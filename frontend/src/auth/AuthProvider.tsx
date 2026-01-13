@@ -1,20 +1,37 @@
-import { useState, useEffect, type ReactNode } from "react";
+import { useState, useEffect, type ReactNode, useRef } from "react";
 import { AuthContext, type User } from "./AuthContext";
 import { api } from "../api/client";
+import { useLocation } from "react-router-dom";
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
+const AUTH_ROUTES = ["/login", "/register"];
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const authChecked = useRef(false);
+  const location = useLocation();
+  const isAuthPage = AUTH_ROUTES.includes(location.pathname);
 
   // Check authentication status on mount
   useEffect(() => {
+    if (isAuthPage) {
+      setLoading(false);
+      return;
+    }
+
+    if (authChecked.current) return;
+    authChecked.current = true;
     const checkAuth = async () => {
       try {
         const response = await api.get("/auth/me");
+        if (response.status === 204) {
+          setUser(null); // silent, no console log
+          return;
+        }
         setUser(response.data);
       } catch (error) {
         console.log("Authentication check failed:", error);
@@ -25,7 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     checkAuth();
-  }, []);
+  }, [isAuthPage]);
 
   const login = async (email: string, password: string) => {
     const response = await api.post("/auth/login", { email, password });

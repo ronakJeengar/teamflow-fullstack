@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
@@ -9,7 +9,6 @@ import TeamDetails from "./pages/TeamDetails";
 
 function App() {
   return (
-    <BrowserRouter>
       <Routes>
         {/* Public route */}
         <Route path="/login" element={<Login />} />
@@ -53,7 +52,6 @@ function App() {
         {/* Fallback */}
         <Route path="*" element={<Login />} />
       </Routes>
-    </BrowserRouter>
   );
 }
 

@@ -725,7 +725,8 @@ export default function TeamDetails() {
                                 <option value="MEMBER">Member</option>
                                 <option value="VIEWER">Viewer</option>
                               </select>
-                            ) : (
+                            )
+                              : (
                               <span
                                 className={`inline-block text-xs px-2 py-1 rounded ${
                                   member.role === "OWNER"
