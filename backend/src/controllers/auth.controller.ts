@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
+import { failure, success } from "../utils/response.js";
 
 // Extend Request type
 declare global {
@@ -30,12 +31,12 @@ export const register = async (req: Request, res: Response) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: "All fields are required" });
+      return failure(res, "All fields are required", 400);
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ message: "Email already registered" });
+      return failure(res, "Email already registered", 400);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -55,10 +56,10 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    return res.status(201).json(user);
+    return success(res, "Registration successful", user, 201);
   } catch (error) {
     console.error("Register error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return failure(res, "Internal server error", 500);
   }
 };
 
@@ -70,18 +71,18 @@ export const login = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return failure(res, "Invalid credentials", 401);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return failure(res, "Invalid credentials", 401);
     }
 
     const accessToken = jwt.sign(
       { userId: user.id, role: user.role },
       JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     const refreshToken = jwt.sign({ userId: user.id }, JWT_REFRESH_SECRET, {
@@ -104,18 +105,15 @@ export const login = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return res.json({
-      message: "Login successful",
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+    return success(res, "Login successful", {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    return failure(res, "Internal server error", 500);
   }
 };
 
@@ -138,13 +136,13 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return res.sendStatus(404);
+      return failure(res, "User not found", 404);
     }
 
-    return res.json(user);
+    return success(res, "User fetched successfully", user);
   } catch (error) {
     console.error("Get current user error:", error);
-    return res.sendStatus(500);
+    return failure(res, "Internal server error", 500);
   }
 };
 
@@ -165,7 +163,7 @@ export const refresh = (req: Request, res: Response) => {
     const accessToken = jwt.sign(
       { userId: decoded.userId },
       JWT_ACCESS_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     // Set new access token cookie
@@ -176,14 +174,14 @@ export const refresh = (req: Request, res: Response) => {
       maxAge: 15 * 60 * 1000, // 15 minutes
     });
 
-    return res.json({ message: "Token refreshed successfully" });
+    return success(res, "Token refreshed successfully", { accessToken });
   } catch (error) {
-    return res.sendStatus(403);
+    return failure(res, "Invalid refresh token", 403);
   }
 };
 
 export const logout = (req: Request, res: Response) => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
-  return res.json({ message: "Logged out successfully" });
+  return success(res, "Logged out successfully", null);
 };

@@ -1,99 +1,121 @@
 import { Response } from "express";
 import { AuthRequest } from "../middleware/auth.middleware.js";
 import { prisma } from "../prisma/client.js";
+import { tr } from "zod/locales";
+import { failure, success } from "../utils/response.js";
 
 // Get Members
 export const getTeamMembers = async (req: AuthRequest, res: Response) => {
-  const { teamId } = req.params;
+  try {
+    const { teamId } = req.params;
 
-  const members = await prisma.teamMember.findMany({
-    where: { teamId },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          avatar: true,
+    const members = await prisma.teamMember.findMany({
+      where: { teamId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  res.json(members);
+    return success(res, "Members fetched successfully", members);
+  } catch (error) {
+    console.error("Error fetching team members:", error);
+    return failure(res, "Internal server error", 500);
+  }
 };
 
 // Add member manually (if user already exists)
 export const addMember = async (req: AuthRequest, res: Response) => {
-  const { teamId } = req.params;
-  const { userId, role } = req.body;
+  try {
+    const { teamId } = req.params;
+    const { userId, role } = req.body;
 
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return failure(res, "User not found", 404);
+    }
+
+    const existing = await prisma.teamMember.findUnique({
+      where: { teamId_userId: { teamId, userId } },
+    });
+
+    if (existing)
+      return failure(res, "User already in team", 400);
+
+    const member = await prisma.teamMember.create({
+      data: { teamId, userId, role: role || "MEMBER" },
+    });
+
+    return success(res, "Member added successfully", member);
+  } catch (error) {
+    console.error("Error adding member:", error);
+    return failure(res, "Internal server error", 500);
   }
-
-  const existing = await prisma.teamMember.findUnique({
-    where: { teamId_userId: { teamId, userId } },
-  });
-
-  if (existing)
-    return res.status(400).json({ message: "User already in team" });
-
-  const member = await prisma.teamMember.create({
-    data: { teamId, userId, role: role || "MEMBER" },
-  });
-
-  res.status(201).json(member);
 };
 
 // Update Role
 export const updateMemberRole = async (req: AuthRequest, res: Response) => {
-  const { teamId, memberId } = req.params;
-  const { role } = req.body;
+  try {
+    const { teamId, memberId } = req.params;
+    const { role } = req.body;
 
-  const member = await prisma.teamMember.findFirst({
-    where: { id: memberId, teamId },
-  });
+    const member = await prisma.teamMember.findFirst({
+      where: { id: memberId, teamId },
+    });
 
-  if (!member) {
-    return res.status(404).json({ message: "Member not found" });
+    if (!member) {
+      return failure(res, "Member not found", 404);
+    }
+
+    if (member.role === "OWNER") {
+      return failure(res, "Owner role cannot be changed", 403);
+    }
+
+    const updated = await prisma.teamMember.update({
+      where: { id: memberId },
+      data: { role },
+    });
+
+    return success(res, "Member role updated successfully", updated);
+  } catch (error) {
+    console.error("Error updating member role:", error);
+    return failure(res, "Internal server error", 500);
   }
-
-  if (member.role === "OWNER") {
-    return res.status(403).json({ message: "Owner role cannot be changed" });
-  }
-
-  const updated = await prisma.teamMember.update({
-    where: { id: memberId },
-    data: { role },
-  });
-
-  res.json(updated);
 };
 
 // Remove Member
 export const removeMember = async (req: AuthRequest, res: Response) => {
-  const { teamId, memberId } = req.params;
-  const currentUserId = req.user!.userId;
+  try {
+    const { teamId, memberId } = req.params;
+    const currentUserId = req.user!.userId;
 
-  const member = await prisma.teamMember.findFirst({
-    where: { id: memberId, teamId },
-  });
+    const member = await prisma.teamMember.findFirst({
+      where: { id: memberId, teamId },
+    });
 
-  if (!member) {
-    return res.status(404).json({ message: "Member not found" });
+    if (!member) {
+      return failure(res, "Member not found", 404);
+    }
+
+    if (member.role === "OWNER") {
+      return failure(res, "Owner cannot be removed", 403);
+    }
+
+    if (member.userId === currentUserId) {
+      return failure(res, "You cannot remove yourself", 400);
+    }
+
+    await prisma.teamMember.delete({ where: { id: memberId } });
+
+    return success(res, "Member removed successfully", null);
+  } catch (error) {
+    console.error("Error removing member:", error);
+    return failure(res, "Internal server error", 500);
   }
-
-  if (member.role === "OWNER") {
-    return res.status(403).json({ message: "Owner cannot be removed" });
-  }
-
-  if (member.userId === currentUserId) {
-    return res.status(400).json({ message: "You cannot remove yourself" });
-  }
-
-  await prisma.teamMember.delete({ where: { id: memberId } });
-
-  res.json({ message: "Member removed" });
 };

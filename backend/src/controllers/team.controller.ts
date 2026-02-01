@@ -1,145 +1,133 @@
 import { Response } from "express";
 import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
-import { log } from "console";
+import { failure, success } from "../utils/response.js";
 
 export type TeamMemberRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
 
 // Create a new team
 export const createTeam = async (req: AuthRequest, res: Response) => {
-  const { name, description, avatar } = req.body;
-  const userId = req.user!.userId;
+  try {
+    const { name, description, avatar } = req.body;
+    const userId = req.user!.userId;
 
-  if (!name) return res.status(400).json({ message: "Team name is required" });
+    if (!name) return failure(res, "Team name is required", 400);
 
-  const team = await prisma.team.create({
-    data: {
-      name,
-      description,
-      avatar,
-      ownerId: userId,
-      members: {
-        create: {
-          userId,
-          role: "OWNER" as TeamMemberRole,
+    const team = await prisma.team.create({
+      data: {
+        name,
+        description,
+        avatar,
+        ownerId: userId,
+        members: {
+          create: {
+            userId,
+            role: "OWNER" as TeamMemberRole,
+          },
         },
       },
-    },
-    include: { members: true },
-  });
-
-  res.status(201).json(team);
+      include: { members: true },
+    });
+    return success(res, "Team created successfully", team, 201);
+  } catch (error) {
+    console.error("Error creating team:", error);
+    return failure(res, "Internal server error", 500);
+  }
 };
 
 // Get all teams where the user is a member
 export const getMyTeams = async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
+  try {
+    const userId = req.user!.userId;
 
-  const memberships = await prisma.teamMember.findMany({
-    where: { userId },
-    include: { team: true },
-  });
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId },
+      include: { team: true },
+    });
 
-  const teams = memberships.map((m) => m.team);
-  res.json(teams);
+    const teams = memberships.map((m) => m.team);
+    success(res, "Teams retrieved successfully", teams);
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+    return failure(res, "Internal server error", 500);
+  }
 };
 
 // Get detailed info of a specific team
 export const getTeamDetails = async (req: AuthRequest, res: Response) => {
-  const userId = req.user!.userId;
-  const { teamId } = req.params;
+  try {
+    const userId = req.user!.userId;
+    const { teamId } = req.params;
 
-  const team = await prisma.team.findUnique({
-    where: { id: teamId },
-    include: {
-      members: { include: { user: true } },
-      projects: true,
-      invitations: true,
-    },
-  });
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      include: {
+        members: { include: { user: true } },
+        projects: true,
+        invitations: true,
+      },
+    });
 
-  if (!team) return res.status(404).json({ message: "Team not found" });
+    if (!team) return failure(res, "Team not found", 404);
 
-  const isOwner = team.ownerId === userId;
-  const isMember = team.members.some((m) => m.userId === userId);
+    const isOwner = team.ownerId === userId;
+    const isMember = team.members.some((m) => m.userId === userId);
 
-  if (!isOwner && !isMember)
-    return res.status(403).json({ message: "Access Denied" });
+    if (!isOwner && !isMember) return failure(res, "Access Denied", 403);
 
-  res.json(team);
+    success(res, "Team details retrieved successfully", team);
+  } catch (error) {
+    console.error("Get Team Details error:", error);
+    return failure(res, "Internal server error", 500);
+  }
 };
 
 // Update a team (only OWNER can update)
 export const updateTeam = async (req: AuthRequest, res: Response) => {
-  const { teamId } = req.params;
-  const { name, description, avatar } = req.body;
-  const userId = req.user!.userId;
+  try {
+    const { teamId } = req.params;
+    const { name, description, avatar } = req.body;
+    const userId = req.user!.userId;
 
-  const team = await prisma.team.findUnique({ where: { id: teamId } });
-  if (!team) return res.status(404).json({ message: "Team not found" });
+    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    if (!team) return failure(res, "Team not found", 404);
 
-  if (team.ownerId !== userId)
-    return res.status(403).json({ message: "Not allowed to update this team" });
+    if (team.ownerId !== userId)
+      return failure(res, "Not allowed to update this team", 403);
 
-  const updatedTeam = await prisma.team.update({
-    where: { id: teamId },
-    data: { name, description, avatar },
-  });
+    const updatedTeam = await prisma.team.update({
+      where: { id: teamId },
+      data: { name, description, avatar },
+    });
 
-  res.json(updatedTeam);
+    success(res, "Team updated successfully", updatedTeam);
+  } catch (err: any) {
+    console.error("Update error:", err);
+    return failure(res, "Internal server error", 500);
+  }
 };
 
 // Delete a team (only OWNER can delete)
-// export const deleteTeam = async (req: AuthRequest, res: Response) => {
-//   const teamId  = req.params.teamId;
-//   const userId = req.user!.userId;
-
-//   const team = await prisma.team.findUnique({ where: { id: teamId } });
-//   console.log("Deleting team:", teamId, "by user:", userId);
-//   console.log("Team found:", team);
-//   if (!team) {
-//     return res.status(404).json({ message: "Team not found" });
-//   }
-
-//   if (team.ownerId !== userId)
-//     return res.status(403).json({ message: "Not allowed to delete this team" });
-
-//   await prisma.team.delete({ where: { id: teamId } });
-
-//   res.status(200).json({ message: "Team deleted successfully" });
-// };
-
 export const deleteTeam = async (req: AuthRequest, res: Response) => {
-  const { teamId } = req.params;
-  const userId = req.user!.userId; // should be UUID string
-
   try {
-    console.log("Deleting team:", teamId, "by user:", userId);
+    const { teamId } = req.params;
+    const userId = req.user!.userId;
     const team = await prisma.team.findUnique({ where: { id: teamId } });
-    console.log("Team found:", team);
 
     if (!team) {
-      return res.status(404).json({ message: "Team not found" });
+      return failure(res, "Team not found", 404);
     }
 
     // Ensure userId is compared as a string UUID
     if (team.ownerId !== String(userId)) {
-      console.log("Owner mismatch:", team.ownerId, userId);
-      return res
-        .status(403)
-        .json({ message: "Not allowed to delete this team" });
+      return failure(res, "Not allowed to delete this team", 403);
     }
 
     const deletedTeam = await prisma.team.delete({ where: { id: teamId } });
-    console.log("Deleted team:", deletedTeam);
 
-    res
-      .status(200)
-      .json({ message: "Team deleted successfully", team: deletedTeam });
+    success(res, "Team deleted successfully", deletedTeam);
   } catch (err: any) {
     console.error("Delete error:", err);
-    res
-      .status(500)
-      .json({ message: "Internal server error", error: err.message });
+    return failure(res, "Internal server error", 500);
   }
 };
