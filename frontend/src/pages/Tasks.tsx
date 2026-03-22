@@ -39,25 +39,21 @@ export default function Tasks() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Task | null>(null);
 
-  // ✅ For optimistic updates - null means use server data
   const [optimisticBoard, setOptimisticBoard] = useState<TaskColumns | null>(
-    null
+    null,
   );
 
-  // Memoize tasks for performance
   const tasks = useMemo(() => data?.data || [], [data]);
 
-  // ✅ Compute board from tasks - this is the source of truth
   const serverBoard: TaskColumns = useMemo(
     () => ({
       TODO: tasks.filter((t: Task) => t.status === "TODO"),
       IN_PROGRESS: tasks.filter((t: Task) => t.status === "IN_PROGRESS"),
       DONE: tasks.filter((t: Task) => t.status === "DONE"),
     }),
-    [tasks]
+    [tasks],
   );
 
-  // ✅ Use optimistic board if available, otherwise use server board
   const board = optimisticBoard || serverBoard;
 
   if (!projectId) {
@@ -135,11 +131,10 @@ export default function Tasks() {
             toast.showToast("Task created successfully");
             setNewTitle("");
             setNewDescription("");
-            // ✅ Clear optimistic state to show server data
             setOptimisticBoard(null);
           },
           onError: () => toast.showToast("Failed to create task", "error"),
-        }
+        },
       );
     } catch (err) {
       console.error("Error creating task:", err);
@@ -166,11 +161,10 @@ export default function Tasks() {
           onSuccess: () => {
             toast.showToast("Task updated successfully");
             setEditTask(null);
-            // ✅ Clear optimistic state
             setOptimisticBoard(null);
           },
           onError: () => toast.showToast("Failed to update task", "error"),
-        }
+        },
       );
     } catch (err) {
       console.error("Error updating task:", err);
@@ -184,7 +178,6 @@ export default function Tasks() {
       await deleteTask.mutateAsync(confirmDelete.id, {
         onSuccess: () => {
           toast.showToast("Task deleted");
-          // ✅ Clear optimistic state
           setOptimisticBoard(null);
         },
         onError: () => toast.showToast("Delete failed", "error"),
@@ -196,13 +189,11 @@ export default function Tasks() {
     }
   };
 
-  // ✅ Optimistic drag handler with instant UI update
   const handleDragEnd = (result: DropResult) => {
     const { destination, source } = result;
 
     if (!destination) return;
 
-    // Same position? Do nothing
     if (
       destination.droppableId === source.droppableId &&
       destination.index === source.index
@@ -213,16 +204,13 @@ export default function Tasks() {
     const sourceCol = source.droppableId as TaskStatus;
     const destCol = destination.droppableId as TaskStatus;
 
-    // ✅ Create optimistic board update
     const newBoard = structuredClone(board);
     const [movedTask] = newBoard[sourceCol].splice(source.index, 1);
     movedTask.status = destCol;
     newBoard[destCol].splice(destination.index, 0, movedTask);
 
-    // ✅ Set optimistic state immediately
     setOptimisticBoard(newBoard);
 
-    // ✅ Then sync with server
     updateTask.mutate(
       {
         id: movedTask.id,
@@ -233,15 +221,13 @@ export default function Tasks() {
       {
         onSuccess: () => {
           toast.showToast("Task moved");
-          // ✅ Clear optimistic state to show server data
           setOptimisticBoard(null);
         },
         onError: () => {
           toast.showToast("Move failed, reverting", "error");
-          // ✅ Clear optimistic state to revert to server data
           setOptimisticBoard(null);
         },
-      }
+      },
     );
   };
 
@@ -251,7 +237,6 @@ export default function Tasks() {
     }
   };
 
-  // ✅ Edit mode keyboard shortcuts
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -261,7 +246,6 @@ export default function Tasks() {
     }
   };
 
-  // ✅ Loading skeleton instead of spinner
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8">
@@ -310,7 +294,7 @@ export default function Tasks() {
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-2">
             <button
-              onClick={() => navigate("/projects")}
+              onClick={() => navigate(-1)}
               className="p-2 hover:bg-white rounded-lg transition-colors"
               aria-label="Back to projects"
             >

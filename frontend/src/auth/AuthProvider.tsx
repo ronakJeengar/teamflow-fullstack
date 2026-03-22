@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const location = useLocation();
   const isAuthPage = AUTH_ROUTES.includes(location.pathname);
 
-  // Check authentication status on mount
   useEffect(() => {
     if (isAuthPage) {
       setLoading(false);
@@ -29,12 +28,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       try {
         const response = await api.get("/auth/me");
         if (response.status === 204) {
-          setUser(null); // silent, no console log
+          setUser(null);
           return;
         }
-        setUser(response.data);
+        setUser(response.data.data);
       } catch (error) {
-        console.log("Authentication check failed:", error);
+        console.error("❌ Authentication check failed:", error);
         setUser(null);
       } finally {
         setLoading(false);
@@ -45,13 +44,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [isAuthPage]);
 
   const login = async (email: string, password: string) => {
-    const response = await api.post("/auth/login", { email, password });
-    setUser(response.data.user);
+    const response = await api.post("/auth/login", {
+      email,
+      password,
+    });
+    const userData = response.data.data;
+    setUser(userData);
+    return userData;
   };
 
   const register = async (name: string, email: string, password: string) => {
     await api.post("/auth/register", { name, email, password });
-    // Auto-login after registration
     await login(email, password);
   };
 

@@ -85,7 +85,7 @@ export default function TeamDetails() {
   }
 
   const currentUserMember = team.members.find(
-    (m: TeamMember) => m.userId === user?.id
+    (m: TeamMember) => m.userId === user?.id,
   );
   const isOwner = team.ownerId === user?.id;
   const isAdmin = currentUserMember?.role === "ADMIN" || isOwner;
@@ -122,7 +122,6 @@ export default function TeamDetails() {
         await removeMemberMutation.mutateAsync(memberId);
       } catch (error) {
         console.error("Failed to remove member:", error);
-        // Optionally show an error notification
       }
     }
   };
@@ -135,7 +134,6 @@ export default function TeamDetails() {
       });
     } catch (error) {
       console.error("Failed to update member role:", error);
-      // Optionally show an error notification
     }
   };
 
@@ -147,7 +145,7 @@ export default function TeamDetails() {
           <div className="flex items-start justify-between mb-6">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate("/teams")}
+                onClick={() => navigate(-1)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Back to Teams"
                 aria-label="Back to Teams"
@@ -276,7 +274,7 @@ export default function TeamDetails() {
                   <p className="text-2xl font-bold text-purple-900">
                     {team.projects?.reduce(
                       (sum: number, p: Project) => sum + (p._count?.tasks || 0),
-                      0
+                      0,
                     ) || 0}
                   </p>
                   <p className="text-sm text-purple-700">Total Tasks</p>
@@ -730,10 +728,10 @@ export default function TeamDetails() {
                                   member.role === "OWNER"
                                     ? "bg-purple-100 text-purple-700"
                                     : member.role === "ADMIN"
-                                    ? "bg-blue-100 text-blue-700"
-                                    : member.role === "MEMBER"
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-gray-100 text-gray-700"
+                                      ? "bg-blue-100 text-blue-700"
+                                      : member.role === "MEMBER"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-gray-100 text-gray-700"
                                 }`}
                               >
                                 {member.role}
@@ -746,7 +744,7 @@ export default function TeamDetails() {
                             onClick={() =>
                               handleRemoveMember(
                                 member.id,
-                                member.user?.name || "this member"
+                                member.user?.name || "this member",
                               )
                             }
                             className="text-red-600 hover:text-red-800 p-1 transition-colors"
