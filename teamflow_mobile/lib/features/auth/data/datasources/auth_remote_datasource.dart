@@ -9,6 +9,9 @@ abstract class AuthRemoteDataSource {
   /// Login user with email & password
   Future<UserModel> login(String email, String password);
 
+  /// Signup user with email, name & password
+  Future<UserModel> signup(String name, String email, String password);
+
   /// Logout user (optional, depends on API)
   Future<void> logout();
 
@@ -18,7 +21,6 @@ abstract class AuthRemoteDataSource {
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final ApiService apiService;
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   AuthRemoteDataSourceImpl(this.apiService);
 
@@ -36,6 +38,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       } else {
         throw AuthException(
           response.message.isNotEmpty ? response.message : 'Login failed',
+        );
+      }
+    } catch (e) {
+      if (e is AuthException || e is ServerException) {
+        rethrow;
+      }
+      throw ServerException('Unexpected server error');
+    }
+  }
+
+  @override
+  Future<UserModel> signup(String name, String email, String password) async {
+    try {
+      final response = await apiService.post<UserModel>(
+        ApiEndpoints.signup,
+        body: {'name': name, 'email': email, 'password': password},
+        fromJson: (json) => UserModel.fromJson(json),
+      );
+
+      if (response.status && response.data != null) {
+        return response.data!;
+      } else {
+        throw AuthException(
+          response.message.isNotEmpty
+              ? response.message
+              : 'Signup failed',
         );
       }
     } catch (e) {
@@ -70,9 +98,6 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   Future<UserModel?> getCurrentUser() async {
     try {
-      final token = await _storage.read(key: 'accessToken');
-      if (token == null) return null;
-
       final response = await apiService.get<UserModel>(
         ApiEndpoints.me,
         fromJson: (json) => UserModel.fromJson(json),

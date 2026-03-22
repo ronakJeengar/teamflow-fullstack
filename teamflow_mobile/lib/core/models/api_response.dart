@@ -1,33 +1,46 @@
 class ApiResponse<T> {
-  final T? data;
-  final String message;
   final bool status;
+  final String message;
+  final T? data;
+  final int? code;
+  final dynamic error;
 
-  ApiResponse({
-    required this.data,
-    required this.message,
+  const ApiResponse({
     required this.status,
+    required this.message,
+    this.data,
+    this.code,
+    this.error,
   });
 
-  /// Optional: factory for creating from JSON
-  /// Note: for generic `T`, you must provide `fromJsonT` function
-  factory ApiResponse.fromJson(
-      Map<String, dynamic> json, {
-        required T Function(dynamic json) fromJsonT,
-      }) {
-    final dataJson = json['data'];
+  // ✅ success(...)
+  factory ApiResponse.success({
+    required String message,
+    T? data,
+    int? code,
+  }) {
     return ApiResponse<T>(
-      data: dataJson != null ? fromJsonT(dataJson) : null,
-      message: json['message'] ?? '',
-      status: json['status'] ?? true,
+      status: true,
+      message: message,
+      data: data,
+      code: code,
     );
   }
 
-  Map<String, dynamic> toJson(Map<String, dynamic> Function(T data) toJsonT) {
-    return {
-      'data': data != null ? toJsonT(data!) : null,
-      'message': message,
-      'status': status,
-    };
+  // ❌ failure(...)
+  factory ApiResponse.failure({
+    required String message,
+    int? code,
+    dynamic error,
+  }) {
+    return ApiResponse<T>(
+      status: false,
+      message: message,
+      code: code,
+      error: error,
+    );
   }
+
+  bool get isSuccess => status;
+  bool get isFailure => !status;
 }
