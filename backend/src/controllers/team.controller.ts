@@ -63,7 +63,13 @@ export const getTeamDetails = async (req: AuthRequest, res: Response) => {
       where: { id: teamId },
       include: {
         members: { include: { user: true } },
-        projects: true,
+        projects: {
+          include: {
+            _count: {
+              select: { tasks: true },
+            },
+          },
+        },
         invitations: true,
       },
     });
