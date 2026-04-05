@@ -1,15 +1,15 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'user.freezed.dart';
+part 'user_entity.freezed.dart';
 
 enum UserRole { admin, member }
 
 @freezed
-abstract class User with _$User {
-  const factory User({
+abstract class UserEntity with _$UserEntity {
+  const factory UserEntity({
     required String id,
     required String name,
     required String email,
     required UserRole role,
-  }) = _User;
+  }) = _UserEntity;
 }

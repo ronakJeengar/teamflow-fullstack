@@ -1,16 +1,16 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../entities/user.dart';
+import '../entities/user_entity.dart';
 import '../repositories/auth_repository.dart';
 
-class GetCurrentUserUseCase extends NoParamsUseCase<User?> {
+class GetCurrentUserUseCase extends NoParams<UserEntity?> {
   final AuthRepository repository;
 
   GetCurrentUserUseCase(this.repository);
 
   @override
-  Future<Either<Failure, User?>> call() {
+  Future<Either<Failure, UserEntity?>> call() {
     return repository.getCurrentUser();
   }
 }

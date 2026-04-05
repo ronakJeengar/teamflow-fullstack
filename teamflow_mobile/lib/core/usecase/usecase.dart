@@ -7,6 +7,6 @@ abstract class UseCase<Type, Params> {
 }
 
 /// Use this for use cases that do NOT require parameters
-abstract class NoParamsUseCase<Type> {
+abstract class NoParams<Type> {
   Future<Either<Failure, Type>> call();
 }

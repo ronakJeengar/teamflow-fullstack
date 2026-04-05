@@ -3,7 +3,7 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repositories/auth_repository.dart';
 
-class LogoutUseCase extends NoParamsUseCase<void> {
+class LogoutUseCase extends NoParams<void> {
   final AuthRepository repository;
 
   LogoutUseCase(this.repository);

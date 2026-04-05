@@ -1,12 +1,12 @@
 import 'package:hooks_riverpod/legacy.dart';
-import '../../domain/entities/user.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/get_current_usecase.dart';
 
 enum AuthStatus { unknown, authenticated, unauthenticated }
 
 class AuthState {
   final AuthStatus status;
-  final User? user;
+  final UserEntity? user;
   final String? errorMessage;
 
   const AuthState({
@@ -16,14 +16,14 @@ class AuthState {
   });
 
   const AuthState.unknown() : this(status: AuthStatus.unknown);
-  const AuthState.authenticated(User user)
+  const AuthState.authenticated(UserEntity user)
       : this(status: AuthStatus.authenticated, user: user);
   const AuthState.unauthenticated({String? message})
       : this(status: AuthStatus.unauthenticated, errorMessage: message);
 
   AuthState copyWith({
     AuthStatus? status,
-    User? user,
+    UserEntity? user,
     String? errorMessage,
   }) =>
       AuthState(
@@ -60,7 +60,7 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
     state = AuthState.unauthenticated(message: message);
   }
 
-  void setAuthenticated(User user) {
+  void setAuthenticated(UserEntity user) {
     state = AuthState.authenticated(user);
   }
 }

@@ -1,37 +1,46 @@
 import '../../features/auth/data/models/user_model.dart';
-import '../../features/auth/domain/entities/user.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
 
+/// MODEL → ENTITY
 extension UserModelMapper on UserModel {
-  User toEntity() => User(
-    id: id,
-    name: name,
-    email: email,
-    role: _stringToUserRole(role),
-  );
-
-  // helper
-  UserRole _stringToUserRole(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return UserRole.admin;
-      case 'user':
-        return UserRole.member;
-      default:
-        throw Exception('Unknown role: $role');
-    }
+  UserEntity toEntity() {
+    return UserEntity(
+      id: id,
+      name: name,
+      email: email,
+      role: _stringToUserRole(role),
+    );
   }
 }
 
-extension UserEntityMapper on User {
-  UserModel toModel() => UserModel(
-    id: id,
-    name: name,
-    email: email,
-    role: _userRoleToString(role),
-  );
-
-  // helper
-  String _userRoleToString(UserRole role) {
-    return role.name; // enum.name returns the string like 'admin', 'user', etc.
+/// ENTITY → MODEL
+extension UserEntityMapper on UserEntity {
+  UserModel toModel() {
+    return UserModel(
+      id: id,
+      name: name,
+      email: email,
+      role: _userRoleToString(role),
+    );
   }
+}
+
+/// String → Enum
+UserRole _stringToUserRole(String role) {
+  switch (role.toLowerCase()) {
+    case 'admin':
+      return UserRole.admin;
+
+    case 'member':
+    case 'user':
+      return UserRole.member;
+
+    default:
+      throw Exception('Unknown role: $role');
+  }
+}
+
+/// Enum → String
+String _userRoleToString(UserRole role) {
+  return role.name;
 }

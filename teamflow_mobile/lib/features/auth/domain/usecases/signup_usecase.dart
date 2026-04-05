@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
-import '../entities/user.dart';
+import '../entities/user_entity.dart';
 import '../repositories/auth_repository.dart';
 
 class SignupParams {
@@ -16,13 +16,13 @@ class SignupParams {
   });
 }
 
-class SignupUseCase extends UseCase<User, SignupParams> {
+class SignupUseCase extends UseCase<UserEntity, SignupParams> {
   final AuthRepository repository;
 
   SignupUseCase(this.repository);
 
   @override
-  Future<Either<Failure, User>> call(SignupParams params) {
+  Future<Either<Failure, UserEntity>> call(SignupParams params) {
     return repository.signup(params.email, params.name, params.password);
   }
 }

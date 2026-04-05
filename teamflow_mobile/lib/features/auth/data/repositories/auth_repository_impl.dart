@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:teamflow_mobile/core/mappers/user_mapper.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
-import '../../domain/entities/user.dart';
+import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_local_datasource.dart';
 import '../datasources/auth_remote_datasource.dart';
@@ -18,7 +18,7 @@ class AuthRepositoryImpl implements AuthRepository {
   });
 
   @override
-  Future<Either<Failure, User>> login(String email, String password) async {
+  Future<Either<Failure, UserEntity>> login(String email, String password) async {
     try {
       final UserModel user = await remoteDataSource.login(email, password);
       return right(user.toEntity());
@@ -32,7 +32,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User>> signup(
+  Future<Either<Failure, UserEntity>> signup(
     String email,
     String name,
     String password,
@@ -65,7 +65,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, User?>> getCurrentUser() async {
+  Future<Either<Failure, UserEntity?>> getCurrentUser() async {
     try {
       final token = await localDataSource.getAccessToken();
       if (token == null) return const Right(null);
