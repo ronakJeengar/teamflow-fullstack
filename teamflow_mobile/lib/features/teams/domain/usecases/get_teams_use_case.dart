@@ -1,11 +1,11 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/team_entity.dart';
-import '../repositories/team_repository.dart';
+import '../repositories/teams_repository.dart';
 import '../../../../core/usecase/usecase.dart';
 
 class GetTeamsUseCase extends NoParams<List<TeamEntity>> {
-  final TeamRepository repository;
+  final TeamsRepository repository;
 
   GetTeamsUseCase(this.repository);
 

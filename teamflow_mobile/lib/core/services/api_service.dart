@@ -147,6 +147,17 @@ class ApiService {
     );
   }
 
+  Future<ApiResponse<T>> patch<T>(
+      String path, {
+        Map<String, dynamic>? body,
+        required T Function(dynamic json) fromJson,
+      }) {
+    return _handleRequest<T>(
+      request: () => _dio.patch(path, data: body),
+      fromJson: fromJson,
+    );
+  }
+
   Future<ApiResponse<T>> delete<T>(
       String path, {
         required T Function(dynamic json) fromJson,

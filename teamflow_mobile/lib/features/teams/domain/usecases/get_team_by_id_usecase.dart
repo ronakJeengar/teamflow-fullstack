@@ -3,7 +3,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../entities/team_entity.dart';
-import '../repositories/team_repository.dart';
+import '../repositories/teams_repository.dart';
 
 class GetTeamByIdParams {
   final String teamId;
@@ -12,7 +12,7 @@ class GetTeamByIdParams {
 }
 
 class GetTeamByIdUseCase extends UseCase<TeamEntity, GetTeamByIdParams> {
-  final TeamRepository repository;
+  final TeamsRepository repository;
 
   GetTeamByIdUseCase(this.repository);
 

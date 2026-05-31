@@ -12,12 +12,18 @@ extension AppNavigation on NavigationHelper {
 
   void goToHome() => goToNamed(RouteNames.home);
 
+  void goToTeamDetails(String teamId) =>
+      goToNamed(RouteNames.teamDetails, params: {'teamId': teamId});
+
   // Push variants (keeps previous screen in stack)
   void pushLogin() => pushNamed(RouteNames.login);
 
   void pushSignup() => pushNamed(RouteNames.signup);
 
   void pushHome() => pushNamed(RouteNames.home);
+
+  void pushTeamDetails(String teamId) =>
+      pushNamed(RouteNames.teamDetails, params: {'teamId': teamId});
 
   // Replace variants (removes previous screen from stack)
   void replaceWithLogin() => replaceNamed(RouteNames.login);

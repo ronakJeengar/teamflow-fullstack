@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/model_scaffold.dart';
 import '../providers/teams_providers.dart';
-import 'model_scaffold.dart';
 
 class DeleteTeamModal extends ConsumerWidget {
   final String teamName;
@@ -22,50 +22,87 @@ class DeleteTeamModal extends ConsumerWidget {
     ref.watch(deleteTeamControllerProvider) is AsyncLoading;
 
     return ModalScaffold(
+      onDismiss: isLoading ? null : onCancel,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Delete Team?',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFFDC2626))),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: const TextStyle(color: Colors.black87, fontSize: 14),
-              children: [
-                const TextSpan(text: 'This will permanently delete '),
-                TextSpan(
-                  text: teamName,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+          // ── Title with danger icon ──────────────────────────────────────
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.dangerLight,
+                  borderRadius: AppRadius.sm,
                 ),
-                const TextSpan(text: ' and all its projects.'),
+                child: const Icon(
+                  Icons.delete_outline_rounded,
+                  size: 18,
+                  color: AppColors.danger,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                'Delete Team?',
+                style: AppTextStyles.heading2.copyWith(color: AppColors.danger),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── Warning body ───────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: AppColors.dangerLight,
+              borderRadius: AppRadius.md,
+              border: Border.all(
+                color: AppColors.danger.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 16,
+                  color: AppColors.danger,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: RichText(
+                    text: TextSpan(
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.danger.withOpacity(0.85),
+                      ),
+                      children: [
+                        const TextSpan(text: 'This will permanently delete '),
+                        TextSpan(
+                          text: teamName,
+                          style: const TextStyle(fontWeight: FontWeight.w700),
+                        ),
+                        const TextSpan(
+                          text:
+                          ' and all its projects. This action cannot be undone.',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(onPressed: onCancel, child: const Text('Cancel')),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: isLoading ? null : onConfirm,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFDC2626)),
-                child: isLoading
-                    ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
-                )
-                    : const Text('Delete',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.xxl),
+
+          // ── Actions ────────────────────────────────────────────────────
+          ModalActions(
+            onCancel: onCancel,
+            onConfirm: onConfirm,
+            confirmLabel: 'Delete Team',
+            isLoading: isLoading,
+            isDanger: true,
           ),
         ],
       ),

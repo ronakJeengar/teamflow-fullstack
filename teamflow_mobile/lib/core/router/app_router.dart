@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:teamflow_mobile/core/router/routes.dart';
+import 'package:teamflow_mobile/features/teams/presentation/pages/teams_page.dart';
 
 import '../../features/auth/presentation/pages/home_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -9,6 +10,7 @@ import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_notifier_listener.dart';
 import '../../features/auth/presentation/providers/auth_state_notifier.dart';
 import '../../features/auth/presentation/providers/providers.dart';
+import '../../features/teams/presentation/pages/team_detail_page.dart';
 import '../navigation/navigation_helper.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -16,7 +18,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = AuthNotifierListener(authNotifier);
 
   return GoRouter(
-    navigatorKey: NavigationHelper.navigatorKey, // Add this line
+    navigatorKey: NavigationHelper.navigatorKey,
     initialLocation: Routes.splash,
     refreshListenable: refreshListenable,
     routes: [
@@ -40,6 +42,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: RouteNames.home,
         builder: (_, __) => const HomePage(),
       ),
+      GoRoute(
+        path: Routes.teams,
+        name: RouteNames.teams,
+        builder: (_, __) => const TeamsPage(),
+      ),
+      GoRoute(
+        path: Routes.teamDetails, // e.g. '/teams/:teamId'
+        name: RouteNames.teamDetails,
+        builder: (_, state) {
+          final teamId = state.pathParameters['teamId']!;
+          return TeamDetailPage(teamId: teamId);
+        },
+      ),
     ],
     redirect: (context, state) {
       final authState = ref.read(authStateNotifierProvider);
@@ -57,7 +72,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           (currentLocation == Routes.login ||
               currentLocation == Routes.signup ||
               currentLocation == Routes.splash)) {
-        return Routes.home;
+        return Routes.teams;
       }
 
       return null;

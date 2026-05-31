@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
 import '../entities/team_entity.dart';
 
-abstract class TeamRepository {
+abstract class TeamsRepository {
   /// Create a new team
   Future<Either<Failure, TeamEntity>> createTeam({
     required String name,

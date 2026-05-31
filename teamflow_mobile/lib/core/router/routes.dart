@@ -5,6 +5,9 @@ class Routes {
   static const login = '/login';
   static const signup = '/signup';
   static const home = '/home';
+  static const teams = '/teams';
+  static const teamDetails = '/teams/:teamId'; // ← parameterised path
+  static String teamDetailPath(String teamId) => '/teams/$teamId';
 }
 
 class RouteNames {
@@ -14,4 +17,6 @@ class RouteNames {
   static const login = 'login';
   static const signup = 'signup';
   static const home = 'home';
+  static const teams = 'teams';
+  static const teamDetails = 'team-details';
 }
