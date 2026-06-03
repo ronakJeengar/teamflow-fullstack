@@ -40,8 +40,7 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
       where: { teamId, userId },
     });
 
-    if (!member)
-      return failure(res, "Not a team member", 403);
+    if (!member) return failure(res, "Not a team member", 403);
 
     const projects = await prisma.project.findMany({
       where: { teamId },
@@ -66,8 +65,7 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const project = await prisma.project.findUnique({ where: { id } });
-    if (!project)
-      return failure(res, "Project not found", 404);
+    if (!project) return failure(res, "Project not found", 404);
 
     const member = await prisma.teamMember.findFirst({
       where: { teamId: project.teamId, userId },
@@ -100,8 +98,7 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
     console.log("Delete project request for ID:", id, "by user:", userId);
 
     const project = await prisma.project.findUnique({ where: { id } });
-    if (!project)
-      return failure(res, "Project not found", 404);
+    if (!project) return failure(res, "Project not found", 404);
 
     const member = await prisma.teamMember.findFirst({
       where: { teamId: project.teamId, userId },
@@ -117,7 +114,7 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
 
     await prisma.project.delete({ where: { id } });
 
-    success(res, "Project deleted successfully", null, 204);
+    success(res, "Project deleted successfully", null, 200);
   } catch (error) {
     console.error("Error deleting project:", error);
     return failure(res, "Internal server error", 500);

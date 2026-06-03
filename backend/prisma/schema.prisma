@@ -7,18 +7,18 @@ datasource db {
 }
 
 model Task {
-  id          String     @id @default(uuid())
-  title       String
-  description String?
-  status      TaskStatus @default(TODO)
-  projectId   String
-  createdById String
-  createdBy   User       @relation("UserTasks", fields: [createdById], references: [id])
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  status       TaskStatus @default(TODO)
+  projectId    String
+  createdById  String
+  createdBy    User       @relation("UserTasks", fields: [createdById], references: [id])
   assignedToId String?
-  assignedTo   User? @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  project     Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  assignedTo   User?      @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 enum TaskStatus {
@@ -28,21 +28,21 @@ enum TaskStatus {
 }
 
 model Project {
-  id        String   @id @default(uuid())
-  name      String
+  id          String        @id @default(uuid())
+  name        String
   description String?
-  avatar      String?      
-  color       String?      
-  teamId    String
-  team      Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  ownerId   String
-  owner     User     @relation(fields: [ownerId], references: [id])
+  avatar      String?
+  color       String?
+  teamId      String
+  team        Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  ownerId     String
+  owner       User          @relation(fields: [ownerId], references: [id])
   status      ProjectStatus @default(ACTIVE)
   visibility  Visibility    @default(PRIVATE)
-  tasks     Task[]
+  tasks       Task[]
   startDate   DateTime?
   dueDate     DateTime?
-  createdAt DateTime @default(now())
+  createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@index([teamId])
@@ -58,25 +58,26 @@ enum ProjectStatus {
 }
 
 enum Visibility {
-  PRIVATE   
+  PRIVATE
   PUBLIC
 }
 
 model User {
-  id        String    @id @default(uuid())
-  name      String
-  email     String    @unique
-  password  String
-  avatar    String?   // profile picture URL
-  bio       String?
-  role      Role      @default(USER)
-  ownedTeams   Team[]       @relation("TeamOwner")
-  teamMembers  TeamMember[]
-  projects  Project[]
-  tasks     Task[]    @relation("UserTasks")
-  assignedTasks Task[]      @relation("AssignedTasks")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id              String           @id @default(uuid())
+  name            String
+  email           String           @unique
+  password        String
+  avatar          String? // profile picture URL
+  bio             String?
+  role            Role             @default(USER)
+  ownedTeams      Team[]           @relation("TeamOwner")
+  teamMembers     TeamMember[]
+  projects        Project[]
+  tasks           Task[]           @relation("UserTasks")
+  assignedTasks   Task[]           @relation("AssignedTasks")
+  sentInvitations TeamInvitation[] @relation("InvitationSender")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model ActivityLog {
@@ -93,35 +94,35 @@ enum Role {
 }
 
 model Team {
-  id          String   @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   description String?
-  avatar      String?  // team logo/avatar URL
-  
-  ownerId     String
-  owner       User     @relation("TeamOwner", fields: [ownerId], references: [id])
-  
+  avatar      String? // team logo/avatar URL
+
+  ownerId String
+  owner   User   @relation("TeamOwner", fields: [ownerId], references: [id])
+
   members     TeamMember[]
   projects    Project[]
   invitations TeamInvitation[]
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([ownerId])
 }
 
 model TeamMember {
-  id       String         @id @default(uuid())
-  teamId   String
-  userId   String
-  role     TeamMemberRole @default(MEMBER)
-  
-  team     Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String         @id @default(uuid())
+  teamId String
+  userId String
+  role   TeamMemberRole @default(MEMBER)
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   joinedAt DateTime @default(now())
-  
+
   @@unique([teamId, userId])
   @@index([teamId])
   @@index([userId])
@@ -135,22 +136,22 @@ enum TeamMemberRole {
 }
 
 model TeamInvitation {
-  id        String           @id @default(uuid())
-  teamId    String
-  email     String
-  role      TeamMemberRole   @default(MEMBER)
-  token     String           @unique
-  status    InvitationStatus @default(PENDING)
-  
-  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  invitedBy String
-  
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  
+  id          String           @id @default(uuid())
+  teamId      String
+  team        Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  email       String
+  invitedById String
+  invitedBy   User             @relation("InvitationSender", fields: [invitedById], references: [id])
+  role        TeamMemberRole   @default(MEMBER)
+  token       String           @unique
+  status      InvitationStatus @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
   @@index([teamId])
   @@index([email])
-  @@index([token])
+  @@index([status])
 }
 
 enum InvitationStatus {
