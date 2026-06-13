@@ -6,10 +6,13 @@ import '../../../../core/ui/app_ui.dart';
 import '../../../projects/domain/entitties/project_entity.dart';
 import '../providers/team_details_providers.dart';
 
-class NewProjectSheet extends HookConsumerWidget {
-  final ValueChanged<ProjectEntity> onCreated;
+class CreateProjectSheet extends HookConsumerWidget {
+  final String teamId;
 
-  const NewProjectSheet({super.key, required this.onCreated});
+  const CreateProjectSheet({
+    super.key,
+    required this.teamId,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,9 +32,9 @@ class NewProjectSheet extends HookConsumerWidget {
 
       nameError.value = null;
 
-      // await ref
-      //     .read(createProjectControllerProvider.notifier)
-      //     .createProject(name);
+      await ref
+          .read(createProjectControllerProvider.notifier)
+          .createProject(teamId: teamId, name: name);
 
       if (ref.read(createProjectControllerProvider) is! AsyncError) {
         Navigator.of(context).pop();

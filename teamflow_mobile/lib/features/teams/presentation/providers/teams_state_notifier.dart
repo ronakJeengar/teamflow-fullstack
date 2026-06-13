@@ -47,15 +47,17 @@ class TeamsStateNotifier extends StateNotifier<TeamsState> {
 
   Future<void> loadTeams() async {
     final result = await getTeamsUsecase();
+
     result.fold(
-      (failure) => state = TeamsState.error(failure.message),
-      (teams) => state = TeamsState.loaded(teams),
+      (failure) {
+        state = TeamsState.error(failure.message);
+      },
+      (teams) {
+        state = TeamsState.loaded(teams);
+      },
     );
   }
 
-  // Called by CreateTeamController / UpdateTeamController / DeleteTeamController
-  // after a successful mutation — mirrors how AuthStateNotifier.setAuthenticated()
-  // is called from LoginController / SignupController
   void addTeam(TeamEntity team) {
     state = TeamsState.loaded([...state.teams, team]);
   }
@@ -68,5 +70,9 @@ class TeamsStateNotifier extends StateNotifier<TeamsState> {
 
   void removeTeam(String id) {
     state = TeamsState.loaded(state.teams.where((t) => t.id != id).toList());
+  }
+
+  void clear() {
+    state = const TeamsState.loaded([]);
   }
 }

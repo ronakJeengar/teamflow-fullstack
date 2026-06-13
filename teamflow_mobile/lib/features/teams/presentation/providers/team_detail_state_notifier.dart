@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:hooks_riverpod/legacy.dart';
 import '../../../projects/domain/entitties/project_entity.dart';
 import '../../../projects/domain/usecases/get_projects_usecase.dart';
@@ -66,6 +67,9 @@ class TeamDetailStateNotifier extends StateNotifier<TeamDetailState> {
   }) : super(const TeamDetailState.unknown());
 
   Future<void> loadTeamDetail(String teamId) async {
+    debugPrint('========== LOAD TEAM DETAIL ==========');
+    debugPrint('Team ID: $teamId');
+
     state = const TeamDetailState.unknown();
 
     final results = await Future.wait([
@@ -74,23 +78,57 @@ class TeamDetailStateNotifier extends StateNotifier<TeamDetailState> {
       getProjectsUsecase(GetProjectsByTeamParams(teamId: teamId)),
     ]);
 
+    debugPrint('Future.wait completed');
+
     final teamResult = results[0];
     final membersResult = results[1];
     final projectsResult = results[2];
 
+    debugPrint('Team Result: $teamResult');
+    debugPrint('Members Result: $membersResult');
+    debugPrint('Projects Result: $projectsResult');
+
     teamResult.fold(
-      (failure) => state = TeamDetailState.error(failure.message),
-      (team) => membersResult.fold(
-        (failure) => state = TeamDetailState.error(failure.message),
-        (members) => projectsResult.fold(
-          (failure) => state = TeamDetailState.error(failure.message),
-          (projects) => state = TeamDetailState.loaded(
-            team: team as TeamEntity,
-            members: members as List<TeamMemberEntity>,
-            projects: projects as List<ProjectEntity>,
-          ),
-        ),
-      ),
+          (failure) {
+        debugPrint('Team Failure: ${failure.message}');
+        state = TeamDetailState.error(failure.message);
+      },
+          (team) {
+        debugPrint('Team Loaded: $team');
+
+        membersResult.fold(
+              (failure) {
+            debugPrint('Members Failure: ${failure.message}');
+            state = TeamDetailState.error(failure.message);
+          },
+              (members) {
+            // debugPrint('Members Loaded: ${members.length}');
+
+            projectsResult.fold(
+                  (failure) {
+                debugPrint('Projects Failure: ${failure.message}');
+                state = TeamDetailState.error(failure.message);
+              },
+                  (projects) {
+                // debugPrint('Projects Loaded: ${projects.length}');
+                debugPrint('Setting LOADED state');
+
+                state = TeamDetailState.loaded(
+                  team: team as TeamEntity,
+                  members: members as List<TeamMemberEntity>,
+                  projects: projects as List<ProjectEntity>,
+                );
+
+                debugPrint('State Updated');
+                debugPrint('Team: ${state.team?.name}');
+                debugPrint('Members Count: ${state.members.length}');
+                debugPrint('Projects Count: ${state.projects.length}');
+                debugPrint('=====================================');
+              },
+            );
+          },
+        );
+      },
     );
   }
 
@@ -129,5 +167,9 @@ class TeamDetailStateNotifier extends StateNotifier<TeamDetailState> {
 
   void addMember(TeamMemberEntity member) {
     state = state.copyWith(members: [...state.members, member]);
+  }
+
+  void clear() {
+    state = const TeamDetailState.unknown();
   }
 }

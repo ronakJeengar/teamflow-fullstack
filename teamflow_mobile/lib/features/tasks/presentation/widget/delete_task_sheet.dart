@@ -2,30 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/ui/app_ui.dart';
-import '../../../projects/domain/entitties/project_entity.dart';
-import '../providers/team_details_providers.dart';
+import '../../domain/entitties/task_entity.dart';
+import '../providers/task_providers.dart';
 
-class DeleteProjectSheet extends HookConsumerWidget {
-  final String teamId;
-  final ProjectEntity project;
+class DeleteTaskSheet extends HookConsumerWidget {
+  final String projectId;
+  final TaskEntity task;
 
-  const DeleteProjectSheet({
+  const DeleteTaskSheet({
     super.key,
-    required this.project,
-    required this.teamId,
+    required this.task,
+    required this.projectId,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controllerState = ref.watch(deleteProjectControllerProvider);
+    final controllerState = ref.watch(deleteTaskControllerProvider);
     final isLoading = controllerState is AsyncLoading;
 
     Future<void> submit() async {
       await ref
-          .read(deleteProjectControllerProvider.notifier)
-          .deleteProject(teamId: teamId, projectId: project.id);
+          .read(deleteTaskControllerProvider.notifier)
+          .deleteTask(projectId: projectId, taskId: task.id);
 
-      if (ref.read(deleteProjectControllerProvider) is! AsyncError) {
+      if (ref.read(deleteTaskControllerProvider) is! AsyncError) {
         if (context.mounted) {
           Navigator.of(context).pop();
         }
@@ -52,7 +52,7 @@ class DeleteProjectSheet extends HookConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
-                    'Are you sure you want to delete "${project.name}"? '
+                    'Are you sure you want to delete "${task.title}"? '
                     'This cannot be undone.',
                     style: const TextStyle(
                       fontSize: 13,
@@ -67,7 +67,7 @@ class DeleteProjectSheet extends HookConsumerWidget {
           const SizedBox(height: 18),
 
           AppSheetActions(
-            confirmLabel: 'Delete project',
+            confirmLabel: 'Delete Task',
             isLoading: isLoading,
             onCancel: isLoading ? null : () => Navigator.of(context).pop(),
             onConfirm: submit,

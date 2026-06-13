@@ -12,6 +12,7 @@ class MyApp extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false ,
       routerConfig: router,
       title: 'Flutter Clean Auth',
       theme: AppTheme.light,

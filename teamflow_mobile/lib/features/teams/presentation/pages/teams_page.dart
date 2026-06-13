@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
-import 'package:teamflow_mobile/features/teams/domain/entities/team_entity.dart';
+import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/navigation_helper.dart';
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/ui/app_tokens.dart';
+import '../../../../core/ui/shared_widgets.dart';
+import '../../../auth/presentation/providers/providers.dart';
+import '../../../auth/presentation/widgets/logout_modal.dart';
+import '../../domain/entities/team_entity.dart';
 import '../providers/teams_providers.dart';
 import '../providers/teams_state_notifier.dart';
 import '../widget/create_team_model.dart';
 import '../widget/delete_team_model.dart';
 import '../widget/edit_team_model.dart';
-import '../widget/team_card.dart';
 
 class TeamsPage extends HookConsumerWidget {
   const TeamsPage({super.key});
@@ -19,44 +21,49 @@ class TeamsPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teamsState = ref.watch(teamsStateNotifierProvider);
-    final showCreate = useState(false);
+    final currentUserId = ref.watch(authStateNotifierProvider).user?.id ?? '';
+
     final editingTeam = useState<TeamEntity?>(null);
     final deletingTeam = useState<TeamEntity?>(null);
     final editNameCtrl = useTextEditingController();
     final editDescCtrl = useTextEditingController();
     final searchCtrl = useTextEditingController();
     final searchQuery = useState('');
+    final searchFocused = useState(false);
 
     useEffect(() {
-      searchCtrl.addListener(() => searchQuery.value = searchCtrl.text);
-      return null;
+      Future.microtask(
+        () => ref.read(teamsStateNotifierProvider.notifier).loadTeams(),
+      );
+      void onSearch() => searchQuery.value = searchCtrl.text;
+      searchCtrl.addListener(onSearch);
+      return () => searchCtrl.removeListener(onSearch);
     }, []);
 
-    // ── Error snackbars ────────────────────────────────────────────────────
-    void showError(Object e) => ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(e.toString()),
-        backgroundColor: AppColors.danger,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-
-    ref.listen<AsyncValue<void>>(
+    for (final p in [
       createTeamControllerProvider,
-      (_, next) => next.whenOrNull(error: (e, _) => showError(e)),
-    );
-    ref.listen<AsyncValue<void>>(
       updateTeamControllerProvider,
-      (_, next) => next.whenOrNull(error: (e, _) => showError(e)),
-    );
-    ref.listen<AsyncValue<void>>(
       deleteTeamControllerProvider,
-      (_, next) => next.whenOrNull(error: (e, _) => showError(e)),
-    );
+    ]) {
+      ref.listen<AsyncValue<void>>(
+        p,
+        (_, next) => next.whenOrNull(
+          error: (e, _) => showAppSnackBar(context, e.toString()),
+        ),
+      );
+    }
 
-    // ── Handlers ───────────────────────────────────────────────────────────
-    Future<void> saveTeam() async {
+    void showCreate() {
+      HapticFeedback.lightImpact();
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => const CreateTeamSheet(),
+      );
+    }
+
+    Future<void> saveEdit() async {
       final team = editingTeam.value;
       if (team == null) return;
       await ref
@@ -72,7 +79,6 @@ class TeamsPage extends HookConsumerWidget {
       deletingTeam.value = null;
     }
 
-    // ── Filtered list ──────────────────────────────────────────────────────
     final allTeams = teamsState.teams;
     final filtered = searchQuery.value.isEmpty
         ? allTeams
@@ -84,172 +90,41 @@ class TeamsPage extends HookConsumerWidget {
               )
               .toList();
 
-    // ── Body ───────────────────────────────────────────────────────────────
-    Widget body() {
-      if (teamsState.status == TeamsStatus.unknown) {
-        return const Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(color: AppColors.primary),
-              SizedBox(height: AppSpacing.lg),
-              Text('Loading teams…', style: AppTextStyles.bodyMd),
-            ],
-          ),
-        );
-      }
-
-      if (teamsState.status == TeamsStatus.error) {
-        return Center(
-          child: Container(
-            margin: const EdgeInsets.all(AppSpacing.xxxl),
-            padding: const EdgeInsets.all(AppSpacing.xxxl),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppColors.dangerLight,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.warning_amber_rounded,
-                    color: AppColors.danger,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                const Text(
-                  'Failed to load teams',
-                  style: AppTextStyles.heading2,
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  teamsState.errorMessage ?? 'Something went wrong.',
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMd,
-                ),
-                const SizedBox(height: AppSpacing.xxl),
-                ElevatedButton.icon(
-                  onPressed: () =>
-                      ref.read(teamsStateNotifierProvider.notifier).loadTeams(),
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: const Text('Try Again'),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return CustomScrollView(
-        slivers: [
-          // ── Page header + search + stats ─────────────────────────────
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xxxl,
-                AppSpacing.xxxl,
-                AppSpacing.xxxl,
-                0,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _PageHeader(
-                    teamCount: allTeams.length,
-                    onCreateTap: () => showCreate.value = true,
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  _SearchBar(controller: searchCtrl),
-                  const SizedBox(height: AppSpacing.lg),
-                  _StatsRow(teams: allTeams),
-                  const SizedBox(height: AppSpacing.xxl),
-                  const Divider(color: AppColors.border, height: 1),
-                  const SizedBox(height: AppSpacing.xxl),
-                ],
-              ),
-            ),
-          ),
-
-          // ── Empty state ──────────────────────────────────────────────
-          if (filtered.isEmpty)
-            SliverFillRemaining(
-              hasScrollBody: false,
-              child: _EmptyState(
-                hasSearch: searchQuery.value.isNotEmpty,
-                onCreateTap: () => showCreate.value = true,
-              ),
-            )
-          // ── Teams grid ───────────────────────────────────────────────
-          else
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.xxxl,
-                0,
-                AppSpacing.xxxl,
-                AppSpacing.xxxl,
-              ),
-              sliver: SliverLayoutBuilder(
-                builder: (ctx, constraints) {
-                  final cols = constraints.crossAxisExtent > 900
-                      ? 3
-                      : constraints.crossAxisExtent > 600
-                      ? 2
-                      : 1;
-                  return SliverGrid(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: cols,
-                      crossAxisSpacing: AppSpacing.lg,
-                      mainAxisSpacing: AppSpacing.lg,
-                      childAspectRatio: cols == 1 ? 2.2 : 1.9,
-                    ),
-                    delegate: SliverChildBuilderDelegate((_, i) {
-                      final team = filtered[i];
-                      return TeamCard(
-                        team: team,
-                        onTap: () {
-                          // context.go('/teams/${team.id}');
-                          NavigationHelper.instance.pushTeamDetails(team.id);
-                        },
-                        onEdit: () {
-                          editingTeam.value = team;
-                          editNameCtrl.text = team.name;
-                          editDescCtrl.text = team.description ?? '';
-                        },
-                        onDelete: () => deletingTeam.value = team,
-                      );
-                    }, childCount: filtered.length),
-                  );
-                },
-              ),
-            ),
-        ],
-      );
-    }
-
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppTokens.bg,
       body: Stack(
         children: [
-          body(),
-
-          if (showCreate.value)
-            CreateTeamModal(onClose: () => showCreate.value = false),
+          _Body(
+            teamsState: teamsState,
+            allTeams: allTeams,
+            filtered: filtered,
+            searchCtrl: searchCtrl,
+            searchQuery: searchQuery.value,
+            searchFocused: searchFocused.value,
+            currentUserId: currentUserId,
+            onCreateTap: showCreate,
+            onLogoutTap: () => showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const LogoutSheet(),
+            ),
+            onEdit: (team) {
+              editingTeam.value = team;
+              editNameCtrl.text = team.name;
+              editDescCtrl.text = team.description ?? '';
+            },
+            onDelete: (team) => deletingTeam.value = team,
+            onRetry: () =>
+                ref.read(teamsStateNotifierProvider.notifier).loadTeams(),
+            onSearchFocusChanged: (v) => searchFocused.value = v,
+          ),
 
           if (editingTeam.value != null)
             EditTeamModal(
               nameController: editNameCtrl,
               descController: editDescCtrl,
               onCancel: () => editingTeam.value = null,
-              onSave: saveTeam,
+              onSave: saveEdit,
             ),
 
           if (deletingTeam.value != null)
@@ -260,204 +135,540 @@ class TeamsPage extends HookConsumerWidget {
             ),
         ],
       ),
+      floatingActionButton: _Fab(onTap: showCreate),
     );
   }
 }
 
-// ─── Local widgets ─────────────────────────────────────────────────────────────
-
-class _PageHeader extends StatelessWidget {
-  final int teamCount;
+class _Body extends StatelessWidget {
+  final TeamsState teamsState;
+  final List<TeamEntity> allTeams;
+  final List<TeamEntity> filtered;
+  final TextEditingController searchCtrl;
+  final String searchQuery;
+  final bool searchFocused;
+  final String currentUserId;
   final VoidCallback onCreateTap;
+  final VoidCallback onLogoutTap;
+  final ValueChanged<TeamEntity> onEdit;
+  final ValueChanged<TeamEntity> onDelete;
+  final VoidCallback onRetry;
+  final ValueChanged<bool> onSearchFocusChanged;
 
-  const _PageHeader({required this.teamCount, required this.onCreateTap});
-
-  @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.end,
-    children: [
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Subtle accent mark
-            Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 5),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.35),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            const Text('Teams', style: AppTextStyles.heading1),
-            const SizedBox(height: 4),
-            const Text(
-              'Manage your teams and members',
-              style: AppTextStyles.bodyMd,
-            ),
-          ],
-        ),
-      ),
-      ElevatedButton.icon(
-        onPressed: onCreateTap,
-        icon: const Icon(Icons.add_rounded, size: 18),
-        label: const Text('Create Team'),
-      ),
-    ],
-  );
-}
-
-class _SearchBar extends StatelessWidget {
-  final TextEditingController controller;
-
-  const _SearchBar({required this.controller});
-
-  @override
-  Widget build(BuildContext context) => TextField(
-    controller: controller,
-    decoration: InputDecoration(
-      hintText: 'Search teams…',
-      prefixIcon: const Icon(
-        Icons.search_rounded,
-        size: 18,
-        color: AppColors.textTertiary,
-      ),
-      suffixIcon: ValueListenableBuilder(
-        valueListenable: controller,
-        builder: (_, val, __) => val.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(
-                  Icons.close_rounded,
-                  size: 16,
-                  color: AppColors.textTertiary,
-                ),
-                onPressed: controller.clear,
-              )
-            : const SizedBox.shrink(),
-      ),
-    ),
-  );
-}
-
-class _StatsRow extends StatelessWidget {
-  final List<TeamEntity> teams;
-
-  const _StatsRow({required this.teams});
+  const _Body({
+    required this.teamsState,
+    required this.allTeams,
+    required this.filtered,
+    required this.searchCtrl,
+    required this.searchQuery,
+    required this.searchFocused,
+    required this.currentUserId,
+    required this.onCreateTap,
+    required this.onLogoutTap,
+    required this.onEdit,
+    required this.onDelete,
+    required this.onRetry,
+    required this.onSearchFocusChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final memberCount = teams.fold<int>(0, (s, t) => s + t.members.length);
-    final projectCount = teams.fold<int>(0, (s, t) => s + t.projects.length);
+    if (teamsState.status == TeamsStatus.unknown) {
+      return const AppLoadingView(message: 'Loading teams…');
+    }
+    if (teamsState.status == TeamsStatus.error) {
+      return AppErrorView(
+        title: 'Failed to load teams',
+        message: teamsState.errorMessage ?? 'Something went wrong.',
+        onRetry: onRetry,
+      );
+    }
 
-    return Wrap(
-      spacing: AppSpacing.sm,
-      runSpacing: AppSpacing.sm,
+    final top = MediaQuery.of(context).padding.top;
+
+    return CustomScrollView(
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+      slivers: [
+        SliverToBoxAdapter(
+          child: Container(
+            color: AppTokens.surface,
+            padding: EdgeInsets.fromLTRB(
+              AppTokens.s20,
+              top + AppTokens.s16,
+              AppTokens.s20,
+              AppTokens.s20,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Teams', style: AppTokens.displayLg),
+                          const SizedBox(height: AppTokens.s4),
+                          Text(
+                            '${allTeams.length} workspace${allTeams.length == 1 ? '' : 's'} you belong to',
+                            style: AppTokens.bodySm,
+                          ),
+                        ],
+                      ),
+                    ),
+                    AppIconButton(
+                      icon: Icons.mail_outline_rounded,
+                      onTap: () => NavigationHelper.instance.pushInvitations(),
+                    ),
+                    const SizedBox(width: AppTokens.s8),
+                    AppIconButton(
+                      icon: Icons.logout_rounded,
+                      onTap: onLogoutTap,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTokens.s20),
+                _StatsOverviewCard(teams: allTeams),
+                const SizedBox(height: AppTokens.s20),
+                _SearchBar(
+                  controller: searchCtrl,
+                  onFocusChanged: onSearchFocusChanged,
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        SliverToBoxAdapter(
+          child: Container(height: 1, color: const Color(0xFFF1F5F9)),
+        ),
+
+        if (filtered.isEmpty)
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: AppEmptyState(
+              icon: searchQuery.isNotEmpty
+                  ? Icons.search_off_rounded
+                  : Icons.groups_outlined,
+              iconColor: searchQuery.isNotEmpty
+                  ? AppTokens.textSecondary
+                  : AppTokens.brand,
+              iconSurface: searchQuery.isNotEmpty
+                  ? AppTokens.surfaceAlt
+                  : AppTokens.brandSurface,
+              title: searchQuery.isNotEmpty
+                  ? 'No results found'
+                  : 'No teams yet',
+              subtitle: searchQuery.isNotEmpty
+                  ? 'Try a different keyword'
+                  : 'Create your first team to start collaborating',
+              actionLabel: searchQuery.isNotEmpty ? null : 'Create a team',
+              actionIcon: searchQuery.isNotEmpty ? null : Icons.add_rounded,
+              onAction: searchQuery.isNotEmpty ? null : onCreateTap,
+            ),
+          )
+        else
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppTokens.s20,
+              AppTokens.s16,
+              AppTokens.s20,
+              120,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (_, i) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppTokens.s10),
+                  child: TeamCard(
+                    team: filtered[i],
+                    currentUserId: currentUserId,
+                    onTap: () => NavigationHelper.instance.pushTeamDetails(
+                      filtered[i].id,
+                    ),
+                    onEdit: () => onEdit(filtered[i]),
+                    onDelete: () => onDelete(filtered[i]),
+                  ),
+                ),
+                childCount: filtered.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _StatsOverviewCard extends StatelessWidget {
+  final List<TeamEntity> teams;
+
+  const _StatsOverviewCard({required this.teams});
+
+  @override
+  Widget build(BuildContext context) {
+    final memberCount = teams.fold<int>(0, (sum, t) => sum + t.members.length);
+    final projectCount = teams.fold<int>(
+      0,
+      (sum, t) => sum + t.projects.length,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _Metric(value: teams.length.toString(), label: 'Teams'),
+          ),
+          _VerticalDivider(),
+          Expanded(
+            child: _Metric(value: memberCount.toString(), label: 'Members'),
+          ),
+          _VerticalDivider(),
+          Expanded(
+            child: _Metric(value: projectCount.toString(), label: 'Projects'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Metric extends StatelessWidget {
+  final String value;
+  final String label;
+
+  const _Metric({required this.value, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
       children: [
-        _StatPill(
-          icon: Icons.groups_outlined,
-          label: '${teams.length} team${teams.length == 1 ? '' : 's'}',
+        Text(
+          value,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -1,
+          ),
         ),
-        _StatPill(
-          icon: Icons.people_outline,
-          label: '$memberCount member${memberCount == 1 ? '' : 's'}',
-        ),
-        _StatPill(
-          icon: Icons.folder_outlined,
-          label: '$projectCount project${projectCount == 1 ? '' : 's'}',
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );
   }
 }
 
-class _StatPill extends StatelessWidget {
+class _VerticalDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 42,
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      color: Theme.of(context).dividerColor.withValues(alpha: .15),
+    );
+  }
+}
+
+class _SearchBar extends StatefulWidget {
+  final TextEditingController controller;
+  final ValueChanged<bool> onFocusChanged;
+
+  const _SearchBar({required this.controller, required this.onFocusChanged});
+
+  @override
+  State<_SearchBar> createState() => _SearchBarState();
+}
+
+class _SearchBarState extends State<_SearchBar> {
+  final _focus = FocusNode();
+  bool _active = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() {
+      setState(() => _active = _focus.hasFocus);
+      widget.onFocusChanged(_focus.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focus.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        color: AppTokens.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppTokens.r14),
+        border: Border.all(
+          color: _active
+              ? AppTokens.brand.withOpacity(0.5)
+              : Colors.transparent,
+          width: 1.5,
+        ),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(width: AppTokens.s14),
+          Icon(
+            Icons.search_rounded,
+            size: 18,
+            color: _active ? AppTokens.brand : AppTokens.textHint,
+          ),
+          const SizedBox(width: AppTokens.s10),
+          Expanded(
+            child: TextField(
+              controller: widget.controller,
+              focusNode: _focus,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: AppTokens.textPrimary,
+              ),
+              decoration: const InputDecoration(
+                hintText: 'Search teams…',
+                hintStyle: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppTokens.textHint,
+                ),
+                border: InputBorder.none,
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(vertical: AppTokens.s14),
+              ),
+            ),
+          ),
+          if (widget.controller.text.isNotEmpty)
+            GestureDetector(
+              onTap: () => widget.controller.clear(),
+              child: Padding(
+                padding: const EdgeInsets.all(AppTokens.s12),
+                child: Container(
+                  width: 18,
+                  height: 18,
+                  decoration: const BoxDecoration(
+                    color: AppTokens.textHint,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.close_rounded,
+                    size: 11,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(width: AppTokens.s14),
+        ],
+      ),
+    );
+  }
+}
+
+class TeamCard extends StatefulWidget {
+  final TeamEntity team;
+  final String currentUserId;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const TeamCard({
+    super.key,
+    required this.team,
+    required this.currentUserId,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  State<TeamCard> createState() => TeamCardState();
+}
+
+class TeamCardState extends State<TeamCard> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final team = widget.team;
+    final isOwner = team.ownerId == widget.currentUserId;
+
+    final memberLabel =
+        '${team.members.length} member${team.members.length == 1 ? '' : 's'}';
+    final projectLabel =
+        '${team.projects.length} project${team.projects.length == 1 ? '' : 's'}';
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.985 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+        child: Container(
+          decoration: BoxDecoration(
+            color: AppTokens.surface,
+            borderRadius: BorderRadius.circular(AppTokens.r16),
+            border: Border.all(color: AppTokens.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.025),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(AppTokens.s14),
+          child: Row(
+            children: [
+              AppAvatar(name: team.name, size: 46),
+
+              const SizedBox(width: AppTokens.s12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            team.name,
+                            style: AppTokens.titleMd,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (isOwner)
+                          Container(
+                            margin: const EdgeInsets.only(left: AppTokens.s6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppTokens.s6,
+                              vertical: AppTokens.s2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTokens.brandSurface,
+                              borderRadius: BorderRadius.circular(AppTokens.r8),
+                            ),
+                            child: const Text(
+                              'Owner',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                color: AppTokens.brand,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTokens.s6),
+                    Row(
+                      children: [
+                        _MetaChip(
+                          icon: Icons.people_outline_rounded,
+                          label: memberLabel,
+                        ),
+                        const SizedBox(width: AppTokens.s10),
+                        _MetaChip(
+                          icon: Icons.folder_outlined,
+                          label: projectLabel,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: AppTokens.s8),
+
+              if (isOwner) ...[
+                AppActionButton(
+                  icon: Icons.edit_rounded,
+                  color: const Color(0xFF3B82F6),
+                  onTap: widget.onEdit,
+                ),
+                const SizedBox(width: AppTokens.s6),
+                AppActionButton(
+                  icon: Icons.delete_outline_rounded,
+                  color: AppTokens.danger,
+                  onTap: widget.onDelete,
+                ),
+                const SizedBox(width: AppTokens.s6),
+              ],
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: AppTokens.textHint,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Fab extends StatelessWidget {
+  final VoidCallback onTap;
+
+  const _Fab({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.extended(
+      onPressed: onTap,
+      backgroundColor: AppTokens.brand,
+      elevation: 0,
+      highlightElevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
+      label: const Text(
+        'New Team',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.w700,
+          fontSize: 14,
+          letterSpacing: -0.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _MetaChip extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _StatPill({required this.icon, required this.label});
+  const _MetaChip({required this.icon, required this.label});
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 6),
-    decoration: BoxDecoration(
-      color: AppColors.card,
-      borderRadius: BorderRadius.circular(50),
-      border: Border.all(color: AppColors.border),
-    ),
-    child: Row(
+  Widget build(BuildContext context) {
+    return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 13, color: AppColors.textSecondary),
-        const SizedBox(width: 6),
-        Text(label, style: AppTextStyles.bodySm),
+        Icon(icon, size: 11, color: AppTokens.textHint),
+        const SizedBox(width: 3),
+        Text(label, style: AppTokens.labelXs),
       ],
-    ),
-  );
-}
-
-class _EmptyState extends StatelessWidget {
-  final bool hasSearch;
-  final VoidCallback onCreateTap;
-
-  const _EmptyState({required this.hasSearch, required this.onCreateTap});
-
-  @override
-  Widget build(BuildContext context) => Center(
-    child: Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxxl),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: const Icon(
-              Icons.groups_outlined,
-              size: 30,
-              color: AppColors.primary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            hasSearch ? 'No teams match your search' : 'No teams yet',
-            style: AppTextStyles.heading2,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            hasSearch
-                ? 'Try a different keyword'
-                : 'Create your first team to get started',
-            style: AppTextStyles.bodyMd,
-            textAlign: TextAlign.center,
-          ),
-          if (!hasSearch) ...[
-            const SizedBox(height: AppSpacing.xxl),
-            ElevatedButton.icon(
-              onPressed: onCreateTap,
-              icon: const Icon(Icons.add_rounded, size: 16),
-              label: const Text('Create Your First Team'),
-            ),
-          ],
-        ],
-      ),
-    ),
-  );
+    );
+  }
 }

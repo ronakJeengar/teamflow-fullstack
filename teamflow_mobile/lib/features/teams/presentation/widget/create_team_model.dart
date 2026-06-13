@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/model_scaffold.dart';
+
+import '../../../../core/ui/app_ui.dart';
 import '../providers/teams_providers.dart';
 
-class CreateTeamModal extends HookConsumerWidget {
-  final VoidCallback onClose;
-
-  const CreateTeamModal({super.key, required this.onClose});
+class CreateTeamSheet extends HookConsumerWidget {
+  const CreateTeamSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,82 +24,53 @@ class CreateTeamModal extends HookConsumerWidget {
       }
       nameError.value = null;
 
+      final description = descCtrl.text.trim();
       await ref
           .read(createTeamControllerProvider.notifier)
-          .createTeam(name);
+          .createTeam(
+            name,
+            description: description.isEmpty ? null : description,
+          );
 
       if (ref.read(createTeamControllerProvider) is! AsyncError) {
-        onClose();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 
-    return ModalScaffold(
-      onDismiss: isLoading ? null : onClose,
+    return AppSheetShell(
+      title: 'New team',
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ── Title ──────────────────────────────────────────────────────
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: AppRadius.sm,
-                ),
-                child: const Icon(
-                  Icons.group_add_outlined,
-                  size: 18,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Text('Create Team', style: AppTextStyles.heading2),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xxl),
-
-          // ── Name field ─────────────────────────────────────────────────
-          const ModalLabel('Team Name'),
-          TextField(
+          const AppSheetLabel('Team name'),
+          AppSheetInput(
             controller: nameCtrl,
+            hint: 'e.g. Engineering, Design',
+            errorText: nameError.value,
             autofocus: true,
             textInputAction: TextInputAction.next,
             onChanged: (_) => nameError.value = null,
             onSubmitted: (_) => submit(),
-            decoration: InputDecoration(
-              hintText: 'e.g. Engineering, Design…',
-              errorText: nameError.value,
-              prefixIcon: const Icon(
-                Icons.group_outlined,
-                size: 18,
-                color: AppColors.textTertiary,
-              ),
-            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
 
-          // ── Description field ──────────────────────────────────────────
-          const ModalLabel('Description (optional)'),
-          TextField(
+          const SizedBox(height: AppSpacing.lg),
+          const AppSheetLabel('Description (optional)'),
+          AppSheetInput(
             controller: descCtrl,
+            hint: 'What does this team work on?',
             maxLines: 3,
             textInputAction: TextInputAction.done,
             onSubmitted: (_) => submit(),
-            decoration: const InputDecoration(
-              hintText: 'What does this team work on?',
-            ),
           ),
-          const SizedBox(height: AppSpacing.xxl),
 
-          // ── Actions ────────────────────────────────────────────────────
-          ModalActions(
-            onCancel: onClose,
-            onConfirm: submit,
-            confirmLabel: 'Create Team',
+          const SizedBox(height: 18),
+          AppSheetActions(
+            confirmLabel: 'Create',
             isLoading: isLoading,
+            onCancel: isLoading ? null : () => Navigator.of(context).pop(),
+            onConfirm: submit,
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hooks_riverpod/legacy.dart';
+
 import '../../../../core/utils/failure_mapper.dart';
 import '../../domain/usecases/login_usecase.dart';
 import 'auth_state_notifier.dart';
@@ -18,11 +19,13 @@ class LoginController extends StateNotifier<AsyncValue<void>> {
       LoginParams(email: email, password: password),
     );
 
-    result.fold(
-      (failure) =>
-          state = AsyncError(mapFailureToMessage(failure), StackTrace.current),
-      (user) {
-        authStateNotifier.setAuthenticated(user);
+    await result.fold(
+      (failure) async {
+        state = AsyncError(mapFailureToMessage(failure), StackTrace.current);
+      },
+      (user) async {
+        await authStateNotifier.authenticate(user);
+
         state = const AsyncData(null);
       },
     );

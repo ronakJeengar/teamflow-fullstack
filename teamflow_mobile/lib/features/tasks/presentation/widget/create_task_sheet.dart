@@ -1,59 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:teamflow_mobile/features/tasks/presentation/providers/task_providers.dart';
 
 import '../../../../core/ui/app_ui.dart';
 import '../../../projects/domain/entitties/project_entity.dart';
-import '../providers/team_details_providers.dart';
 
-class CreateProjectSheet extends HookConsumerWidget {
-  final String teamId;
+class CreateTaskSheet extends HookConsumerWidget {
+  final String projectId;
 
-  const CreateProjectSheet({
-    super.key,
-    required this.teamId,
-  });
+  const CreateTaskSheet({super.key, required this.projectId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final nameCtrl = useTextEditingController();
-    final nameError = useState<String?>(null);
+    final titleCtrl = useTextEditingController();
+    final titleError = useState<String?>(null);
 
-    final controllerState = ref.watch(createProjectControllerProvider);
+    final controllerState = ref.watch(createTaskControllerProvider);
     final isLoading = controllerState is AsyncLoading;
 
     Future<void> submit() async {
-      final name = nameCtrl.text.trim();
+      final title = titleCtrl.text.trim();
 
-      if (name.isEmpty) {
-        nameError.value = 'Project name is required';
+      if (title.isEmpty) {
+        titleError.value = 'Task title is required';
         return;
       }
 
-      nameError.value = null;
+      titleError.value = null;
 
       await ref
-          .read(createProjectControllerProvider.notifier)
-          .createProject(teamId: teamId, name: name);
+          .read(createTaskControllerProvider.notifier)
+          .createTask(projectId: projectId, title: title);
 
-      if (ref.read(createProjectControllerProvider) is! AsyncError) {
-        Navigator.of(context).pop();
+      if (ref.read(createTaskControllerProvider) is! AsyncError) {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 
     return AppSheetShell(
-      title: 'New project',
+      title: 'New Task',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppSheetLabel('Project name'),
+          const AppSheetLabel('Task Title'),
 
           AppSheetInput(
-            controller: nameCtrl,
+            controller: titleCtrl,
             hint: 'e.g. Mobile Redesign',
-            errorText: nameError.value,
+            errorText: titleError.value,
             autofocus: true,
-            onChanged: (_) => nameError.value = null,
+            onChanged: (_) => titleError.value = null,
             onSubmitted: (_) => submit(),
           ),
 

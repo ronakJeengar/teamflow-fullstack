@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/failures.dart';
+import '../entities/membership_entity.dart';
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {
@@ -14,4 +15,6 @@ abstract class AuthRepository {
   Future<Either<Failure, void>> logout();
 
   Future<Either<Failure, UserEntity?>> getCurrentUser();
+
+  Future<Either<Failure, List<MembershipEntity>>> getMyMemberships();
 }

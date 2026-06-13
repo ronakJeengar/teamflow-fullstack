@@ -24,12 +24,14 @@ class DeleteProjectController extends StateNotifier<AsyncValue<void>> {
     );
 
     result.fold(
-      (failure) =>
-          state = AsyncError(mapFailureToMessage(failure), StackTrace.current),
-      (_) {
-        teamDetailStateNotifier.removeProject(
-          projectId,
-        ); // mirrors teamsStateNotifier.removeTeam()
+          (failure) {
+        state = AsyncError(
+          mapFailureToMessage(failure),
+          StackTrace.current,
+        );
+      },
+          (_) {
+        teamDetailStateNotifier.removeProject(projectId);
         state = const AsyncData(null);
       },
     );

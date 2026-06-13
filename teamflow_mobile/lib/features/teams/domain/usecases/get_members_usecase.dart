@@ -1,4 +1,5 @@
 import 'package:dartz/dartz.dart';
+import 'package:flutter/cupertino.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
@@ -10,25 +11,19 @@ import '../repositories/team_members_repository.dart';
 class GetMembersParams {
   final String teamId;
 
-  const GetMembersParams({
-    required this.teamId,
-  });
+  const GetMembersParams({required this.teamId});
 }
 
 class GetMembersUseCase
-    extends UseCase<List<TeamMemberEntity>,
-        GetMembersParams> {
+    extends UseCase<List<TeamMemberEntity>, GetMembersParams> {
   final TeamMembersRepository repository;
 
   GetMembersUseCase(this.repository);
 
   @override
-  Future<Either<Failure,
-      List<TeamMemberEntity>>> call(
-      GetMembersParams params,
-      ) {
-    return repository.getMembers(
-      params.teamId,
-    );
+  Future<Either<Failure, List<TeamMemberEntity>>> call(
+    GetMembersParams params,
+  ) {
+    return repository.getMembers(params.teamId);
   }
 }

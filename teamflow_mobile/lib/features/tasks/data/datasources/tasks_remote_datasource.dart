@@ -28,8 +28,7 @@ abstract class TasksRemoteDataSource {
   Future<void> deleteTask(String taskId);
 }
 
-class TasksRemoteDataSourceImpl
-    implements TasksRemoteDataSource {
+class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
   final ApiService apiService;
 
   TasksRemoteDataSourceImpl(this.apiService);
@@ -44,16 +43,15 @@ class TasksRemoteDataSourceImpl
     String? priority,
   }) async {
     try {
+      final String? desc;
+      if (description == null) {
+        desc = '';
+      } else {
+        desc = description;
+      }
       final response = await apiService.post<TaskModel>(
         ApiEndpoints.createTask,
-        body: {
-          'title': title,
-          'description': description,
-          'projectId': projectId,
-          'assigneeId': assigneeId,
-          'status': status,
-          'priority': priority,
-        },
+        body: {'title': title, 'description': desc, 'projectId': projectId},
         fromJson: (json) => TaskModel.fromJson(json),
       );
 
@@ -73,16 +71,14 @@ class TasksRemoteDataSourceImpl
   }
 
   @override
-  Future<List<TaskModel>> getTasks(
-      String projectId,
-      ) async {
+  Future<List<TaskModel>> getTasks(String projectId) async {
     try {
       final response = await apiService.get<List<TaskModel>>(
         ApiEndpoints.getTasks(projectId),
-        fromJson: (json) =>
-            (json as List)
-                .map((e) => TaskModel.fromJson(e))
-                .toList(),
+        fromJson: (json) {
+          final items = (json as Map<String, dynamic>)['items'] as List;
+          return items.map((e) => TaskModel.fromJson(e)).toList();
+        },
       );
 
       if (response.status && response.data != null) {
@@ -105,15 +101,16 @@ class TasksRemoteDataSourceImpl
     String? assigneeId,
   }) async {
     try {
+      final body = <String, dynamic>{};
+      if (title != null) body['title'] = title;
+      if (description != null) body['description'] = description;
+      if (status != null) body['status'] = status;
+      if (priority != null) body['priority'] = priority;
+      if (assigneeId != null) body['assigneeId'] = assigneeId;
+
       final response = await apiService.patch<TaskModel>(
         ApiEndpoints.updateTask(taskId),
-        body: {
-          'title': title,
-          'description': description,
-          'status': status,
-          'priority': priority,
-          'assigneeId': assigneeId,
-        },
+        body: body,
         fromJson: (json) => TaskModel.fromJson(json),
       );
 

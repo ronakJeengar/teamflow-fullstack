@@ -10,7 +10,7 @@ import '../models/task_model.dart';
 class TasksRepositoryImpl implements TasksRepository {
   final TasksRemoteDataSource remoteDataSource;
 
-  TasksRepositoryImpl(this.remoteDataSource);
+  TasksRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, TaskEntity>> createTask({

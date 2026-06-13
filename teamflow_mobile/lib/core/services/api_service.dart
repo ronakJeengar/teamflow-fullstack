@@ -5,10 +5,13 @@ import '../models/api_response.dart';
 class ApiService {
   final Dio _dio;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  late final Future<void> _cookieReady;
   String? _cookie;
 
-  ApiService({String baseUrl = 'http://10.0.2.2:3000/api/v1/'})
-      : _dio = Dio(
+  ApiService({
+    // String baseUrl = 'https://teamflow-fullstack.onrender.com/api/v1/',
+    String baseUrl = 'http://10.0.2.2:3000/api/v1/',
+  }) : _dio = Dio(
     BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 10),
@@ -16,28 +19,47 @@ class ApiService {
       responseType: ResponseType.json,
     ),
   ) {
-    _initCookie();
+    _cookieReady = _initCookie();
 
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-    ));
+    _dio.interceptors.add(
+      LogInterceptor(requestBody: true, responseBody: true),
+    );
 
     _dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
+          await _cookieReady;
           if (_cookie != null) {
             options.headers['cookie'] = _cookie!;
           }
           handler.next(options);
         },
         onResponse: (response, handler) async {
-          final setCookie = response.headers.map['set-cookie']?.first;
-          if (setCookie != null) {
-            final accessToken = setCookie.split(';').first;
-            await _saveCookie(accessToken);
+          final cookies = response.headers.map['set-cookie'];
+          if (cookies != null) {
+            final parsed = <String>[];
+
+            for (final cookie in cookies) {
+              final nameValue = cookie.split(';').first.trim();
+              final name = nameValue.split('=').first.trim();
+
+              if (name == 'accessToken' || name == 'refreshToken') {
+                parsed.add(nameValue);
+              }
+            }
+
+            if (parsed.isNotEmpty) {
+              await _saveCookie(parsed.join('; '));
+            }
           }
           handler.next(response);
+        },
+        onError: (error, handler) async {
+          // If 401, clear the stored cookie so stale token doesn't persist
+          if (error.response?.statusCode == 401) {
+            await clearCookie();
+          }
+          handler.next(error);
         },
       ),
     );
@@ -46,7 +68,7 @@ class ApiService {
   /* ==================== COOKIE ==================== */
 
   Future<void> _initCookie() async {
-    _cookie = await _storage.read(key: 'accessToken');
+    _cookie ??= await _storage.read(key: 'accessToken');
   }
 
   Future<void> _saveCookie(String cookie) async {
@@ -175,8 +197,7 @@ class ApiService {
       }) {
     return _handleRequest<List<T>>(
       request: () => _dio.get(path, queryParameters: queryParameters),
-      fromJson: (json) =>
-          (json as List).map((e) => fromJson(e)).toList(),
+      fromJson: (json) => (json as List).map((e) => fromJson(e)).toList(),
     );
   }
 }

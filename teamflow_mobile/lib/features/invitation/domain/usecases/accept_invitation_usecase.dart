@@ -4,8 +4,6 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repository/invitation_repository.dart';
 
-/// ================= ACCEPT INVITATION =================
-
 class AcceptInvitationParams {
   final String token;
 
@@ -13,7 +11,7 @@ class AcceptInvitationParams {
 }
 
 class AcceptInvitationUseCase extends UseCase<void, AcceptInvitationParams> {
-  final InvitationsRepository repository;
+  final InvitationRepository repository;
 
   AcceptInvitationUseCase(this.repository);
 

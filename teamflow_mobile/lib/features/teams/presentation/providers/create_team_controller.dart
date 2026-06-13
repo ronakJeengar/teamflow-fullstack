@@ -13,18 +13,20 @@ class CreateTeamController extends StateNotifier<AsyncValue<void>> {
     required this.teamsStateNotifier,
   }) : super(const AsyncData(null));
 
-  Future<void> createTeam(String name) async {
+  Future<void> createTeam(String name, {String? description}) async {
     state = const AsyncLoading();
 
     final result = await createTeamUsecase(
-      CreateTeamParams(name: name),
+      CreateTeamParams(name: name, description: description),
     );
 
     result.fold(
-          (failure) =>
-      state = AsyncError(mapFailureToMessage(failure), StackTrace.current),
-          (team) {
-        teamsStateNotifier.addTeam(team);   // mirrors authStateNotifier.setAuthenticated(user)
+      (failure) =>
+          state = AsyncError(mapFailureToMessage(failure), StackTrace.current),
+      (team) {
+        teamsStateNotifier.addTeam(
+          team,
+        ); // mirrors authStateNotifier.setAuthenticated(user)
         state = const AsyncData(null);
       },
     );

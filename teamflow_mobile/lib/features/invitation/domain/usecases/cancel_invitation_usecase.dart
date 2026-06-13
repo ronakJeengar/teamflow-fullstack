@@ -4,8 +4,6 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repository/invitation_repository.dart';
 
-/// ================= CANCEL INVITATION =================
-
 class CancelInvitationParams {
   final String teamId;
   final String token;
@@ -14,7 +12,7 @@ class CancelInvitationParams {
 }
 
 class CancelInvitationUseCase extends UseCase<void, CancelInvitationParams> {
-  final InvitationsRepository repository;
+  final InvitationRepository repository;
 
   CancelInvitationUseCase(this.repository);
 

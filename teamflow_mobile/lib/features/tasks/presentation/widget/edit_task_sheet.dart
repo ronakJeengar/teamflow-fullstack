@@ -3,48 +3,46 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/ui/app_ui.dart';
-import '../../../projects/domain/entitties/project_entity.dart';
-import '../providers/team_details_providers.dart';
+import '../../domain/entitties/task_entity.dart';
+import '../providers/task_providers.dart';
 
-class EditProjectSheet extends HookConsumerWidget {
-  final String teamId;
-  final ProjectEntity project;
+class EditTaskSheet extends HookConsumerWidget {
+  final String projectId;
+  final TaskEntity task;
 
-  const EditProjectSheet({
-    super.key,
-    required this.project,
-    required this.teamId,
-  });
+  const EditTaskSheet({super.key, required this.task, required this.projectId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final nameCtrl = useTextEditingController(text: project.name);
-    final nameError = useState<String?>(null);
+    final titleCtrl = useTextEditingController(text: task.title);
+    final titleError = useState<String?>(null);
 
-    final controllerState = ref.watch(updateProjectControllerProvider);
+    final controllerState = ref.watch(updateTaskControllerProvider);
     final isLoading = controllerState is AsyncLoading;
 
     Future<void> submit() async {
-      final name = nameCtrl.text.trim();
+      final title = titleCtrl.text.trim();
 
-      if (name.isEmpty) {
-        nameError.value = 'Project name is required';
+      if (title.isEmpty) {
+        titleError.value = 'Task title is required';
         return;
       }
 
-      if (name == project.name) {
+      if (title == task.title) {
         Navigator.of(context).pop();
         return;
       }
 
-      nameError.value = null;
+      titleError.value = null;
 
       await ref
-          .read(updateProjectControllerProvider.notifier)
-          .updateProject(projectId: project.id, name: name, teamId: teamId);
+          .read(updateTaskControllerProvider.notifier)
+          .updateTask(taskId: task.id, title: title, projectId: projectId);
 
-      if (ref.read(updateProjectControllerProvider) is! AsyncError) {
-        Navigator.of(context).pop();
+      if (ref.read(updateTaskControllerProvider) is! AsyncError) {
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 
@@ -56,11 +54,11 @@ class EditProjectSheet extends HookConsumerWidget {
           const AppSheetLabel('Project name'),
 
           AppSheetInput(
-            controller: nameCtrl,
-            hint: project.name,
-            errorText: nameError.value,
+            controller: titleCtrl,
+            hint: task.title,
+            errorText: titleError.value,
             autofocus: true,
-            onChanged: (_) => nameError.value = null,
+            onChanged: (_) => titleError.value = null,
             onSubmitted: (_) => submit(),
           ),
 

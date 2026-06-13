@@ -4,8 +4,6 @@ import '../../../../core/error/failures.dart';
 import '../../../../core/usecase/usecase.dart';
 import '../repository/invitation_repository.dart';
 
-/// ================= SEND INVITATION =================
-
 class SendInvitationParams {
   final String teamId;
   final String email;
@@ -19,7 +17,7 @@ class SendInvitationParams {
 }
 
 class SendInvitationUseCase extends UseCase<void, SendInvitationParams> {
-  final InvitationsRepository repository;
+  final InvitationRepository repository;
 
   SendInvitationUseCase(this.repository);
 
