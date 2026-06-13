@@ -62,7 +62,18 @@ export const getTeamDetails = async (req: AuthRequest, res: Response) => {
     const team = await prisma.team.findUnique({
       where: { id: teamId },
       include: {
-        members: { include: { user: true } },
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                avatar: true,
+              },
+            },
+          },
+        },
         projects: {
           include: {
             _count: {
@@ -70,7 +81,6 @@ export const getTeamDetails = async (req: AuthRequest, res: Response) => {
             },
           },
         },
-        invitations: true,
       },
     });
 

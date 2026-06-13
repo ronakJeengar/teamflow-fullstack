@@ -17,13 +17,15 @@ export const createProject = async (req: AuthRequest, res: Response) => {
 
     if (!member) return failure(res, "Not a team member", 403);
 
+    // Only OWNER and ADMIN can create projects
+    if (!["OWNER", "ADMIN"].includes(member.role)) {
+      return failure(res, "Only admins and owners can create projects", 403);
+    }
+
     const project = await prisma.project.create({
-      data: {
-        name,
-        teamId,
-        ownerId: userId,
-      },
+      data: { name, teamId, ownerId: userId },
     });
+
     return success(res, "Project created successfully", project, 201);
   } catch (error) {
     console.error("Error creating project:", error);
@@ -61,7 +63,6 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
-
     const userId = req.user!.userId;
 
     const project = await prisma.project.findUnique({ where: { id } });
@@ -71,12 +72,11 @@ export const updateProject = async (req: AuthRequest, res: Response) => {
       where: { teamId: project.teamId, userId },
     });
 
-    const isProjectOwner = project.ownerId === userId;
-    const isPrivilegedMember =
-      member && ["OWNER", "ADMIN"].includes(member.role);
+    if (!member) return failure(res, "Not a team member", 403);
 
-    if (!isProjectOwner && !isPrivilegedMember) {
-      return failure(res, "Not allowed", 403);
+    // Only OWNER and ADMIN can update projects
+    if (!["OWNER", "ADMIN"].includes(member.role)) {
+      return failure(res, "Only admins and owners can update projects", 403);
     }
 
     const updatedProject = await prisma.project.update({
@@ -95,7 +95,6 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user!.userId;
-    console.log("Delete project request for ID:", id, "by user:", userId);
 
     const project = await prisma.project.findUnique({ where: { id } });
     if (!project) return failure(res, "Project not found", 404);
@@ -104,12 +103,11 @@ export const deleteProject = async (req: AuthRequest, res: Response) => {
       where: { teamId: project.teamId, userId },
     });
 
-    const isProjectOwner = project.ownerId === userId;
-    const isTeamAdminOrOwner =
-      member && ["OWNER", "ADMIN"].includes(member.role);
+    if (!member) return failure(res, "Not a team member", 403);
 
-    if (!isProjectOwner && !isTeamAdminOrOwner) {
-      return failure(res, "Not allowed", 403);
+    // Only OWNER and ADMIN can delete projects
+    if (!["OWNER", "ADMIN"].includes(member.role)) {
+      return failure(res, "Only admins and owners can delete projects", 403);
     }
 
     await prisma.project.delete({ where: { id } });

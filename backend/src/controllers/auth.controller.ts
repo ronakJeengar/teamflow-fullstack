@@ -148,6 +148,36 @@ export const getCurrentUser = async (
   }
 };
 
+/* ========================= MY MEMBERSHIPS ========================= */
+
+export const getMyMemberships = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId },
+      select: {
+        role: true,
+        team: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    success(res, "Memberships fetched successfully", memberships);
+  } catch (error) {
+    console.error("Get memberships error:", error);
+    failure(res, "Internal server error", 500);
+  }
+};
+
 /* ========================= REFRESH ========================= */
 
 export const refresh = (req: Request, res: Response): void => {
@@ -176,9 +206,7 @@ export const refresh = (req: Request, res: Response): void => {
       maxAge: 15 * 60 * 1000,
     });
 
-    success(res, "Token refreshed successfully", {
-      accessToken,
-    });
+    success(res, "Token refreshed successfully", { accessToken });
   } catch {
     failure(res, "Invalid refresh token", 403);
   }

@@ -19,7 +19,24 @@ export const sendInvitation = async (req: AuthRequest, res: Response) => {
       return failure(res, "Email is required", 400);
     }
 
-    // Verify inviter belongs to team
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+    });
+
+    if (!team) {
+      return failure(res, "Team not found", 404);
+    }
+
+    if (email.toLowerCase() === req.user!.email.toLowerCase()) {
+      return failure(res, "You cannot invite yourself", 400);
+    }
+
+    const allowedRoles = ["ADMIN", "MEMBER", "VIEWER"];
+
+    if (role && !allowedRoles.includes(role)) {
+      return failure(res, "Invalid role", 400);
+    }
+
     const inviterMembership = await prisma.teamMember.findUnique({
       where: {
         teamId_userId: {
@@ -32,11 +49,6 @@ export const sendInvitation = async (req: AuthRequest, res: Response) => {
     if (!inviterMembership) {
       return failure(res, "You are not a member of this team", 403);
     }
-
-    // Optional:
-    // if (!["OWNER", "ADMIN"].includes(inviterMembership.role)) {
-    //   return failure(res, "Insufficient permissions", 403);
-    // }
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
@@ -89,6 +101,7 @@ export const sendInvitation = async (req: AuthRequest, res: Response) => {
     return success(res, "Invitation sent successfully", { invite }, 201);
   } catch (error) {
     console.error("Send Invitation error:", error);
+
     return failure(res, "Internal server error", 500);
   }
 };
@@ -101,6 +114,7 @@ export const acceptInvitation = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const userEmail = req.user!.email;
+
     const { token } = req.params;
 
     const invite = await prisma.teamInvitation.findUnique({
@@ -114,7 +128,9 @@ export const acceptInvitation = async (req: AuthRequest, res: Response) => {
     if (invite.expiresAt < new Date()) {
       await prisma.teamInvitation.update({
         where: { token },
-        data: { status: "EXPIRED" },
+        data: {
+          status: "EXPIRED",
+        },
       });
 
       return failure(res, "Invitation expired", 410);
@@ -128,7 +144,6 @@ export const acceptInvitation = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    // IMPORTANT SECURITY CHECK
     if (invite.email.toLowerCase() !== userEmail.toLowerCase()) {
       return failure(
         res,
@@ -149,7 +164,9 @@ export const acceptInvitation = async (req: AuthRequest, res: Response) => {
     if (alreadyMember) {
       await prisma.teamInvitation.update({
         where: { token },
-        data: { status: "CANCELLED" },
+        data: {
+          status: "CANCELLED",
+        },
       });
 
       return failure(res, "You are already a member of this team", 400);
@@ -209,7 +226,16 @@ export const cancelInvitation = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    if (invite.invitedById !== userId) {
+    const member = await prisma.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId: invite.teamId,
+          userId,
+        },
+      },
+    });
+
+    if (!member || !["OWNER", "ADMIN"].includes(member.role)) {
       return failure(res, "Unauthorized", 403);
     }
 
@@ -223,6 +249,7 @@ export const cancelInvitation = async (req: AuthRequest, res: Response) => {
     return success(res, "Invitation cancelled successfully", null, 200);
   } catch (error) {
     console.error("Cancel Invitation error:", error);
+
     return failure(res, "Internal server error", 500);
   }
 };
@@ -251,6 +278,7 @@ export const getMyInvitations = async (req: AuthRequest, res: Response) => {
     const invitations = await prisma.teamInvitation.findMany({
       where: {
         email,
+        status: "PENDING",
       },
       include: {
         team: {
@@ -269,6 +297,51 @@ export const getMyInvitations = async (req: AuthRequest, res: Response) => {
     return success(res, "Invitations fetched", { invitations }, 200);
   } catch (error) {
     console.error("Get Invitations error:", error);
+
+    return failure(res, "Internal server error", 500);
+  }
+};
+
+export const getTeamInvitations = async (req: AuthRequest, res: Response) => {
+  try {
+    const { teamId } = req.params;
+
+    await prisma.teamInvitation.updateMany({
+      where: {
+        teamId,
+        status: "PENDING",
+        expiresAt: {
+          lt: new Date(),
+        },
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    });
+
+    const invitations = await prisma.teamInvitation.findMany({
+      where: {
+        teamId,
+        status: "PENDING",
+      },
+      include: {
+        invitedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return success(res, "Invitations fetched", { invitations }, 200);
+  } catch (error) {
+    console.error("Get Team Invitations error:", error);
+
     return failure(res, "Internal server error", 500);
   }
 };

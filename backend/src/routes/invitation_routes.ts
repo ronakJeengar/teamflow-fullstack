@@ -9,14 +9,22 @@ import {
   cancelInvitation,
   sendInvitation,
   getMyInvitations,
+  getTeamInvitations,
 } from "../controllers/invitation.controller.js";
 
 const router = Router();
 
 router.use(authenticate);
 
-// Get current user's invitations
+// Current user's pending invitations
 router.get("/my", getMyInvitations);
+
+// Team pending invitations
+router.get(
+  "/:teamId/invitations",
+  requireTeamRole([TeamMemberRole.OWNER, TeamMemberRole.ADMIN]),
+  getTeamInvitations,
+);
 
 // Send invitation
 router.post(
