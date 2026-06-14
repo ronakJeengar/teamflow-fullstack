@@ -7,7 +7,7 @@ export const useTeamMembers = (teamId: string) => {
     queryKey: teamMembersKey(teamId),
     queryFn: async () => {
       const res = await api.get(`/teams/${teamId}/members`);
-      return res.data;
+      return res.data.data;
     },
   });
 };
