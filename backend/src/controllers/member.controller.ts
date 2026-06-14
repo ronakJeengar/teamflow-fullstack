@@ -7,8 +7,7 @@ import { failure, success } from "../utils/response.js";
 // Get Members
 export const getTeamMembers = async (req: AuthRequest, res: Response) => {
   try {
-    const { teamId } = req.params;
-
+    const teamId = String(req.params.teamId);
     const members = await prisma.teamMember.findMany({
       where: { teamId },
       include: {
@@ -45,8 +44,7 @@ export const addMember = async (req: AuthRequest, res: Response) => {
       where: { teamId_userId: { teamId, userId } },
     });
 
-    if (existing)
-      return failure(res, "User already in team", 400);
+    if (existing) return failure(res, "User already in team", 400);
 
     const member = await prisma.teamMember.create({
       data: { teamId, userId, role: role || "MEMBER" },

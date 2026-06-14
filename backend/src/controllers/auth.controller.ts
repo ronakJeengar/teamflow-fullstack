@@ -5,38 +5,27 @@ import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
 import { failure, success } from "../utils/response.js";
 
-// Extend Request type
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        role?: string;
-      };
-    }
-  }
-}
-
-const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET;
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET;
-
-if (!JWT_ACCESS_SECRET || !JWT_REFRESH_SECRET) {
-  throw new Error("JWT secrets are not defined in environment variables");
-}
+const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
 /* ========================= REGISTER ========================= */
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return failure(res, "All fields are required", 400);
+      failure(res, "All fields are required", 400);
+      return;
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
     if (existingUser) {
-      return failure(res, "Email already registered", 400);
+      failure(res, "Email already registered", 400);
+      return;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -56,31 +45,41 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
-    return success(res, "Registration successful", user, 201);
+    success(res, "Registration successful", user, 201);
   } catch (error) {
     console.error("Register error:", error);
-    return failure(res, "Internal server error", 500);
+    failure(res, "Internal server error", 500);
   }
 };
 
 /* ========================= LOGIN ========================= */
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<void> => {
   try {
     const { email, password } = req.body;
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
     if (!user) {
-      return failure(res, "Invalid credentials", 401);
+      failure(res, "Invalid credentials", 401);
+      return;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
+
     if (!isMatch) {
-      return failure(res, "Invalid credentials", 401);
+      failure(res, "Invalid credentials", 401);
+      return;
     }
 
     const accessToken = jwt.sign(
-      { userId: user.id, role: user.role },
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      },
       JWT_ACCESS_SECRET,
       { expiresIn: "15m" },
     );
@@ -89,23 +88,21 @@ export const login = async (req: Request, res: Response) => {
       expiresIn: "7d",
     });
 
-    // Set access token cookie
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
 
-    // Set refresh token cookie
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return success(res, "Login successful", {
+    success(res, "Login successful", {
       id: user.id,
       name: user.name,
       email: user.email,
@@ -113,16 +110,20 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    return failure(res, "Internal server error", 500);
+    failure(res, "Internal server error", 500);
   }
 };
 
 /* ========================= CURRENT USER ========================= */
 
-export const getCurrentUser = async (req: AuthRequest, res: Response) => {
+export const getCurrentUser = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
   try {
     if (!req.user) {
-      return res.sendStatus(204);
+      res.sendStatus(204);
+      return;
     }
 
     const user = await prisma.user.findUnique({
@@ -136,23 +137,55 @@ export const getCurrentUser = async (req: AuthRequest, res: Response) => {
     });
 
     if (!user) {
-      return failure(res, "User not found", 404);
+      failure(res, "User not found", 404);
+      return;
     }
 
-    return success(res, "User fetched successfully", user);
+    success(res, "User fetched successfully", user);
   } catch (error) {
     console.error("Get current user error:", error);
-    return failure(res, "Internal server error", 500);
+    failure(res, "Internal server error", 500);
+  }
+};
+
+/* ========================= MY MEMBERSHIPS ========================= */
+
+export const getMyMemberships = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+
+    const memberships = await prisma.teamMember.findMany({
+      where: { userId },
+      select: {
+        role: true,
+        team: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    success(res, "Memberships fetched successfully", memberships);
+  } catch (error) {
+    console.error("Get memberships error:", error);
+    failure(res, "Internal server error", 500);
   }
 };
 
 /* ========================= REFRESH ========================= */
 
-export const refresh = (req: Request, res: Response) => {
+export const refresh = (req: Request, res: Response): void => {
   const token = req.cookies?.refreshToken;
 
   if (!token) {
-    return res.sendStatus(204);
+    res.sendStatus(204);
+    return;
   }
 
   try {
@@ -166,22 +199,24 @@ export const refresh = (req: Request, res: Response) => {
       { expiresIn: "15m" },
     );
 
-    // Set new access token cookie
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 15 * 60 * 1000, // 15 minutes
+      maxAge: 15 * 60 * 1000,
     });
 
-    return success(res, "Token refreshed successfully", { accessToken });
-  } catch (error) {
-    return failure(res, "Invalid refresh token", 403);
+    success(res, "Token refreshed successfully", { accessToken });
+  } catch {
+    failure(res, "Invalid refresh token", 403);
   }
 };
 
-export const logout = (req: Request, res: Response) => {
+/* ========================= LOGOUT ========================= */
+
+export const logout = (req: Request, res: Response): void => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
-  return success(res, "Logged out successfully", null);
+
+  success(res, "Logged out successfully", null);
 };

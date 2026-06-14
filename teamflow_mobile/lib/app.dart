@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
 
 import 'core/router/app_router.dart';
 
@@ -11,9 +12,10 @@ class MyApp extends ConsumerWidget {
     final router = ref.watch(goRouterProvider);
 
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false ,
       routerConfig: router,
       title: 'Flutter Clean Auth',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: AppTheme.light,
     );
   }
 }

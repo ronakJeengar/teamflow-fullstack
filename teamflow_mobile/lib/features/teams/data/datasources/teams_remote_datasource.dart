@@ -4,7 +4,7 @@ import '../../../../core/services/api_service.dart';
 
 import '../models/team_model.dart';
 
-abstract class TeamRemoteDataSource {
+abstract class TeamsRemoteDataSource {
   /// Create Team
   Future<Team> createTeam({required String name, String? description});
 
@@ -25,10 +25,10 @@ abstract class TeamRemoteDataSource {
   Future<void> deleteTeam(String teamId);
 }
 
-class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
+class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
   final ApiService apiService;
 
-  TeamRemoteDataSourceImpl(this.apiService);
+  TeamsRemoteDataSourceImpl(this.apiService);
 
   /// CREATE TEAM
   @override
@@ -80,7 +80,8 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
   Future<Team> getTeamById(String teamId) async {
     try {
       final response = await apiService.get<Team>(
-        '${ApiEndpoints.getTeamById}$teamId',
+        ApiEndpoints.getTeamById(teamId),
+        // ← was: '${ApiEndpoints.getTeamById}$teamId'
         fromJson: (json) => Team.fromJson(json),
       );
 
@@ -92,6 +93,7 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
         );
       }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('Failed to fetch team');
     }
   }
@@ -105,7 +107,8 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
   }) async {
     try {
       final response = await apiService.put<Team>(
-        '${ApiEndpoints.updateTeam}$teamId',
+        ApiEndpoints.updateTeam(teamId),
+        // ← was: '${ApiEndpoints.updateTeam}$teamId'
         body: {'name': name, 'description': description},
         fromJson: (json) => Team.fromJson(json),
       );
@@ -120,6 +123,7 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
         );
       }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('Update team failed');
     }
   }
@@ -129,7 +133,7 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
   Future<void> deleteTeam(String teamId) async {
     try {
       final response = await apiService.delete(
-        '${ApiEndpoints.deleteTeam}$teamId',
+        ApiEndpoints.deleteTeam(teamId),
         fromJson: (_) => {},
       );
 
@@ -141,6 +145,7 @@ class TeamRemoteDataSourceImpl implements TeamRemoteDataSource {
         );
       }
     } catch (e) {
+      if (e is ServerException) rethrow;
       throw ServerException('Delete team failed');
     }
   }

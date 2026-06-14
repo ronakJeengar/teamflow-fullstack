@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
 import '../../../../core/navigation/navigation_helper.dart';
+import '../../../../core/ui/app_tokens.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/ui/shared_widgets.dart'; // ← replaces all the private _T / widget classes
 import '../providers/providers.dart';
-import '../widgets/auth_header.dart';
-import '../widgets/auth_text_field.dart';
-import '../widgets/auth_button.dart';
-import '../widgets/error_message.dart';
-import '../widgets/auth_divider.dart';
-import '../widgets/auth_navigation_text.dart';
 
 class LoginPage extends HookConsumerWidget {
   const LoginPage({super.key});
@@ -18,105 +15,156 @@ class LoginPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final formKey = useMemoized(() => GlobalKey<FormState>());
-    final emailController = useTextEditingController();
-    final passwordController = useTextEditingController();
-    final obscurePassword = useState(true);
+    final emailCtrl = useTextEditingController();
+    final passwordCtrl = useTextEditingController();
+    final obscure = useState(true);
+    final emailFocus = useFocusNode();
+    final passwordFocus = useFocusNode();
 
     final loginState = ref.watch(loginControllerProvider);
+    final isLoading = loginState.isLoading;
 
     void handleLogin() {
       FocusScope.of(context).unfocus();
-
       if (formKey.currentState?.validate() ?? false) {
+        HapticFeedback.lightImpact();
         ref
             .read(loginControllerProvider.notifier)
-            .login(emailController.text.trim(), passwordController.text.trim());
+            .login(emailCtrl.text.trim(), passwordCtrl.text.trim());
       }
     }
 
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
+      backgroundColor: AppTokens.bg,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const AuthHeader(
-                    icon: Icons.lock_outline,
-                    title: 'Welcome Back',
-                    subtitle: 'Sign in to continue',
-                  ),
-                  const SizedBox(height: 48),
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+              AppTokens.s24, AppTokens.s48, AppTokens.s24, AppTokens.s24 + bottom),
+          child: Form(
+            key: formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AppBrandMark(),
+                const SizedBox(height: AppTokens.s32),
 
-                  AuthTextField(
-                    controller: emailController,
-                    labelText: 'Email',
-                    hintText: 'Enter your email',
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: Validators.validateEmail,
+                const Text(
+                  'Welcome back',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w800,
+                    color: AppTokens.textPrimary,
+                    letterSpacing: -1.0,
+                    height: 1.05,
                   ),
-                  const SizedBox(height: 16),
+                ),
+                const SizedBox(height: AppTokens.s6),
+                const Text(
+                  'Sign in to your workspace',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppTokens.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
 
-                  AuthTextField(
-                    controller: passwordController,
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    prefixIcon: Icons.lock_outlined,
-                    obscureText: obscurePassword.value,
-                    validator: Validators.validatePassword,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        obscurePassword.value
-                            ? Icons.visibility_outlined
-                            : Icons.visibility_off_outlined,
+                const SizedBox(height: AppTokens.s32),
+
+                const AppFieldLabel(label: 'Email address'),
+                const SizedBox(height: AppTokens.s8),
+                AppInputField(
+                  controller: emailCtrl,
+                  focusNode: emailFocus,
+                  hint: 'you@company.com',
+                  icon: Icons.alternate_email_rounded,
+                  keyboardType: TextInputType.emailAddress,
+                  textInputAction: TextInputAction.next,
+                  onSubmitted: (_) => passwordFocus.requestFocus(),
+                  validator: Validators.validateEmail,
+                  enabled: !isLoading,
+                ),
+
+                const SizedBox(height: AppTokens.s20),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const AppFieldLabel(label: 'Password'),
+                    GestureDetector(
+                      onTap: () {/* Handle forgot password */},
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTokens.brand,
+                        ),
                       ),
-                      onPressed: () =>
-                          obscurePassword.value = !obscurePassword.value,
                     ),
+                  ],
+                ),
+                const SizedBox(height: AppTokens.s8),
+                AppInputField(
+                  controller: passwordCtrl,
+                  focusNode: passwordFocus,
+                  hint: '••••••••',
+                  icon: Icons.lock_outline_rounded,
+                  obscureText: obscure.value,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => handleLogin(),
+                  validator: Validators.validatePassword,
+                  enabled: !isLoading,
+                  suffix: AppVisibilityToggle(
+                    obscure: obscure.value,
+                    onToggle: () => obscure.value = !obscure.value,
                   ),
-                  const SizedBox(height: 8),
+                ),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () {
-                        // Handle forgot password
-                      },
-                      child: const Text('Forgot Password?'),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                const SizedBox(height: AppTokens.s32),
 
-                  AuthButton(
-                    onPressed: handleLogin,
-                    isLoading: loginState.isLoading,
-                    text: 'Login',
-                  ),
-                  const SizedBox(height: 16),
+                AppPrimaryButton(
+                  label: 'Sign in',
+                  isLoading: isLoading,
+                  onPressed: handleLogin,
+                ),
 
-                  if (loginState.hasError)
-                    ErrorMessage(message: loginState.error.toString()),
-
-                  const SizedBox(height: 24),
-                  const AuthDivider(),
-                  const SizedBox(height: 24),
-
-                  AuthNavigationText(
-                    question: "Don't have an account? ",
-                    actionText: 'Sign Up',
-                    onTap: nav.goToSignup,
+                if (loginState.hasError) ...[
+                  const SizedBox(height: AppTokens.s16),
+                  AppErrorBanner(
+                    message: _friendlyError(loginState.error.toString()),
                   ),
                 ],
-              ),
+
+                const SizedBox(height: AppTokens.s32),
+                const AppOrDivider(),
+                const SizedBox(height: AppTokens.s24),
+
+                AppAuthNavPrompt(
+                  question: "Don't have an account?",
+                  actionLabel: 'Create account',
+                  onTap: nav.goToSignup,
+                ),
+              ],
             ),
           ),
         ),
       ),
     );
+  }
+
+  String _friendlyError(String raw) {
+    final lower = raw.toLowerCase();
+    if (lower.contains('credential') ||
+        lower.contains('password') ||
+        lower.contains('invalid')) {
+      return 'Incorrect email or password. Please try again.';
+    }
+    if (lower.contains('network') || lower.contains('socket')) {
+      return 'Connection failed. Check your internet and retry.';
+    }
+    return 'Something went wrong. Please try again.';
   }
 }

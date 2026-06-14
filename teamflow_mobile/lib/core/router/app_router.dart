@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:teamflow_mobile/core/router/routes.dart';
 
 import '../../features/auth/presentation/pages/home_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -9,57 +8,120 @@ import '../../features/auth/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/providers/auth_notifier_listener.dart';
 import '../../features/auth/presentation/providers/auth_state_notifier.dart';
 import '../../features/auth/presentation/providers/providers.dart';
+import '../../features/invitation/presentation/pages/invitation_page.dart';
+import '../../features/tasks/presentation/pages/tasks_page.dart';
+import '../../features/teams/presentation/pages/team_detail_page.dart';
+import '../../features/teams/presentation/pages/teams_page.dart';
 import '../navigation/navigation_helper.dart';
+import 'routes.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authStateNotifierProvider.notifier);
-  final refreshListenable = AuthNotifierListener(authNotifier);
 
   return GoRouter(
-    navigatorKey: NavigationHelper.navigatorKey, // Add this line
+    navigatorKey: NavigationHelper.navigatorKey,
     initialLocation: Routes.splash,
-    refreshListenable: refreshListenable,
+    refreshListenable: AuthNotifierListener(authNotifier),
+
     routes: [
       GoRoute(
         path: Routes.splash,
         name: RouteNames.splash,
         builder: (_, __) => const SplashPage(),
       ),
+
       GoRoute(
         path: Routes.login,
         name: RouteNames.login,
         builder: (_, __) => const LoginPage(),
       ),
+
       GoRoute(
         path: Routes.signup,
         name: RouteNames.signup,
         builder: (_, __) => const SignUpPage(),
       ),
+
       GoRoute(
         path: Routes.home,
         name: RouteNames.home,
         builder: (_, __) => const HomePage(),
       ),
+
+      GoRoute(
+        path: Routes.teams,
+        name: RouteNames.teams,
+        builder: (_, __) => const TeamsPage(),
+      ),
+
+      GoRoute(
+        path: Routes.teamDetails,
+        name: RouteNames.teamDetails,
+        builder: (_, state) {
+          final teamId = state.pathParameters['teamId']!;
+          return TeamDetailPage(teamId: teamId);
+        },
+      ),
+
+      GoRoute(
+        path: Routes.invitations,
+        name: RouteNames.invitations,
+        builder: (_, __) => const InvitationsPage(),
+      ),
+
+      GoRoute(
+        path: Routes.tasks,
+        name: RouteNames.tasks,
+        builder: (_, state) {
+          final projectId = state.pathParameters['projectId']!;
+          return TasksPage(projectId: projectId);
+        },
+      ),
     ],
+
     redirect: (context, state) {
       final authState = ref.read(authStateNotifierProvider);
-      final currentLocation = state.fullPath;
+      final currentLocation = state.matchedLocation;
 
-      if (authState.status == AuthStatus.unknown) return Routes.splash;
-
-      if (authState.status == AuthStatus.unauthenticated &&
-          currentLocation != Routes.login &&
-          currentLocation != Routes.signup) {
-        return Routes.login;
+      // Still checking auth state
+      if (authState.status == AuthStatus.unknown) {
+        return currentLocation == Routes.splash ? null : Routes.splash;
       }
 
-      if (authState.status == AuthStatus.authenticated &&
-          (currentLocation == Routes.login ||
-              currentLocation == Routes.signup ||
-              currentLocation == Routes.splash)) {
-        return Routes.home;
+      // Not logged in
+      if (authState.status == AuthStatus.unauthenticated) {
+        final isAuthPage =
+            currentLocation == Routes.login || currentLocation == Routes.signup;
+
+        return isAuthPage ? null : Routes.login;
       }
 
+      // Logged in
+      if (authState.status == AuthStatus.authenticated) {
+        final isAuthPage =
+            currentLocation == Routes.splash ||
+            currentLocation == Routes.login ||
+            currentLocation == Routes.signup;
+
+        if (isAuthPage) {
+          final memberships = authState.memberships;
+
+          // No memberships yet
+          if (memberships.isEmpty) {
+            return Routes.teams;
+          }
+
+          // Single membership and not admin/owner
+          if (memberships.length == 1) {
+            final membership = memberships.first;
+
+            if (!['OWNER', 'ADMIN'].contains(membership.role)) {
+              return Routes.teamDetailPath(membership.team.id);
+            }
+          }
+          return Routes.teams;
+        }
+      }
       return null;
     },
   );

@@ -2,7 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'user_entity.freezed.dart';
 
-enum UserRole { admin, member }
+enum UserRole { admin, member, user }
 
 @freezed
 abstract class UserEntity with _$UserEntity {
@@ -10,6 +10,6 @@ abstract class UserEntity with _$UserEntity {
     required String id,
     required String name,
     required String email,
-    required UserRole role,
+    String? avatar,
   }) = _UserEntity;
 }

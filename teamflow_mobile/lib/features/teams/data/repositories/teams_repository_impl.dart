@@ -3,14 +3,14 @@ import 'package:teamflow_mobile/core/mappers/team_mapper.dart';
 import '../../../../core/error/exceptions.dart';
 import '../../../../core/error/failures.dart';
 import '../../domain/entities/team_entity.dart';
-import '../../domain/repositories/team_repository.dart';
+import '../../domain/repositories/teams_repository.dart';
 import '../datasources/teams_remote_datasource.dart';
 import '../models/team_model.dart';
 
-class TeamRepositoryImpl implements TeamRepository {
-  final TeamRemoteDataSource remoteDataSource;
+class TeamsRepositoryImpl implements TeamsRepository {
+  final TeamsRemoteDataSource remoteDataSource;
 
-  TeamRepositoryImpl({required this.remoteDataSource});
+  TeamsRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<Either<Failure, TeamEntity>> createTeam({

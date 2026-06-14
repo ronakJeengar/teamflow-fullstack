@@ -43,7 +43,7 @@ export default function Tasks() {
     null,
   );
 
-  const tasks = useMemo(() => data?.data || [], [data]);
+  const tasks = useMemo(() => data || [], [data]);
 
   const serverBoard: TaskColumns = useMemo(
     () => ({

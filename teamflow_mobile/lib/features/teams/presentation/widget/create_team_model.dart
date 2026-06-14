@@ -2,86 +2,75 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
+import '../../../../core/ui/app_ui.dart';
 import '../providers/teams_providers.dart';
-import 'model_scaffold.dart';
 
-class CreateTeamModal extends HookConsumerWidget {
-  final VoidCallback onClose;
-
-  const CreateTeamModal({super.key, required this.onClose});
+class CreateTeamSheet extends HookConsumerWidget {
+  const CreateTeamSheet({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final nameCtrl = useTextEditingController();
+    final descCtrl = useTextEditingController();
+    final nameError = useState<String?>(null);
     final controllerState = ref.watch(createTeamControllerProvider);
     final isLoading = controllerState is AsyncLoading;
 
     Future<void> submit() async {
-      if (nameCtrl.text.trim().isEmpty) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Team name is required')));
+      final name = nameCtrl.text.trim();
+      if (name.isEmpty) {
+        nameError.value = 'Team name is required';
         return;
       }
+      nameError.value = null;
+
+      final description = descCtrl.text.trim();
       await ref
           .read(createTeamControllerProvider.notifier)
-          .createTeam(nameCtrl.text.trim());
+          .createTeam(
+            name,
+            description: description.isEmpty ? null : description,
+          );
 
-      // Only close if no error occurred
       if (ref.read(createTeamControllerProvider) is! AsyncError) {
-        onClose();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 
-    return ModalScaffold(
+    return AppSheetShell(
+      title: 'New team',
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Create Team',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          TextField(
+          const AppSheetLabel('Team name'),
+          AppSheetInput(
             controller: nameCtrl,
+            hint: 'e.g. Engineering, Design',
+            errorText: nameError.value,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Team name',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-            ),
+            textInputAction: TextInputAction.next,
+            onChanged: (_) => nameError.value = null,
             onSubmitted: (_) => submit(),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(onPressed: onClose, child: const Text('Cancel')),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: isLoading ? null : submit,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2563EB),
-                ),
-                child: isLoading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text(
-                        'Create',
-                        style: TextStyle(color: Colors.white),
-                      ),
-              ),
-            ],
+
+          const SizedBox(height: AppSpacing.lg),
+          const AppSheetLabel('Description (optional)'),
+          AppSheetInput(
+            controller: descCtrl,
+            hint: 'What does this team work on?',
+            maxLines: 3,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => submit(),
+          ),
+
+          const SizedBox(height: 18),
+          AppSheetActions(
+            confirmLabel: 'Create',
+            isLoading: isLoading,
+            onCancel: isLoading ? null : () => Navigator.of(context).pop(),
+            onConfirm: submit,
           ),
         ],
       ),

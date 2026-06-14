@@ -1,17 +1,24 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
-import http from 'http';
-import { Server } from 'socket.io';
-import app from './app.js';
+import http from "http";
+import { Server } from "socket.io";
+import app from "./app.js";
 
 const server = http.createServer(app);
 
 export const io = new Server(server, {
-  cors: { origin: '*' },
+  cors: { origin: "*" },
 });
 
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+});
+
+app.get("/test", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Test is Working",
+  });
 });
 
 const PORT = process.env.PORT || 5000;

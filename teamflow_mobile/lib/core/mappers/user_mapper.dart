@@ -8,7 +8,7 @@ extension UserModelMapper on UserModel {
       id: id,
       name: name,
       email: email,
-      role: _stringToUserRole(role),
+      avatar: avatar,
     );
   }
 }
@@ -20,27 +20,7 @@ extension UserEntityMapper on UserEntity {
       id: id,
       name: name,
       email: email,
-      role: _userRoleToString(role),
+      avatar: avatar,
     );
   }
-}
-
-/// String → Enum
-UserRole _stringToUserRole(String role) {
-  switch (role.toLowerCase()) {
-    case 'admin':
-      return UserRole.admin;
-
-    case 'member':
-    case 'user':
-      return UserRole.member;
-
-    default:
-      throw Exception('Unknown role: $role');
-  }
-}
-
-/// Enum → String
-String _userRoleToString(UserRole role) {
-  return role.name;
 }

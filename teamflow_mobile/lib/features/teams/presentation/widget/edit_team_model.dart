@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/model_scaffold.dart';
 import '../providers/teams_providers.dart';
-import 'model_scaffold.dart';
 
 class EditTeamModal extends ConsumerWidget {
   final TextEditingController nameController;
@@ -24,55 +24,67 @@ class EditTeamModal extends ConsumerWidget {
     ref.watch(updateTeamControllerProvider) is AsyncLoading;
 
     return ModalScaffold(
+      onDismiss: isLoading ? null : onCancel,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Edit Team',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-          const SizedBox(height: 16),
+          // ── Title ──────────────────────────────────────────────────────
+          Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: AppRadius.sm,
+                ),
+                child: const Icon(
+                  Icons.edit_outlined,
+                  size: 18,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text('Edit Team', style: AppTextStyles.heading2),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xxl),
+
+          // ── Name field ─────────────────────────────────────────────────
+          const ModalLabel('Team Name'),
           TextField(
             controller: nameController,
             autofocus: true,
+            textInputAction: TextInputAction.next,
             decoration: const InputDecoration(
-              hintText: 'Team Name',
-              border: OutlineInputBorder(),
-              contentPadding:
-              EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintText: 'Team name',
+              prefixIcon: Icon(
+                Icons.group_outlined,
+                size: 18,
+                color: AppColors.textTertiary,
+              ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.lg),
+
+          // ── Description field ──────────────────────────────────────────
+          const ModalLabel('Description'),
           TextField(
             controller: descController,
             maxLines: 3,
             decoration: const InputDecoration(
-              hintText: 'Description',
-              border: OutlineInputBorder(),
-              contentPadding:
-              EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              hintText: 'What does this team work on?',
             ),
           ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              TextButton(onPressed: onCancel, child: const Text('Cancel')),
-              const SizedBox(width: 8),
-              ElevatedButton(
-                onPressed: isLoading ? null : onSave,
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2563EB)),
-                child: isLoading
-                    ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
-                )
-                    : const Text('Save',
-                    style: TextStyle(color: Colors.white)),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.xxl),
+
+          // ── Actions ────────────────────────────────────────────────────
+          ModalActions(
+            onCancel: onCancel,
+            onConfirm: onSave,
+            confirmLabel: 'Save Changes',
+            isLoading: isLoading,
           ),
         ],
       ),
