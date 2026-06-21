@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -301,7 +302,7 @@ class _Header extends StatelessWidget {
                     icon: Icons.arrow_back_ios_new_rounded,
                     onTap: onBack!,
                   ),
-                  const SizedBox(width: AppTokens.s10),
+                  SizedBox(width: AppTokens.s10),
                 ],
                 Expanded(
                   child: Row(
@@ -312,12 +313,12 @@ class _Header extends StatelessWidget {
                         height: 56,
                         decoration: BoxDecoration(
                           color: AppTokens.brand,
-                          borderRadius: BorderRadius.circular(AppTokens.r16),
+                          borderRadius: BorderRadius.circular(8),
                         ),
                         child: Center(
                           child: Text(
                             _headerInitials(team.name),
-                            style: const TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
                               color: Colors.white,
@@ -326,7 +327,7 @@ class _Header extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(width: AppTokens.s14),
+                      SizedBox(width: AppTokens.s14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -338,7 +339,7 @@ class _Header extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             if (_createdLabel.isNotEmpty) ...[
-                              const SizedBox(height: AppTokens.s4),
+                              SizedBox(height: AppTokens.s4),
                               Text(_createdLabel, style: AppTokens.labelXs),
                             ],
                           ],
@@ -352,7 +353,7 @@ class _Header extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
+          SizedBox(height: AppTokens.s20),
 
           // ── Stats row ──────────────────────────────────────────────────────
           Padding(
@@ -366,7 +367,7 @@ class _Header extends StatelessWidget {
                   color: AppTokens.brand,
                   surface: AppTokens.brandSurface,
                 ),
-                const SizedBox(width: AppTokens.s10),
+                SizedBox(width: AppTokens.s10),
                 _StatCard(
                   value: '$memberCount',
                   label: 'Members',
@@ -374,7 +375,7 @@ class _Header extends StatelessWidget {
                   color: AppTokens.success,
                   surface: AppTokens.successSurface,
                 ),
-                const SizedBox(width: AppTokens.s10),
+                SizedBox(width: AppTokens.s10),
                 _StatCard(
                   value: '$totalTasks',
                   label: 'Tasks',
@@ -386,7 +387,7 @@ class _Header extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
+          SizedBox(height: AppTokens.s20),
 
           // ── Tabs + CTA ─────────────────────────────────────────────────────
           Padding(
@@ -401,7 +402,7 @@ class _Header extends StatelessWidget {
                     onChanged: onTabChanged,
                   ),
                 ),
-                const SizedBox(width: AppTokens.s10),
+                SizedBox(width: AppTokens.s10),
                 _PrimaryBtn(
                   icon: tabIndex == 0
                       ? Icons.add_rounded
@@ -415,8 +416,8 @@ class _Header extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
-          Container(height: 1, color: const Color(0xFFF1F5F9)),
+          SizedBox(height: AppTokens.s20),
+          Container(height: 1, color: AppTokens.border),
         ],
       ),
     );
@@ -458,16 +459,17 @@ class _StatCard extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: surface,
-          borderRadius: BorderRadius.circular(AppTokens.r14),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppTokens.border, width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Icon(icon, size: 16, color: color),
-            const SizedBox(height: AppTokens.s8),
+            SizedBox(height: AppTokens.s8),
             Text(
               value,
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w800,
                 color: color,
@@ -475,7 +477,7 @@ class _StatCard extends StatelessWidget {
                 height: 1,
               ),
             ),
-            const SizedBox(height: AppTokens.s4),
+            SizedBox(height: AppTokens.s4),
             Text(
               label,
               style: AppTokens.labelXs.copyWith(
@@ -646,7 +648,7 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
       padding: const EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: AppTokens.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppTokens.r14),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -667,14 +669,7 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
                     child: Container(
                       decoration: BoxDecoration(
                         color: AppTokens.surface,
-                        borderRadius: BorderRadius.circular(AppTokens.r12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.07),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                   ),
@@ -688,7 +683,7 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
                           behavior: HitTestBehavior.opaque,
                           onTap: () => widget.onChanged(i),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 9),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
@@ -703,10 +698,10 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
                                         : AppTokens.textSecondary,
                                   ),
                                 ),
-                                const SizedBox(width: AppTokens.s6),
+                                SizedBox(width: AppTokens.s6),
                                 AnimatedDefaultTextStyle(
                                   duration: const Duration(milliseconds: 180),
-                                  style: TextStyle(
+                                  style: GoogleFonts.inter(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w700,
                                     color: isSelected
@@ -754,7 +749,7 @@ class _PrimaryBtn extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: enabled ? AppTokens.brand : AppTokens.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppTokens.r12),
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -764,10 +759,10 @@ class _PrimaryBtn extends StatelessWidget {
               size: 15,
               color: enabled ? Colors.white : AppTokens.textHint,
             ),
-            const SizedBox(width: AppTokens.s6),
+            SizedBox(width: AppTokens.s6),
             Text(
               label,
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
                 color: enabled ? Colors.white : AppTokens.textHint,
@@ -878,13 +873,13 @@ class _ProjectCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppTokens.surface,
-      borderRadius: BorderRadius.circular(AppTokens.r16),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
-        borderRadius: BorderRadius.circular(AppTokens.r16),
+        borderRadius: BorderRadius.circular(8),
         onTap: () => NavigationHelper.instance.pushTasks(project.id),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTokens.r16),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTokens.border),
           ),
           padding: const EdgeInsets.all(AppTokens.s14),
@@ -895,15 +890,15 @@ class _ProjectCard extends StatelessWidget {
                 height: 44,
                 decoration: BoxDecoration(
                   color: AppTokens.brandSurface,
-                  borderRadius: BorderRadius.circular(AppTokens.r12),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.folder_rounded,
                   size: 20,
                   color: AppTokens.brand,
                 ),
               ),
-              const SizedBox(width: AppTokens.s12),
+              SizedBox(width: AppTokens.s12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -914,7 +909,7 @@ class _ProjectCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppTokens.s4),
+                    SizedBox(height: AppTokens.s4),
                     Row(
                       children: [
                         _MetaChip(
@@ -922,7 +917,7 @@ class _ProjectCard extends StatelessWidget {
                           label: '${project.count?.tasks ?? 0} tasks',
                         ),
                         if (_dateStr.isNotEmpty) ...[
-                          const SizedBox(width: AppTokens.s8),
+                          SizedBox(width: AppTokens.s8),
                           _MetaChip(
                             icon: Icons.today_outlined,
                             label: _dateStr,
@@ -934,20 +929,20 @@ class _ProjectCard extends StatelessWidget {
                 ),
               ),
               if (canManage) ...[
-                const SizedBox(width: AppTokens.s8),
+                SizedBox(width: AppTokens.s8),
                 AppActionButton(
                   icon: Icons.edit_rounded,
-                  color: const Color(0xFF3B82F6),
+                  color: AppTokens.brand,
                   onTap: onEdit,
                 ),
-                const SizedBox(width: AppTokens.s6),
+                SizedBox(width: AppTokens.s6),
                 AppActionButton(
                   icon: Icons.delete_outline_rounded,
                   color: AppTokens.danger,
                   onTap: onDelete,
                 ),
               ] else
-                const Icon(
+                Icon(
                   Icons.chevron_right_rounded,
                   size: 18,
                   color: AppTokens.textHint,
@@ -1056,13 +1051,13 @@ class _MemberCard extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r16),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTokens.border),
       ),
       child: Row(
         children: [
           AppAvatar(name: name, size: 40),
-          const SizedBox(width: AppTokens.s12),
+          SizedBox(width: AppTokens.s12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1074,7 +1069,7 @@ class _MemberCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (email.isNotEmpty) ...[
-                  const SizedBox(height: AppTokens.s4),
+                  SizedBox(height: AppTokens.s4),
                   Text(
                     email,
                     style: AppTokens.labelXs,
@@ -1085,10 +1080,10 @@ class _MemberCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(width: AppTokens.s8),
+          SizedBox(width: AppTokens.s8),
           _RoleBadge(role: role),
           if (canRemove) ...[
-            const SizedBox(width: AppTokens.s6),
+            SizedBox(width: AppTokens.s6),
             AppActionButton(
               icon: Icons.person_remove_outlined,
               color: AppTokens.danger,
@@ -1116,7 +1111,7 @@ class _RemoveMemberSheet extends StatelessWidget {
       margin: const EdgeInsets.all(AppTokens.s16),
       decoration: BoxDecoration(
         color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r16),
+        borderRadius: BorderRadius.circular(8),
       ),
       padding: const EdgeInsets.all(AppTokens.s20),
       child: Column(
@@ -1129,24 +1124,24 @@ class _RemoveMemberSheet extends StatelessWidget {
               color: AppTokens.dangerSurface,
               borderRadius: BorderRadius.circular(AppTokens.r14),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.person_remove_outlined,
               color: AppTokens.danger,
               size: 22,
             ),
           ),
-          const SizedBox(height: AppTokens.s16),
+          SizedBox(height: AppTokens.s16),
           Text(
             'Remove member',
             style: AppTokens.displayLg.copyWith(fontSize: 18),
           ),
-          const SizedBox(height: AppTokens.s8),
+          SizedBox(height: AppTokens.s8),
           Text(
             'Remove $memberName from this team? They will lose access to all projects.',
             style: AppTokens.labelXs.copyWith(fontSize: 13, height: 1.5),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppTokens.s24),
+          SizedBox(height: AppTokens.s24),
           Row(
             children: [
               Expanded(
@@ -1158,12 +1153,12 @@ class _RemoveMemberSheet extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppTokens.surfaceAlt,
-                      borderRadius: BorderRadius.circular(AppTokens.r12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Text(
                         'Cancel',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppTokens.textSecondary,
@@ -1173,7 +1168,7 @@ class _RemoveMemberSheet extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: AppTokens.s12),
+              SizedBox(width: AppTokens.s12),
               Expanded(
                 child: GestureDetector(
                   onTap: () {
@@ -1186,12 +1181,12 @@ class _RemoveMemberSheet extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppTokens.danger,
-                      borderRadius: BorderRadius.circular(AppTokens.r12),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
+                    child: Center(
                       child: Text(
                         'Remove',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
@@ -1253,11 +1248,11 @@ class _RoleBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: s.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         s.label,
-        style: TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w700,
           color: s.color,
@@ -1282,7 +1277,7 @@ class _MetaChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 11, color: AppTokens.textHint),
-        const SizedBox(width: 3),
+        SizedBox(width: 4),
         Text(label, style: AppTokens.labelXs),
       ],
     );

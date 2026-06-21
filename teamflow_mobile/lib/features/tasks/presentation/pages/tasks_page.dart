@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -40,9 +41,9 @@ const _columns = [
     subtitle: 'Not started',
     emoji: '○',
     status: TaskStatus.TODO,
-    accent: Color(0xFF64748B),
-    accentSurface: Color(0xFFF1F5F9),
-    accentMuted: Color(0xFFE2E8F0),
+    accent: Color(0xFF687280),
+    accentSurface: Color(0x1A687280),
+    accentMuted: Color(0xFF1F2430),
     icon: Icons.circle_outlined,
   ),
   _ColumnConfig(
@@ -50,9 +51,9 @@ const _columns = [
     subtitle: 'Active now',
     emoji: '◑',
     status: TaskStatus.IN_PROGRESS,
-    accent: Color(0xFFD97706),
-    accentSurface: Color(0xFFFFFBEB),
-    accentMuted: Color(0xFFFEF3C7),
+    accent: Color(0xFFF59E0B),
+    accentSurface: Color(0x1AF59E0B),
+    accentMuted: Color(0xFF1F2430),
     icon: Icons.timelapse_rounded,
   ),
   _ColumnConfig(
@@ -60,9 +61,9 @@ const _columns = [
     subtitle: 'Completed',
     emoji: '●',
     status: TaskStatus.DONE,
-    accent: Color(0xFF059669),
-    accentSurface: Color(0xFFF0FDF4),
-    accentMuted: Color(0xFFDCFCE7),
+    accent: Color(0xFF22C55E),
+    accentSurface: Color(0x1A22C55E),
+    accentMuted: Color(0xFF1F2430),
     icon: Icons.check_circle_outline_rounded,
   ),
 ];
@@ -71,10 +72,10 @@ enum _Priority { high, medium, low }
 
 extension _PriorityX on _Priority {
   Color get color =>
-      const [Color(0xFFDC2626), Color(0xFFD97706), Color(0xFF0284C7)][index];
+      const [Color(0xFFEF4444), Color(0xFFF59E0B), Color(0xFF687280)][index];
 
   Color get surface =>
-      const [Color(0xFFFEF2F2), Color(0xFFFFFBEB), Color(0xFFF0F9FF)][index];
+      const [Color(0x1AEF4444), Color(0x1AF59E0B), Color(0x1A687280)][index];
 
   String get label => ['High', 'Med', 'Low'][index];
 
@@ -150,7 +151,9 @@ class TasksPage extends HookConsumerWidget {
           ),
         ],
       ),
-      floatingActionButton: _Fab(projectId: projectId),
+      floatingActionButton: MediaQuery.of(context).size.width < 768
+          ? _Fab(projectId: projectId)
+          : null,
     );
   }
 }
@@ -182,12 +185,12 @@ class _TopBar extends StatelessWidget {
     final col = _columns[activeTab];
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 140),
       curve: Curves.easeOut,
       decoration: const BoxDecoration(
         color: AppTokens.surface,
         border: Border(
-          bottom: BorderSide(color: Color(0xFFF1F5F9), width: 1.5),
+          bottom: BorderSide(color: AppTokens.border, width: 1),
         ),
       ),
       child: Column(
@@ -203,7 +206,7 @@ class _TopBar extends StatelessWidget {
                   icon: Icons.arrow_back_ios_new_rounded,
                   onTap: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(width: AppTokens.s16),
+                SizedBox(width: AppTokens.s16),
 
                 Expanded(
                   child: Column(
@@ -234,7 +237,7 @@ class _TopBar extends StatelessWidget {
                         ),
                       ),
 
-                      const SizedBox(height: AppTokens.s8),
+                      SizedBox(height: AppTokens.s8),
 
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -276,7 +279,7 @@ class _TopBar extends StatelessWidget {
                               key: ValueKey(
                                 'cnt_$activeTab${counts[activeTab]}',
                               ),
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 fontSize: 52,
                                 fontWeight: FontWeight.w800,
                                 color: col.accent.withOpacity(0.10),
@@ -288,19 +291,19 @@ class _TopBar extends StatelessWidget {
                         ],
                       ),
 
-                      const SizedBox(height: AppTokens.s4),
+                      SizedBox(height: AppTokens.s4),
                       Text(col.subtitle, style: AppTokens.bodySm),
                     ],
                   ),
                 ),
 
-                const SizedBox(width: AppTokens.s16),
+                SizedBox(width: AppTokens.s16),
                 AppIconButton(icon: Icons.logout_rounded, onTap: onLogoutTap),
               ],
             ),
           ),
 
-          const SizedBox(height: AppTokens.s24),
+          SizedBox(height: AppTokens.s24),
 
           SizedBox(
             height: 52,
@@ -308,7 +311,7 @@ class _TopBar extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
               itemCount: _columns.length,
-              separatorBuilder: (_, __) => const SizedBox(width: AppTokens.s8),
+              separatorBuilder: (_, __) => SizedBox(width: AppTokens.s8),
               itemBuilder: (_, i) {
                 final c = _columns[i];
                 final isActive = activeTab == i;
@@ -331,35 +334,26 @@ class _TopBar extends StatelessWidget {
                     return GestureDetector(
                       onTap: () => onTabChanged(i),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 220),
+                        duration: const Duration(milliseconds: 120),
                         curve: Curves.easeOut,
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppTokens.s16,
                         ),
                         decoration: BoxDecoration(
                           color: hovering
-                              ? c.accentMuted
+                              ? c.accentSurface
                               : isActive
-                              ? c.accent
-                              : AppTokens.bg,
-                          borderRadius: BorderRadius.circular(AppTokens.r16),
+                              ? AppTokens.surface
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(AppTokens.r8),
                           border: Border.all(
                             color: hovering
-                                ? c.accent.withOpacity(0.4)
-                                : isActive
                                 ? c.accent
-                                : AppTokens.borderAlt,
-                            width: 1.5,
+                                : isActive
+                                ? AppTokens.brand
+                                : AppTokens.border,
+                            width: 1,
                           ),
-                          boxShadow: isActive && !hovering
-                              ? [
-                                  BoxShadow(
-                                    color: c.accent.withOpacity(0.20),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : [],
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -371,27 +365,27 @@ class _TopBar extends StatelessWidget {
                                 key: ValueKey(hovering),
                                 size: 15,
                                 color: isActive && !hovering
-                                    ? Colors.white
+                                    ? AppTokens.brand
                                     : hovering
                                     ? c.accent
                                     : AppTokens.textSecondary,
                               ),
                             ),
-                            const SizedBox(width: AppTokens.s6),
+                            SizedBox(width: AppTokens.s6),
                             Text(
                               c.title,
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                                 letterSpacing: -0.1,
                                 color: isActive && !hovering
-                                    ? Colors.white
+                                    ? AppTokens.textPrimary
                                     : hovering
                                     ? c.accent
                                     : AppTokens.textSecondary,
                               ),
                             ),
-                            const SizedBox(width: AppTokens.s8),
+                            SizedBox(width: AppTokens.s8),
                             _CountBadge(
                               count: counts[i],
                               isActive: isActive && !hovering,
@@ -407,8 +401,8 @@ class _TopBar extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
-          Container(height: 1, color: const Color(0xFFF1F5F9)),
+          SizedBox(height: AppTokens.s20),
+          Container(height: 1, color: AppTokens.border),
         ],
       ),
     );
@@ -435,26 +429,18 @@ class _StatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
+          Container(
             width: 6,
             height: 6,
             decoration: BoxDecoration(
               color: config.accent,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: config.accent.withOpacity(0.4),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ],
             ),
           ),
-          const SizedBox(width: AppTokens.s6),
+          SizedBox(width: AppTokens.s6),
           Text(
             config.title.toUpperCase(),
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.2,
@@ -481,23 +467,23 @@ class _CountBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 120),
       padding: const EdgeInsets.symmetric(
         horizontal: AppTokens.s6,
         vertical: AppTokens.s2,
       ),
       decoration: BoxDecoration(
         color: isActive
-            ? Colors.white.withOpacity(0.25)
+            ? AppTokens.brand.withOpacity(0.1)
             : color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(AppTokens.r8),
       ),
       child: Text(
         '$count',
-        style: TextStyle(
+        style: GoogleFonts.inter(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: isActive ? Colors.white : color,
+          color: isActive ? AppTokens.brand : color,
         ),
       ),
     );
@@ -573,27 +559,27 @@ class _EmptyState extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: config.accentSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r20),
+                borderRadius: BorderRadius.circular(AppTokens.r8),
               ),
               child: Icon(config.icon, size: 28, color: config.accent),
             ),
-            const SizedBox(height: AppTokens.s20),
-            const Text(
+            SizedBox(height: AppTokens.s20),
+            Text(
               'Nothing here yet',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppTokens.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: AppTokens.s6),
+            SizedBox(height: AppTokens.s6),
             Text(
               'Tasks in "${config.title}" will appear here.\nDrag cards from other columns to move them.',
               textAlign: TextAlign.center,
               style: AppTokens.bodySm.copyWith(height: 1.6),
             ),
-            const SizedBox(height: AppTokens.s24),
+            SizedBox(height: AppTokens.s24),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppTokens.s16,
@@ -601,7 +587,7 @@ class _EmptyState extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: config.accentSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r12),
+                borderRadius: BorderRadius.circular(AppTokens.r8),
                 border: Border.all(color: config.accentMuted),
               ),
               child: Row(
@@ -612,10 +598,10 @@ class _EmptyState extends StatelessWidget {
                     size: 15,
                     color: config.accent,
                   ),
-                  const SizedBox(width: AppTokens.s6),
+                  SizedBox(width: AppTokens.s6),
                   Text(
                     'Drop tasks here',
-                    style: TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: config.accent,
@@ -638,7 +624,7 @@ class _Fab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
+    return FloatingActionButton(
       onPressed: () {
         HapticFeedback.lightImpact();
         showModalBottomSheet(
@@ -650,20 +636,8 @@ class _Fab extends StatelessWidget {
       },
       backgroundColor: AppTokens.brand,
       elevation: 0,
-      highlightElevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTokens.r16),
-      ),
-      icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-      label: const Text(
-        'New Task',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-          letterSpacing: -0.2,
-        ),
-      ),
+      shape: const CircleBorder(),
+      child: Icon(Icons.add_rounded, color: Colors.white, size: 24),
     );
   }
 }
@@ -793,33 +767,17 @@ class _TaskCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r20),
+        borderRadius: BorderRadius.circular(AppTokens.r8),
         border: Border.all(
           color: isFloating ? col.accent.withOpacity(0.3) : AppTokens.borderAlt,
-          width: isFloating ? 2 : 1,
+          width: isFloating ? 1.5 : 1,
         ),
-        boxShadow: isFloating
-            ? [
-                BoxShadow(
-                  color: col.accent.withOpacity(0.15),
-                  blurRadius: 32,
-                  offset: const Offset(0, 12),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.r20),
+        borderRadius: BorderRadius.circular(AppTokens.r8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(height: 3, color: col.accent),
 
             Padding(
               padding: const EdgeInsets.all(AppTokens.s16),
@@ -834,25 +792,25 @@ class _TaskCard extends StatelessWidget {
                         // ← AppActionButton replaces _ActionBtn
                         AppActionButton(
                           icon: Icons.edit_rounded,
-                          color: const Color(0xFF3B82F6),
+                          color: AppTokens.brand,
                           onTap: onEdit,
                         ),
-                        const SizedBox(width: AppTokens.s6),
+                        SizedBox(width: AppTokens.s6),
                         AppActionButton(
                           icon: Icons.delete_outline_rounded,
-                          color: const Color(0xFFEF4444),
+                          color: AppTokens.danger,
                           onTap: onDelete,
                         ),
                       ],
                     ],
                   ),
 
-                  const SizedBox(height: AppTokens.s12),
+                  SizedBox(height: AppTokens.s12),
 
                   Text(task.title, style: AppTokens.titleMd),
 
                   if (task.description?.isNotEmpty ?? false) ...[
-                    const SizedBox(height: AppTokens.s6),
+                    SizedBox(height: AppTokens.s6),
                     Text(
                       task.description!,
                       maxLines: 2,
@@ -861,17 +819,17 @@ class _TaskCard extends StatelessWidget {
                     ),
                   ],
 
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: AppTokens.s16),
 
                   Row(
                     children: [
                       // ← AppAvatar replaces _Avatar
                       AppAvatar(name: 'John Doe', size: 28),
-                      const SizedBox(width: AppTokens.s8),
-                      const Expanded(
+                      SizedBox(width: AppTokens.s8),
+                      Expanded(
                         child: Text(
                           'John Doe',
-                          style: TextStyle(
+                          style: GoogleFonts.inter(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                             color: AppTokens.textSecondary,
@@ -880,12 +838,12 @@ class _TaskCard extends StatelessWidget {
                         ),
                       ),
                       if (!isFloating)
-                        const Icon(
+                        Icon(
                           Icons.drag_indicator_rounded,
                           size: 14,
                           color: AppTokens.borderMid,
                         ),
-                      const SizedBox(width: AppTokens.s8),
+                      SizedBox(width: AppTokens.s8),
                       _DateChip(iso: task.createdAt.toIso8601String()),
                     ],
                   ),
@@ -913,16 +871,16 @@ class _PriorityBadge extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: priority.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(priority.icon, size: 11, color: priority.color),
-          const SizedBox(width: AppTokens.s4),
+          SizedBox(width: AppTokens.s4),
           Text(
             priority.label,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: priority.color,
@@ -976,7 +934,7 @@ class _DateChip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: AppTokens.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppTokens.r8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,

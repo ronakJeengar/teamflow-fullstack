@@ -28,72 +28,66 @@ import 'package:flutter/services.dart';
 
 abstract class AppColors {
   // ── Backgrounds ───────────────────────────────────────────────────────────
-  static const Color bg          = Color(0xFFF8FAFC);
-  static const Color surface     = Color(0xFFFFFFFF);
-  static const Color surfaceAlt  = Color(0xFFF1F5F9);
+  static const Color bg          = Color(0xFF0F1115);
+  static const Color surface     = Color(0xFF161A21);
+  static const Color surfaceAlt  = Color(0xFF1F2430);
 
-  // "card" kept for compatibility with existing widget references
-  static const Color card        = Color(0xFFFFFFFF);
+  // "card" kept for compatibility
+  static const Color card        = Color(0xFF161A21);
 
   // ── Borders ───────────────────────────────────────────────────────────────
-  static const Color border      = Color(0xFFE8EDF3);
-  static const Color borderMid   = Color(0xFFCBD5E1);
+  static const Color border      = Color(0xFF1F2430);
+  static const Color borderMid   = Color(0xFF1F2430);
 
-  // ── Brand (indigo) ────────────────────────────────────────────────────────
-  static const Color primary        = Color(0xFF6366F1);
-  static const Color primaryLight   = Color(0xFFEEF2FF); // compat alias
-  static const Color primaryDark    = Color(0xFF4F46E5);
-  static const Color brandSurface   = Color(0xFFEEF2FF);
-  static const Color brandMuted     = Color(0xFFE0E7FF);
+  // ── Brand (purple) ────────────────────────────────────────────────────────
+  static const Color primary        = Color(0xFF7C5CFF);
+  static const Color primaryLight   = Color(0x1A7C5CFF);
+  static const Color primaryDark    = Color(0xFF7C5CFF);
+  static const Color brandSurface   = Color(0xFF161A21);
+  static const Color brandMuted     = Color(0xFF1F2430);
 
-  // ── Success (emerald) ─────────────────────────────────────────────────────
-  static const Color success        = Color(0xFF059669);
-  static const Color successLight   = Color(0xFFF0FDF4); // compat alias
-  static const Color successSurface = Color(0xFFF0FDF4);
-  static const Color successMuted   = Color(0xFFD1FAE5);
+  // ── Success (green) ─────────────────────────────────────────────────────
+  static const Color success        = Color(0xFF22C55E);
+  static const Color successLight   = Color(0x1A22C55E);
+  static const Color successSurface = Color(0x1A22C55E);
+  static const Color successMuted   = Color(0xFF1F2430);
 
   // ── Warning (amber) ───────────────────────────────────────────────────────
-  static const Color warning        = Color(0xFFD97706);
-  static const Color warningSurface = Color(0xFFFFFBEB);
-  static const Color warningMuted   = Color(0xFFFEF3C7);
+  static const Color warning        = Color(0xFFF59E0B);
+  static const Color warningSurface = Color(0x1AF59E0B);
+  static const Color warningMuted   = Color(0xFF1F2430);
 
   // ── Danger (red) ──────────────────────────────────────────────────────────
-  static const Color danger         = Color(0xFFDC2626);
-  static const Color dangerLight    = Color(0xFFFEF2F2); // compat alias
-  static const Color dangerSurface  = Color(0xFFFEF2F2);
-  static const Color dangerMuted    = Color(0xFFFECACA);
+  static const Color danger         = Color(0xFFEF4444);
+  static const Color dangerLight    = Color(0x1AEF4444);
+  static const Color dangerSurface  = Color(0x1AEF4444);
+  static const Color dangerMuted    = Color(0xFF1F2430);
 
   // ── Purple (accent) ───────────────────────────────────────────────────────
-  static const Color purple      = Color(0xFF7C3AED);
-  static const Color purpleLight = Color(0xFFEDE9FE);
-  static const Color purpleText  = Color(0xFF6D28D9);
+  static const Color purple      = Color(0xFF7C5CFF);
+  static const Color purpleLight = Color(0x1A7C5CFF);
+  static const Color purpleText  = Color(0xFF7C5CFF);
 
   // ── Typography ────────────────────────────────────────────────────────────
-  static const Color textPrimary   = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textHint      = Color(0xFF94A3B8);
-  static const Color textMuted     = Color(0xFFCBD5E1);
+  static const Color textPrimary   = Color(0xFFE6EBEB);
+  static const Color textSecondary = Color(0xFF8893A6);
+  static const Color textHint      = Color(0xFF687280);
+  static const Color textMuted     = Color(0xFF687280);
 
-  /// Kept for backward-compat (was Color(0xFF1C1C28))
   static const Color dark = textPrimary;
 
   // ── Role badge colours ────────────────────────────────────────────────────
-  static const Color adminBg   = Color(0xFFFFFBEB);
-  static const Color adminText = Color(0xFFD97706);
+  static const Color adminBg   = Color(0xFF1F2430);
+  static const Color adminText = Color(0xFFF59E0B);
 
   // ── Legacy control colours ────────────────────────────────────────────────
-  /// Use [surfaceAlt] for new code.
-  static const Color circleBtnBg   = Color(0xFFF1F5F9);
-  static const Color circleBtnIcon = Color(0xFF64748B);
+  static const Color circleBtnBg   = Color(0xFF1F2430);
+  static const Color circleBtnIcon = Color(0xFF8893A6);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 2 · SPACING SCALE
 // ─────────────────────────────────────────────────────────────────────────────
-//
-// 4-point grid. All values are multiples of 4.
-// ─────────────────────────────────────────────────────────────────────────────
-
 abstract class AppSpacing {
   static const double xs   =  4.0;
   static const double sm   =  8.0;
@@ -105,42 +99,40 @@ abstract class AppSpacing {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SECTION 3 · RADIUS SCALE
+// SECTION 3 · RADIUS SCALE (Max 8px corner radius)
 // ─────────────────────────────────────────────────────────────────────────────
-
 abstract class AppRadius {
   static const double xs  =  6.0;
   static const double sm  =  8.0;
-  static const double md  = 12.0;
-  static const double lg  = 14.0;
-  static const double xl  = 16.0;
-  static const double xxl = 20.0;
+  static const double md  =  8.0;
+  static const double lg  =  8.0;
+  static const double xl  =  8.0;
+  static const double xxl =  8.0;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 4 · TYPOGRAPHY SCALE
 // ─────────────────────────────────────────────────────────────────────────────
-
 abstract class AppText {
   static const TextStyle displayLg = TextStyle(
     fontSize: 28,
-    fontWeight: FontWeight.w800,
+    fontWeight: FontWeight.w600,
     letterSpacing: -1.0,
     height: 1.05,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle displayMd = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w800,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.7,
     height: 1.1,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle titleLg = TextStyle(
-    fontSize: 17,
-    fontWeight: FontWeight.w700,
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.4,
     height: 1.2,
     color: AppColors.textPrimary,
@@ -148,82 +140,50 @@ abstract class AppText {
 
   static const TextStyle titleMd = TextStyle(
     fontSize: 14,
-    fontWeight: FontWeight.w700,
+    fontWeight: FontWeight.w600,
     letterSpacing: -0.2,
     height: 1.3,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle bodySm = TextStyle(
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: FontWeight.w400,
     height: 1.55,
     color: AppColors.textSecondary,
   );
 
   static const TextStyle labelMd = TextStyle(
-    fontSize: 13,
-    fontWeight: FontWeight.w600,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
     letterSpacing: -0.1,
     color: AppColors.textPrimary,
   );
 
   static const TextStyle labelSm = TextStyle(
     fontSize: 11,
-    fontWeight: FontWeight.w600,
+    fontWeight: FontWeight.w400,
     letterSpacing: 0.1,
     color: AppColors.textSecondary,
   );
 
   static const TextStyle mono = TextStyle(
-    fontSize: 10,
-    fontWeight: FontWeight.w600,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
     letterSpacing: 0.1,
-    color: AppColors.textSecondary,
+    color: AppColors.textPrimary,
     fontFamily: 'monospace',
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SECTION 5 · ELEVATION / SHADOW SYSTEM
+// SECTION 5 · ELEVATION / SHADOW SYSTEM (No shadows!)
 // ─────────────────────────────────────────────────────────────────────────────
-
 abstract class AppShadow {
-  /// Subtle shadow for cards and list rows.
-  static const List<BoxShadow> sm = [
-    BoxShadow(
-      color: Color(0x06000000),
-      blurRadius: 8,
-      offset: Offset(0, 2),
-    ),
-  ];
-
-  /// Medium shadow for floating elements (FAB, modals).
-  static const List<BoxShadow> md = [
-    BoxShadow(
-      color: Color(0x10000000),
-      blurRadius: 20,
-      offset: Offset(0, 6),
-    ),
-  ];
-
-  /// Brand-tinted shadow for primary CTAs.
-  static List<BoxShadow> brand({double opacity = 0.28}) => [
-    BoxShadow(
-      color: AppColors.primary.withOpacity(opacity),
-      blurRadius: 16,
-      offset: const Offset(0, 6),
-    ),
-  ];
-
-  /// Success-tinted shadow for accept/confirm CTAs.
-  static List<BoxShadow> success({double opacity = 0.22}) => [
-    BoxShadow(
-      color: AppColors.success.withOpacity(opacity),
-      blurRadius: 12,
-      offset: const Offset(0, 4),
-    ),
-  ];
+  static const List<BoxShadow> sm = [];
+  static const List<BoxShadow> md = [];
+  static List<BoxShadow> brand({double opacity = 0.0}) => [];
+  static List<BoxShadow> success({double opacity = 0.0}) => [];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -280,7 +240,7 @@ class AppIconButton extends StatelessWidget {
         height: size,
         decoration: BoxDecoration(
           color: _bg,
-          borderRadius: BorderRadius.circular(size * 0.3),
+          borderRadius: BorderRadius.circular((size * 0.3).clamp(0, 8)),
         ),
         child: Icon(icon, size: size * 0.44, color: _fg),
       ),
@@ -343,13 +303,12 @@ class AppPrimaryButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: double.infinity,
-        height: 52,
+        height: 48,
         decoration: BoxDecoration(
           color: (isLoading || onTap == null)
               ? _bg.withOpacity(0.65)
               : _bg,
-          borderRadius: BorderRadius.circular(AppRadius.lg),
-          boxShadow: (isLoading || onTap == null) ? [] : _shadow,
+          borderRadius: BorderRadius.circular(AppRadius.sm),
         ),
         child: Center(
           child: isLoading
@@ -398,14 +357,12 @@ class AppAvatar extends StatelessWidget {
 
   const AppAvatar({super.key, required this.name, required this.size});
 
-  static const _palette = <(Color, Color)>[
-    (Color(0xFFEDE9FE), Color(0xFF7C3AED)), // purple
-    (Color(0xFFD1FAE5), Color(0xFF059669)), // green
-    (Color(0xFFFEF3C7), Color(0xFFD97706)), // amber
-    (Color(0xFFDBEAFE), Color(0xFF2563EB)), // blue
-    (Color(0xFFFCE7F3), Color(0xFFDB2777)), // pink
-    (Color(0xFFFFEDD5), Color(0xFFEA580C)), // orange
-    (Color(0xFFECFDF5), Color(0xFF059669)), // teal
+  static final _palette = <(Color, Color)>[
+    (const Color(0xFF7C5CFF).withOpacity(0.15), const Color(0xFF7C5CFF)), // primary
+    (const Color(0xFF22C55E).withOpacity(0.15), const Color(0xFF22C55E)), // success
+    (const Color(0xFFF59E0B).withOpacity(0.15), const Color(0xFFF59E0B)), // warning
+    (const Color(0xFFEF4444).withOpacity(0.15), const Color(0xFFEF4444)), // danger
+    (const Color(0xFF1F2430), const Color(0xFF8893A6)), // neutral/border
   ];
 
   (Color, Color) get _colors {
@@ -432,7 +389,7 @@ class AppAvatar extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(size * 0.32),
+        shape: BoxShape.circle,
       ),
       child: Center(
         child: Text(
@@ -472,7 +429,7 @@ class AppRoleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         label,
@@ -534,7 +491,7 @@ class AppStatChip extends StatelessWidget {
                 height: 1,
               ),
             ),
-            const SizedBox(height: 3),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
@@ -576,8 +533,8 @@ class AppSheetShell extends StatelessWidget {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(8)),
       ),
       padding: EdgeInsets.fromLTRB(
         AppSpacing.xl,
@@ -688,24 +645,15 @@ class _AppSheetInputState extends State<AppSheetInput> {
       duration: const Duration(milliseconds: 160),
       decoration: BoxDecoration(
         color: AppColors.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: hasError
               ? AppColors.danger
               : _focused
               ? AppColors.primary
               : AppColors.border,
-          width: _focused || hasError ? 1.5 : 1,
+          width: 1,
         ),
-        boxShadow: _focused
-            ? [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.07),
-            blurRadius: 0,
-            spreadRadius: 3,
-          )
-        ]
-            : [],
       ),
       child: TextField(
         controller: widget.controller,
@@ -779,7 +727,7 @@ class AppSheetActions extends StatelessWidget {
               height: 48,
               decoration: BoxDecoration(
                 color: AppColors.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: const Center(
                 child: Text(
@@ -805,12 +753,7 @@ class AppSheetActions extends StatelessWidget {
               decoration: BoxDecoration(
                 color:
                 isLoading ? _confirmBg.withOpacity(0.65) : _confirmBg,
-                borderRadius: BorderRadius.circular(AppRadius.lg),
-                boxShadow: isLoading
-                    ? []
-                    : isDestructive
-                    ? []
-                    : AppShadow.brand(opacity: 0.2),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Center(
                 child: isLoading
@@ -886,12 +829,12 @@ class _AppSearchBarState extends State<AppSearchBar> {
       duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
         color: AppColors.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
+        borderRadius: BorderRadius.circular(AppRadius.sm),
         border: Border.all(
           color: _active
-              ? AppColors.primary.withOpacity(0.5)
-              : Colors.transparent,
-          width: 1.5,
+              ? AppColors.primary
+              : AppColors.border,
+          width: 1,
         ),
       ),
       child: Row(
@@ -976,7 +919,7 @@ class AppMetaChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 11, color: c),
-        const SizedBox(width: 3),
+        const SizedBox(width: 4),
         Text(
           label,
           style: TextStyle(
@@ -1042,7 +985,7 @@ class AppStatusAccentBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(height: 3, color: color);
+    return const SizedBox.shrink();
   }
 }
 
@@ -1085,7 +1028,7 @@ class AppEmptyState extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: iconSurface,
-                borderRadius: BorderRadius.circular(AppRadius.xxl),
+                borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
               child: Icon(icon, size: 28, color: iconColor),
             ),
@@ -1116,7 +1059,7 @@ class AppEmptyState extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: iconColor,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    borderRadius: BorderRadius.circular(AppRadius.sm),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,

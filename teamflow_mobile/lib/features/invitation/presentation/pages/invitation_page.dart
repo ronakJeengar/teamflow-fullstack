@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -158,15 +159,15 @@ class _Header extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
+          SizedBox(height: AppTokens.s20),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTokens.s24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Invitations',
-                  style: TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 28,
                     fontWeight: FontWeight.w800,
                     color: AppTokens.textPrimary,
@@ -174,7 +175,7 @@ class _Header extends StatelessWidget {
                     height: 1.05,
                   ),
                 ),
-                const SizedBox(height: AppTokens.s4),
+                SizedBox(height: AppTokens.s4),
                 Text(
                   count == 0
                       ? 'No pending invitations'
@@ -185,8 +186,8 @@ class _Header extends StatelessWidget {
             ),
           ),
 
-          const SizedBox(height: AppTokens.s20),
-          Container(height: 1, color: const Color(0xFFF1F5F9)),
+          SizedBox(height: AppTokens.s20),
+          Container(height: 1, color: AppTokens.border),
         ],
       ),
     );
@@ -211,7 +212,7 @@ class _PendingBadge extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: AppTokens.warningSurface,
-          borderRadius: BorderRadius.circular(AppTokens.r8),
+          borderRadius: BorderRadius.circular(6),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -224,10 +225,10 @@ class _PendingBadge extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const SizedBox(width: AppTokens.s6),
+            SizedBox(width: AppTokens.s6),
             Text(
               '$count pending',
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: AppTokens.warning,
@@ -314,24 +315,14 @@ class _InvitationTile extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppTokens.surface,
-          borderRadius: BorderRadius.circular(AppTokens.r20),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: AppTokens.border),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x06000000),
-              blurRadius: 8,
-              offset: Offset(0, 2),
-            ),
-          ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppTokens.r20),
+          borderRadius: BorderRadius.circular(8),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Amber accent bar – signals "action required"
-              Container(height: 3, color: AppTokens.warning),
-
               Padding(
                 padding: const EdgeInsets.all(AppTokens.s16),
                 child: Column(
@@ -341,7 +332,7 @@ class _InvitationTile extends StatelessWidget {
                       children: [
                         AppAvatar(name: _teamName, size: 44),
 
-                        const SizedBox(width: AppTokens.s12),
+                        SizedBox(width: AppTokens.s12),
 
                         Expanded(
                           child: Column(
@@ -349,7 +340,7 @@ class _InvitationTile extends StatelessWidget {
                             children: [
                               Text(
                                 _teamName,
-                                style: const TextStyle(
+                                style: GoogleFonts.inter(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: AppTokens.textPrimary,
@@ -359,7 +350,7 @@ class _InvitationTile extends StatelessWidget {
                                 overflow: TextOverflow.ellipsis,
                               ),
                               if (_inviterName.isNotEmpty) ...[
-                                const SizedBox(height: AppTokens.s4),
+                                SizedBox(height: AppTokens.s4),
                                 Text(
                                   'Invited by $_inviterName',
                                   style: AppTokens.bodySm.copyWith(
@@ -374,16 +365,16 @@ class _InvitationTile extends StatelessWidget {
                           ),
                         ),
 
-                        const SizedBox(width: AppTokens.s8),
+                        SizedBox(width: AppTokens.s8),
 
                         // ← Uses shared AppRoleBadge (owner/admin/member)
                         _RoleBadge(role: _role),
                       ],
                     ),
 
-                    const SizedBox(height: AppTokens.s16),
-                    Container(height: 1, color: const Color(0xFFF1F5F9)),
-                    const SizedBox(height: AppTokens.s14),
+                    SizedBox(height: AppTokens.s16),
+                    Container(height: 1, color: AppTokens.border),
+                    SizedBox(height: AppTokens.s14),
                     Row(
                       children: [
                         Expanded(
@@ -396,7 +387,7 @@ class _InvitationTile extends StatelessWidget {
                             isBusy: false,
                           ),
                         ),
-                        const SizedBox(width: AppTokens.s10),
+                        SizedBox(width: AppTokens.s10),
                         Expanded(
                           flex: 2,
                           child: _TileActionButton(
@@ -458,16 +449,7 @@ class _TileActionButton extends StatelessWidget {
         height: 44,
         decoration: BoxDecoration(
           color: surface,
-          borderRadius: BorderRadius.circular(AppTokens.r12),
-          boxShadow: surface == AppTokens.success
-              ? [
-                  BoxShadow(
-                    color: AppTokens.success.withOpacity(0.22),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : [],
+          borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
           child: isBusy
@@ -483,10 +465,10 @@ class _TileActionButton extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(icon, size: 15, color: color),
-                    const SizedBox(width: AppTokens.s6),
+                    SizedBox(width: AppTokens.s6),
                     Text(
                       label,
-                      style: TextStyle(
+                      style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: color,
@@ -513,7 +495,7 @@ class _EmptyState extends StatelessWidget {
       color: AppTokens.brand,
       child: ListView(
         children: [
-          const SizedBox(height: 80),
+          SizedBox(height: 80),
           AppEmptyState(
             icon: Icons.mark_email_read_outlined,
             iconColor: AppTokens.brand,

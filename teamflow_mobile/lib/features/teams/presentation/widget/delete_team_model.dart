@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -37,20 +38,20 @@ class DeleteTeamModal extends ConsumerWidget {
                   color: AppColors.dangerLight,
                   borderRadius: AppRadius.sm,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.delete_outline_rounded,
                   size: 18,
                   color: AppColors.danger,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Text(
                 'Delete Team?',
                 style: AppTextStyles.heading2.copyWith(color: AppColors.danger),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
+          SizedBox(height: AppSpacing.xl),
 
           // ── Warning body ───────────────────────────────────────────────
           Container(
@@ -65,12 +66,12 @@ class DeleteTeamModal extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   size: 16,
                   color: AppColors.danger,
                 ),
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: RichText(
                     text: TextSpan(
@@ -78,12 +79,12 @@ class DeleteTeamModal extends ConsumerWidget {
                         color: AppColors.danger.withOpacity(0.85),
                       ),
                       children: [
-                        const TextSpan(text: 'This will permanently delete '),
+                        TextSpan(text: 'This will permanently delete '),
                         TextSpan(
                           text: teamName,
-                          style: const TextStyle(fontWeight: FontWeight.w700),
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w700),
                         ),
-                        const TextSpan(
+                        TextSpan(
                           text:
                           ' and all its projects. This action cannot be undone.',
                         ),
@@ -94,7 +95,7 @@ class DeleteTeamModal extends ConsumerWidget {
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: AppSpacing.xxl),
 
           // ── Actions ────────────────────────────────────────────────────
           ModalActions(

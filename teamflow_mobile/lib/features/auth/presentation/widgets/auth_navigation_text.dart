@@ -1,3 +1,5 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 // lib/widgets/auth_navigation_text.dart
 import 'package:flutter/material.dart';
 
@@ -20,13 +22,13 @@ class AuthNavigationText extends StatelessWidget {
       children: [
         Text(
           question,
-          style: TextStyle(color: Colors.grey[600]),
+          style: GoogleFonts.inter(color: AppColors.textSecondary),
         ),
         TextButton(
           onPressed: onTap,
           child: Text(
             actionText,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold),
           ),
         ),
       ],

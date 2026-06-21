@@ -39,17 +39,17 @@ class EditTeamModal extends ConsumerWidget {
                   color: AppColors.primaryLight,
                   borderRadius: AppRadius.sm,
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.edit_outlined,
                   size: 18,
                   color: AppColors.primary,
                 ),
               ),
-              const SizedBox(width: AppSpacing.md),
+              SizedBox(width: AppSpacing.md),
               Text('Edit Team', style: AppTextStyles.heading2),
             ],
           ),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: AppSpacing.xxl),
 
           // ── Name field ─────────────────────────────────────────────────
           const ModalLabel('Team Name'),
@@ -66,7 +66,7 @@ class EditTeamModal extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
 
           // ── Description field ──────────────────────────────────────────
           const ModalLabel('Description'),
@@ -77,7 +77,7 @@ class EditTeamModal extends ConsumerWidget {
               hintText: 'What does this team work on?',
             ),
           ),
-          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(height: AppSpacing.xxl),
 
           // ── Actions ────────────────────────────────────────────────────
           ModalActions(

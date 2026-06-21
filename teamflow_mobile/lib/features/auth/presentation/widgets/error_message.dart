@@ -1,3 +1,5 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 // lib/widgets/error_message.dart
 import 'package:flutter/material.dart';
 
@@ -14,19 +16,19 @@ class ErrorMessage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.red[50],
+        color: AppColors.dangerLight,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red[700], size: 20),
+          const Icon(Icons.error_outline, color: AppColors.danger, size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               message,
-              style: TextStyle(
-                color: Colors.red[700],
+              style: GoogleFonts.inter(
+                color: AppColors.danger,
                 fontSize: 14,
               ),
             ),

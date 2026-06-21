@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -49,32 +50,22 @@ class LoginPage extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const AppBrandMark(),
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
-                const Text(
+                Text(
                   'Welcome back',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppTokens.textPrimary,
-                    letterSpacing: -1.0,
-                    height: 1.05,
-                  ),
+                  style: AppTokens.displayLg,
                 ),
-                const SizedBox(height: AppTokens.s6),
-                const Text(
+                SizedBox(height: AppTokens.s6),
+                Text(
                   'Sign in to your workspace',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppTokens.textSecondary,
-                    height: 1.4,
-                  ),
+                  style: AppTokens.bodySm,
                 ),
 
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
-                const AppFieldLabel(label: 'Email address'),
-                const SizedBox(height: AppTokens.s8),
+                AppFieldLabel(label: 'Email address'),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: emailCtrl,
                   focusNode: emailFocus,
@@ -87,17 +78,17 @@ class LoginPage extends HookConsumerWidget {
                   enabled: !isLoading,
                 ),
 
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const AppFieldLabel(label: 'Password'),
+                    AppFieldLabel(label: 'Password'),
                     GestureDetector(
                       onTap: () {/* Handle forgot password */},
-                      child: const Text(
+                      child: Text(
                         'Forgot password?',
-                        style: TextStyle(
+                        style: GoogleFonts.inter(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppTokens.brand,
@@ -106,7 +97,7 @@ class LoginPage extends HookConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTokens.s8),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: passwordCtrl,
                   focusNode: passwordFocus,
@@ -123,7 +114,7 @@ class LoginPage extends HookConsumerWidget {
                   ),
                 ),
 
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
                 AppPrimaryButton(
                   label: 'Sign in',
@@ -132,15 +123,15 @@ class LoginPage extends HookConsumerWidget {
                 ),
 
                 if (loginState.hasError) ...[
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: AppTokens.s16),
                   AppErrorBanner(
                     message: _friendlyError(loginState.error.toString()),
                   ),
                 ],
 
-                const SizedBox(height: AppTokens.s32),
-                const AppOrDivider(),
-                const SizedBox(height: AppTokens.s24),
+                SizedBox(height: AppTokens.s32),
+                AppOrDivider(),
+                SizedBox(height: AppTokens.s24),
 
                 AppAuthNavPrompt(
                   question: "Don't have an account?",

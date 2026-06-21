@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 // lib/widgets/auth_button.dart
 import 'package:flutter/material.dart';
 
@@ -21,12 +22,12 @@ class AuthButton extends StatelessWidget {
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           elevation: 0,
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
           height: 24,
           width: 24,
           child: CircularProgressIndicator(
@@ -36,7 +37,7 @@ class AuthButton extends StatelessWidget {
         )
             : Text(
           text,
-          style: const TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

@@ -1,3 +1,4 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
 // lib/widgets/auth_header.dart
 import 'package:flutter/material.dart';
 
@@ -22,7 +23,7 @@ class AuthHeader extends StatelessWidget {
           size: 80,
           color: Theme.of(context).primaryColor,
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Text(
           title,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -30,11 +31,11 @@ class AuthHeader extends StatelessWidget {
           ),
           textAlign: TextAlign.center,
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           subtitle,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
+            color: AppColors.textSecondary,
           ),
           textAlign: TextAlign.center,
         ),

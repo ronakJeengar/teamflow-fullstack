@@ -15,7 +15,9 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false ,
       routerConfig: router,
       title: 'Flutter Clean Auth',
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
     );
   }
 }

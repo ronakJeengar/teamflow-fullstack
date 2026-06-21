@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
@@ -34,20 +35,20 @@ class LogoutSheet extends ConsumerWidget {
             padding: const EdgeInsets.all(AppSpacing.lg),
             decoration: BoxDecoration(
               color: AppColors.dangerLight,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   color: AppColors.danger,
                   size: 20,
                 ),
-                const SizedBox(width: AppSpacing.md),
+                SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: Text(
                     'Are you sure you want to logout? You will be sent back to the login screen.',
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 13,
                       color: AppColors.danger,
                     ),
@@ -57,7 +58,7 @@ class LogoutSheet extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 18),
+          SizedBox(height: 16),
 
           AppSheetActions(
             confirmLabel: 'Logout',

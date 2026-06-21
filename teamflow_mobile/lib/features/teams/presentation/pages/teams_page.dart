@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -135,7 +136,9 @@ class TeamsPage extends HookConsumerWidget {
             ),
         ],
       ),
-      floatingActionButton: _Fab(onTap: showCreate),
+      floatingActionButton: MediaQuery.of(context).size.width < 768
+          ? _Fab(onTap: showCreate)
+          : null,
     );
   }
 }
@@ -207,8 +210,8 @@ class _Body extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('Teams', style: AppTokens.displayLg),
-                          const SizedBox(height: AppTokens.s4),
+                          Text('Teams', style: AppTokens.displayLg),
+                          SizedBox(height: AppTokens.s4),
                           Text(
                             '${allTeams.length} workspace${allTeams.length == 1 ? '' : 's'} you belong to',
                             style: AppTokens.bodySm,
@@ -220,16 +223,16 @@ class _Body extends StatelessWidget {
                       icon: Icons.mail_outline_rounded,
                       onTap: () => NavigationHelper.instance.pushInvitations(),
                     ),
-                    const SizedBox(width: AppTokens.s8),
+                    SizedBox(width: AppTokens.s8),
                     AppIconButton(
                       icon: Icons.logout_rounded,
                       onTap: onLogoutTap,
                     ),
                   ],
                 ),
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
                 _StatsOverviewCard(teams: allTeams),
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
                 _SearchBar(
                   controller: searchCtrl,
                   onFocusChanged: onSearchFocusChanged,
@@ -240,7 +243,7 @@ class _Body extends StatelessWidget {
         ),
 
         SliverToBoxAdapter(
-          child: Container(height: 1, color: const Color(0xFFF1F5F9)),
+          child: Container(height: 1, color: AppTokens.border),
         ),
 
         if (filtered.isEmpty)
@@ -314,8 +317,9 @@ class _StatsOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
+        color: AppTokens.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTokens.border, width: 1),
       ),
       child: Row(
         children: [
@@ -348,17 +352,19 @@ class _Metric extends StatelessWidget {
       children: [
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -1,
+          style: GoogleFonts.inter(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: AppTokens.textPrimary,
           ),
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 8),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
+          style: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w400,
+            color: AppTokens.textSecondary,
           ),
         ),
       ],
@@ -373,7 +379,7 @@ class _VerticalDivider extends StatelessWidget {
       width: 1,
       height: 42,
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      color: Theme.of(context).dividerColor.withValues(alpha: .15),
+      color: AppTokens.border,
     );
   }
 }
@@ -410,45 +416,45 @@ class _SearchBarState extends State<_SearchBar> {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 140),
       decoration: BoxDecoration(
         color: AppTokens.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppTokens.r14),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: _active
-              ? AppTokens.brand.withOpacity(0.5)
-              : Colors.transparent,
-          width: 1.5,
+              ? AppTokens.brand
+              : AppTokens.border,
+          width: 1,
         ),
       ),
       child: Row(
         children: [
-          const SizedBox(width: AppTokens.s14),
+          SizedBox(width: AppTokens.s14),
           Icon(
             Icons.search_rounded,
             size: 18,
             color: _active ? AppTokens.brand : AppTokens.textHint,
           ),
-          const SizedBox(width: AppTokens.s10),
+          SizedBox(width: AppTokens.s10),
           Expanded(
             child: TextField(
               controller: widget.controller,
               focusNode: _focus,
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
                 color: AppTokens.textPrimary,
               ),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search teams…',
-                hintStyle: TextStyle(
+                hintStyle: GoogleFonts.inter(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                   color: AppTokens.textHint,
                 ),
                 border: InputBorder.none,
                 isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: AppTokens.s14),
+                contentPadding: const EdgeInsets.symmetric(vertical: AppTokens.s14),
               ),
             ),
           ),
@@ -464,7 +470,7 @@ class _SearchBarState extends State<_SearchBar> {
                     color: AppTokens.textHint,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close_rounded,
                     size: 11,
                     color: Colors.white,
@@ -473,7 +479,7 @@ class _SearchBarState extends State<_SearchBar> {
               ),
             )
           else
-            const SizedBox(width: AppTokens.s14),
+            SizedBox(width: AppTokens.s14),
         ],
       ),
     );
@@ -527,22 +533,15 @@ class TeamCardState extends State<TeamCard> {
         child: Container(
           decoration: BoxDecoration(
             color: AppTokens.surface,
-            borderRadius: BorderRadius.circular(AppTokens.r16),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTokens.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.025),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           padding: const EdgeInsets.all(AppTokens.s14),
           child: Row(
             children: [
               AppAvatar(name: team.name, size: 46),
 
-              const SizedBox(width: AppTokens.s12),
+              SizedBox(width: AppTokens.s12),
 
               Expanded(
                 child: Column(
@@ -567,11 +566,11 @@ class TeamCardState extends State<TeamCard> {
                             ),
                             decoration: BoxDecoration(
                               color: AppTokens.brandSurface,
-                              borderRadius: BorderRadius.circular(AppTokens.r8),
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            child: const Text(
+                            child: Text(
                               'Owner',
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: AppTokens.brand,
@@ -580,14 +579,14 @@ class TeamCardState extends State<TeamCard> {
                           ),
                       ],
                     ),
-                    const SizedBox(height: AppTokens.s6),
+                    SizedBox(height: AppTokens.s6),
                     Row(
                       children: [
                         _MetaChip(
                           icon: Icons.people_outline_rounded,
                           label: memberLabel,
                         ),
-                        const SizedBox(width: AppTokens.s10),
+                        SizedBox(width: AppTokens.s10),
                         _MetaChip(
                           icon: Icons.folder_outlined,
                           label: projectLabel,
@@ -598,23 +597,23 @@ class TeamCardState extends State<TeamCard> {
                 ),
               ),
 
-              const SizedBox(width: AppTokens.s8),
+              SizedBox(width: AppTokens.s8),
 
               if (isOwner) ...[
                 AppActionButton(
                   icon: Icons.edit_rounded,
-                  color: const Color(0xFF3B82F6),
+                  color: AppTokens.brand,
                   onTap: widget.onEdit,
                 ),
-                const SizedBox(width: AppTokens.s6),
+                SizedBox(width: AppTokens.s6),
                 AppActionButton(
                   icon: Icons.delete_outline_rounded,
                   color: AppTokens.danger,
                   onTap: widget.onDelete,
                 ),
-                const SizedBox(width: AppTokens.s6),
+                SizedBox(width: AppTokens.s6),
               ],
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 18,
                 color: AppTokens.textHint,
@@ -634,22 +633,12 @@ class _Fab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FloatingActionButton.extended(
+    return FloatingActionButton(
       onPressed: onTap,
       backgroundColor: AppTokens.brand,
       elevation: 0,
-      highlightElevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      icon: const Icon(Icons.add_rounded, color: Colors.white, size: 20),
-      label: const Text(
-        'New Team',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.w700,
-          fontSize: 14,
-          letterSpacing: -0.2,
-        ),
-      ),
+      shape: const CircleBorder(),
+      child: Icon(Icons.add_rounded, color: Colors.white, size: 24),
     );
   }
 }
@@ -666,7 +655,7 @@ class _MetaChip extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(icon, size: 11, color: AppTokens.textHint),
-        const SizedBox(width: 3),
+        SizedBox(width: 4),
         Text(label, style: AppTokens.labelXs),
       ],
     );

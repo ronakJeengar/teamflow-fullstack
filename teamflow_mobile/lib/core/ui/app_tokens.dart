@@ -1,91 +1,109 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-abstract class AppTokens {
-  static const double s2 = 2;
-  static const double s4 = 4;
-  static const double s6 = 6;
-  static const double s8 = 8;
-  static const double s10 = 10;
+abstract final class AppTokens {
+  // ── Colors ──────────────────────────────────────────────────────────
+  static const Color brand        = Color(0xFF7C5CFF); // Primary
+  static const Color brandLight   = Color(0xFF7C5CFF);
+  static const Color brandSurface = Color(0xFF161A21); // Surface
+  static const Color brandBorder  = Color(0xFF1F2430); // Border
+  static const Color brandMuted   = Color(0xFF687280); // Muted
+
+  static const LinearGradient brandGradient = LinearGradient(
+    colors: [brand, brand],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  // ── Semantic ────────────────────────────────────────────────────────────────
+  static const Color success        = Color(0xFF22C55E);
+  static const Color successSurface = Color(0x1A22C55E); // 10% opacity
+  static const Color successBorder  = Color(0xFF1F2430);
+
+  static const Color warning        = Color(0xFFF59E0B);
+  static const Color warningSurface = Color(0x1AF59E0B); // 10% opacity
+  static const Color warningBorder  = Color(0xFF1F2430);
+
+  static const Color danger        = Color(0xFFEF4444);
+  static const Color dangerSurface = Color(0x1AEF4444); // 10% opacity
+  static const Color dangerBorder  = Color(0xFF1F2430);
+
+  // ── Neutral canvas ──────────────────────────────────────────────────────────
+  static const Color bg          = Color(0xFF0F1115);
+  static const Color surface     = Color(0xFF161A21);
+  static const Color surfaceAlt  = Color(0xFF161A21);
+  static const Color surfaceDeep = Color(0xFF161A21);
+
+  // ── Borders ─────────────────────────────────────────────────────────────────
+  static const Color border    = Color(0xFF1F2430);
+  static const Color borderAlt = Color(0xFF1F2430);
+  static const Color borderMid = Color(0xFF1F2430);
+
+  // ── Text ───────────────────────────────────────────────────────────────────
+  static const Color textPrimary   = Color(0xFFE6EBEB);
+  static const Color textSecondary = Color(0xFF8893A6);
+  static const Color textHint      = Color(0xFF687280);
+
+  // ── Spacing (strict 4px grid mappings) ──────────────────────────────────────
+  static const double s2  = 4;
+  static const double s4  = 4;
+  static const double s6  = 8;
+  static const double s8  = 8;
+  static const double s10 = 12;
   static const double s12 = 12;
-  static const double s14 = 14;
+  static const double s14 = 16;
   static const double s16 = 16;
   static const double s20 = 20;
   static const double s24 = 24;
+  static const double s28 = 32;
   static const double s32 = 32;
   static const double s40 = 40;
   static const double s48 = 48;
 
-  static const double r8 = 8;
-  static const double r10 = 10;
-  static const double r12 = 12;
-  static const double r14 = 14;
-  static const double r16 = 16;
-  static const double r20 = 20;
-  static const double r24 = 24;
+  // ── Radii (strict max 8px rounded corners) ──────────────────────────────────
+  static const double r6  = 6;
+  static const double r8  = 8;
+  static const double r10 = 8;
+  static const double r12 = 8;
+  static const double r14 = 8;
+  static const double r16 = 8;
+  static const double r20 = 8;
+  static const double r24 = 8;
 
-  static const Color bg = Color(0xFFF8FAFC);
-  static const Color surface = Colors.white;
-  static const Color surfaceAlt = Color(0xFFF1F5F9);
-
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderAlt = Color(0xFFE8EDF3);
-  static const Color borderMid = Color(0xFFCBD5E1);
-  static const Color borderFocus = Color(0xFF6366F1);
-
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF64748B);
-  static const Color textHint = Color(0xFF94A3B8);
-
-  static const Color brand = Color(0xFF6366F1);
-  static const Color brandDark = Color(0xFF4F46E5);
-  static const Color brandSurface = Color(0xFFEEF2FF);
-  static const Color brandMuted = Color(0xFFE0E7FF);
-
-  static const Color success = Color(0xFF059669);
-  static const Color successSurface = Color(0xFFF0FDF4);
-  static const Color successMuted = Color(0xFFD1FAE5);
-
-  static const Color warning = Color(0xFFD97706);
-  static const Color warningSurface = Color(0xFFFFFBEB);
-  static const Color warningMuted = Color(0xFFFEF3C7);
-
-  static const Color danger = Color(0xFFDC2626);
-  static const Color dangerSurface = Color(0xFFFEF2F2);
-  static const Color dangerMuted = Color(0xFFFECACA);
-
-  static const TextStyle displayLg = TextStyle(
+  // ── Typography ──────────────────────────────────────────────────────────────
+  static TextStyle get displayLg => GoogleFonts.inter(
     fontSize: 28,
-    fontWeight: FontWeight.w800,
-    letterSpacing: -1.0,
-    height: 1.05,
+    fontWeight: FontWeight.w600,
     color: textPrimary,
   );
 
-  static const TextStyle titleMd = TextStyle(
+  static TextStyle get titleMd => GoogleFonts.inter(
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: textPrimary,
+  );
+
+  static TextStyle get body => GoogleFonts.inter(
     fontSize: 14,
-    fontWeight: FontWeight.w700,
-    letterSpacing: -0.2,
+    fontWeight: FontWeight.w400,
     color: textPrimary,
   );
 
-  static const TextStyle bodySm = TextStyle(
-    fontSize: 13,
+  static TextStyle get bodySm => GoogleFonts.inter(
+    fontSize: 12,
     fontWeight: FontWeight.w400,
-    height: 1.5,
     color: textSecondary,
   );
 
-  static const TextStyle labelXs = TextStyle(
-    fontSize: 11,
-    fontWeight: FontWeight.w600,
+  static TextStyle get labelSm => GoogleFonts.inter(
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
     color: textSecondary,
-    letterSpacing: 0.1,
   );
 
-  static const TextStyle labelSm = TextStyle(
+  static TextStyle get labelXs => GoogleFonts.inter(
     fontSize: 11,
-    fontWeight: FontWeight.w600,
-    letterSpacing: 0.2,
-    color: textSecondary,
+    fontWeight: FontWeight.w400,
+    color: textHint,
   );
 }

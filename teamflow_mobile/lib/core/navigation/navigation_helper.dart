@@ -1,3 +1,4 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
 // lib/core/navigation/navigation_helper.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -112,7 +113,7 @@ class NavigationHelper {
   void showErrorSnackBar(String message) {
     showSnackBar(
       message: message,
-      backgroundColor: Colors.red,
+      backgroundColor: AppColors.danger,
       duration: const Duration(seconds: 4),
     );
   }
@@ -121,7 +122,7 @@ class NavigationHelper {
   void showSuccessSnackBar(String message) {
     showSnackBar(
       message: message,
-      backgroundColor: Colors.green,
+      backgroundColor: AppColors.success,
       duration: const Duration(seconds: 3),
     );
   }

@@ -64,7 +64,7 @@ class EditProjectSheet extends HookConsumerWidget {
             onSubmitted: (_) => submit(),
           ),
 
-          const SizedBox(height: 18),
+          SizedBox(height: 16),
 
           AppSheetActions(
             confirmLabel: 'Save changes',

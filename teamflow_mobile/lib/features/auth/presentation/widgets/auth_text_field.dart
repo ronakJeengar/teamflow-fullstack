@@ -1,3 +1,4 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
 // lib/widgets/auth_text_field.dart
 import 'package:flutter/material.dart';
 
@@ -39,10 +40,10 @@ class AuthTextField extends StatelessWidget {
         prefixIcon: Icon(prefixIcon),
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(8),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
+        fillColor: AppColors.surface,
       ),
     );
   }

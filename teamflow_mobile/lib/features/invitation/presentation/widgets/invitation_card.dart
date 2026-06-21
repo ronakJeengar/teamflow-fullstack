@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../../core/ui/app_ui.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/reusable_widgets.dart';
+import '../../../../core/ui/shared_widgets.dart'; // contains AppRoleBadge
 import '../../domain/entities/invitation_entity.dart';
 
 class InvitationCard extends StatelessWidget {
@@ -14,37 +17,12 @@ class InvitationCard extends StatelessWidget {
     required this.onDecline,
   });
 
-  Color get _accentColor {
-    const colors = [
-      Color(0xFF4F6EF7),
-      Color(0xFF7C3AED),
-      Color(0xFF0D9488),
-      Color(0xFFD97706),
-      Color(0xFFDB2777),
-      Color(0xFF059669),
-    ];
-    final idx =
-        invitation.team.name.codeUnits.fold<int>(0, (sum, c) => sum + c) %
-        colors.length;
-    return colors[idx];
-  }
-
   String get _expiresLabel {
     try {
       final d = DateTime.parse(invitation.expiresAt.toIso8601String());
       const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
       return 'Expires ${months[d.month - 1]} ${d.day}';
     } catch (_) {
@@ -56,75 +34,48 @@ class InvitationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppColors.border, width: 1),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg), // 16px
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // ── Header ──────────────────────────────────
             Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: _accentColor,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Center(
-                    child: Text(
-                      invitation.team.name.isNotEmpty
-                          ? invitation.team.name[0].toUpperCase()
-                          : '?',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
+                Avatar(name: invitation.team.name, size: 40),
+                SizedBox(width: AppSpacing.md), // 12px
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         invitation.team.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
+                        style: GoogleFonts.inter(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: AppColors.textPrimary,
-                          letterSpacing: -0.3,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(height: 3),
+                      SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.person_outline_rounded,
                             size: 12,
                             color: AppColors.textSecondary,
                           ),
-                          const SizedBox(width: 3),
+                          SizedBox(width: 4),
                           Text(
                             'Invited as ${invitation.role}',
-                            style: const TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: FontWeight.w400,
                               color: AppColors.textSecondary,
                             ),
                           ),
@@ -137,26 +88,26 @@ class InvitationCard extends StatelessWidget {
               ],
             ),
 
-            const SizedBox(height: AppSpacing.md),
-            const Divider(color: AppColors.border, height: 1),
-            const SizedBox(height: AppSpacing.md),
+            SizedBox(height: AppSpacing.md),
+            Divider(color: AppColors.border, height: 1),
+            SizedBox(height: AppSpacing.md),
 
             // ── Footer ──────────────────────────────────
             Row(
               children: [
                 if (_expiresLabel.isNotEmpty) ...[
-                  const Icon(
+                  Icon(
                     Icons.schedule_rounded,
                     size: 12,
-                    color: AppColors.textMuted,
+                    color: AppColors.muted,
                   ),
-                  const SizedBox(width: 4),
+                  SizedBox(width: 4),
                   Text(
                     _expiresLabel,
-                    style: const TextStyle(
+                    style: GoogleFonts.inter(
                       fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.textMuted,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.muted,
                     ),
                   ),
                   const Spacer(),
@@ -164,51 +115,25 @@ class InvitationCard extends StatelessWidget {
                   const Spacer(),
 
                 // Decline
-                GestureDetector(
-                  onTap: onDecline,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.dangerLight,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Decline',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.danger,
-                      ),
-                    ),
+                OutlinedButton(
+                  onPressed: onDecline,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    foregroundColor: AppColors.danger,
+                    side: const BorderSide(color: AppColors.border),
                   ),
+                  child: Text('Decline'),
                 ),
 
-                const SizedBox(width: AppSpacing.sm),
+                SizedBox(width: AppSpacing.sm), // 8px
 
                 // Accept
-                GestureDetector(
-                  onTap: onAccept,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Text(
-                      'Accept',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                ElevatedButton(
+                  onPressed: onAccept,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
+                  child: Text('Accept'),
                 ),
               ],
             ),

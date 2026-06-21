@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -26,9 +27,9 @@ _PasswordStrength _evalStrength(String pw) {
 extension _StrengthX on _PasswordStrength {
   Color get color => const [
     Colors.transparent,
-    Color(0xFFDC2626),
-    Color(0xFFD97706),
-    Color(0xFF059669),
+    Color(0xFFEF4444),
+    Color(0xFFF59E0B),
+    Color(0xFF22C55E),
   ][index];
 
   String get label => const ['', 'Weak', 'Fair', 'Strong'][index];
@@ -97,36 +98,26 @@ class SignUpPage extends HookConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const AppBrandMark(),
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
-                const Text(
+                Text(
                   'Create account',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w800,
-                    color: AppTokens.textPrimary,
-                    letterSpacing: -1.0,
-                    height: 1.05,
-                  ),
+                  style: AppTokens.displayLg,
                 ),
-                const SizedBox(height: AppTokens.s6),
-                const Text(
+                SizedBox(height: AppTokens.s6),
+                Text(
                   'Join your team in seconds',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: AppTokens.textSecondary,
-                    height: 1.4,
-                  ),
+                  style: AppTokens.bodySm,
                 ),
 
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
                 const _StepIndicator(totalFields: 4),
-                const SizedBox(height: AppTokens.s24),
+                SizedBox(height: AppTokens.s24),
 
                 // ── Full name ────────────────────────────────────────────────
-                const AppFieldLabel(label: 'Full name'),
-                const SizedBox(height: AppTokens.s8),
+                AppFieldLabel(label: 'Full name'),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: nameCtrl,
                   focusNode: nameFocus,
@@ -139,11 +130,11 @@ class SignUpPage extends HookConsumerWidget {
                   enabled: !isLoading,
                 ),
 
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
 
                 // ── Email ────────────────────────────────────────────────────
-                const AppFieldLabel(label: 'Work email'),
-                const SizedBox(height: AppTokens.s8),
+                AppFieldLabel(label: 'Work email'),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: emailCtrl,
                   focusNode: emailFocus,
@@ -156,11 +147,11 @@ class SignUpPage extends HookConsumerWidget {
                   enabled: !isLoading,
                 ),
 
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
 
                 // ── Password ─────────────────────────────────────────────────
-                const AppFieldLabel(label: 'Password'),
-                const SizedBox(height: AppTokens.s8),
+                AppFieldLabel(label: 'Password'),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: passwordCtrl,
                   focusNode: passwordFocus,
@@ -179,15 +170,15 @@ class SignUpPage extends HookConsumerWidget {
                 ),
 
                 if (passwordStrength.value != _PasswordStrength.empty) ...[
-                  const SizedBox(height: AppTokens.s10),
+                  SizedBox(height: AppTokens.s10),
                   _StrengthMeter(strength: passwordStrength.value),
                 ],
 
-                const SizedBox(height: AppTokens.s20),
+                SizedBox(height: AppTokens.s20),
 
                 // ── Confirm password ─────────────────────────────────────────
-                const AppFieldLabel(label: 'Confirm password'),
-                const SizedBox(height: AppTokens.s8),
+                AppFieldLabel(label: 'Confirm password'),
+                SizedBox(height: AppTokens.s8),
                 AppInputField(
                   controller: confirmCtrl,
                   focusNode: confirmFocus,
@@ -208,7 +199,7 @@ class SignUpPage extends HookConsumerWidget {
                   ),
                 ),
 
-                const SizedBox(height: AppTokens.s32),
+                SizedBox(height: AppTokens.s32),
 
                 AppPrimaryButton(
                   label: 'Create account',
@@ -217,17 +208,17 @@ class SignUpPage extends HookConsumerWidget {
                 ),
 
                 if (signUpState.hasError) ...[
-                  const SizedBox(height: AppTokens.s16),
+                  SizedBox(height: AppTokens.s16),
                   AppErrorBanner(
                     message: _friendlyError(signUpState.error.toString()),
                   ),
                 ],
 
-                const SizedBox(height: AppTokens.s24),
+                SizedBox(height: AppTokens.s24),
                 const _LegalNote(),
-                const SizedBox(height: AppTokens.s24),
-                const AppOrDivider(),
-                const SizedBox(height: AppTokens.s24),
+                SizedBox(height: AppTokens.s24),
+                AppOrDivider(),
+                SizedBox(height: AppTokens.s24),
 
                 AppAuthNavPrompt(
                   question: 'Already have an account?',
@@ -284,10 +275,10 @@ class _StepIndicator extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: AppTokens.s6),
+              SizedBox(width: AppTokens.s6),
               Text(
                 'Quick setup · $totalFields fields',
-                style: const TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppTokens.brand,
@@ -319,7 +310,7 @@ class _StrengthMeter extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: Stack(
               children: [
-                Container(height: 4, color: const Color(0xFFE2E8F0)),
+                Container(height: 4, color: AppTokens.border),
                 AnimatedFractionallySizedBox(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
@@ -330,13 +321,13 @@ class _StrengthMeter extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: AppTokens.s10),
+        SizedBox(width: AppTokens.s10),
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 200),
           child: Text(
             strength.label,
             key: ValueKey(strength),
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: strength.color,
@@ -358,8 +349,8 @@ class _LegalNote extends StatelessWidget {
   Widget build(BuildContext context) {
     return RichText(
       textAlign: TextAlign.center,
-      text: const TextSpan(
-        style: TextStyle(
+      text: TextSpan(
+        style: GoogleFonts.inter(
           fontSize: 12,
           fontWeight: FontWeight.w400,
           color: AppTokens.textHint,
@@ -369,7 +360,7 @@ class _LegalNote extends StatelessWidget {
           TextSpan(text: 'By creating an account you agree to our '),
           TextSpan(
             text: 'Terms of Service',
-            style: TextStyle(
+            style: GoogleFonts.inter(
               color: AppTokens.brand,
               fontWeight: FontWeight.w600,
             ),
@@ -377,7 +368,7 @@ class _LegalNote extends StatelessWidget {
           TextSpan(text: ' and '),
           TextSpan(
             text: 'Privacy Policy',
-            style: TextStyle(
+            style: GoogleFonts.inter(
               color: AppTokens.brand,
               fontWeight: FontWeight.w600,
             ),

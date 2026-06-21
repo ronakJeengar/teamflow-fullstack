@@ -21,7 +21,7 @@ class ModalScaffold extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: onDismiss,
       child: ColoredBox(
-        color: const Color(0xFF0F0F1A).withOpacity(0.45),
+        color: AppColors.background.withOpacity(0.45),
         child: Center(
           child: GestureDetector(
             // Prevent backdrop tap from propagating through the card
@@ -56,7 +56,7 @@ class ModalLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 7),
+    padding: const EdgeInsets.only(bottom: 8),
     child: Text(text.toUpperCase(), style: AppTextStyles.label),
   );
 }
@@ -85,16 +85,16 @@ class ModalActions extends StatelessWidget {
       children: [
         TextButton(
           onPressed: isLoading ? null : onCancel,
-          child: const Text('Cancel'),
+          child: Text('Cancel'),
         ),
-        const SizedBox(width: AppSpacing.sm),
+        SizedBox(width: AppSpacing.sm),
         ElevatedButton(
           onPressed: isLoading ? null : onConfirm,
           style: ElevatedButton.styleFrom(
             backgroundColor: isDanger ? AppColors.danger : AppColors.primary,
           ),
           child: isLoading
-              ? const SizedBox(
+              ? SizedBox(
             width: 16,
             height: 16,
             child: CircularProgressIndicator(

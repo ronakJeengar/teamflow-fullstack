@@ -55,7 +55,7 @@ class CreateTeamSheet extends HookConsumerWidget {
             onSubmitted: (_) => submit(),
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          SizedBox(height: AppSpacing.lg),
           const AppSheetLabel('Description (optional)'),
           AppSheetInput(
             controller: descCtrl,
@@ -65,7 +65,7 @@ class CreateTeamSheet extends HookConsumerWidget {
             onSubmitted: (_) => submit(),
           ),
 
-          const SizedBox(height: 18),
+          SizedBox(height: 16),
           AppSheetActions(
             confirmLabel: 'Create',
             isLoading: isLoading,

@@ -1,3 +1,4 @@
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'package:teamflow_mobile/features/teams/domain/entities/team_entity.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -25,12 +26,12 @@ class _TeamCardState extends State<TeamCard> {
 
   Color get _accentColor {
     const colors = [
-      Color(0xFF4F6EF7),
-      Color(0xFF7C3AED),
-      Color(0xFF0D9488),
-      Color(0xFFD97706),
-      Color(0xFFDB2777),
-      Color(0xFF059669),
+      AppColors.primary,
+      AppColors.primary,
+      AppColors.success,
+      AppColors.warning,
+      AppColors.danger,
+      AppColors.success,
     ];
 
     final idx = widget.team.name.codeUnits
@@ -57,35 +58,20 @@ class _TeamCardState extends State<TeamCard> {
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(
             color: _hovered
-                ? _accentColor.withOpacity(0.45)
+                ? AppColors.primary
                 : AppColors.border,
-            width: _hovered ? 1.5 : 1,
+            width: 1,
           ),
-          boxShadow: _hovered
-              ? [
-            BoxShadow(
-              color: _accentColor.withOpacity(0.1),
-              blurRadius: 24,
-              offset: const Offset(0, 6),
-            ),
-          ]
-              : [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
@@ -100,7 +86,7 @@ class _TeamCardState extends State<TeamCard> {
                         color: _accentColor,
                       ),
 
-                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(width: AppSpacing.md),
 
                       Expanded(
                         child: Column(
@@ -114,7 +100,7 @@ class _TeamCardState extends State<TeamCard> {
                             ),
 
                             if (hasDesc) ...[
-                              const SizedBox(height: 4),
+                              SizedBox(height: 4),
 
                               // Reduced to 1 line to avoid overflow
                               Text(
@@ -128,7 +114,7 @@ class _TeamCardState extends State<TeamCard> {
                         ),
                       ),
 
-                      const SizedBox(width: AppSpacing.sm),
+                      SizedBox(width: AppSpacing.sm),
 
                       Row(
                         mainAxisSize: MainAxisSize.min,
@@ -141,7 +127,7 @@ class _TeamCardState extends State<TeamCard> {
                             bgColor: AppColors.primaryLight,
                           ),
 
-                          const SizedBox(width: AppSpacing.xs),
+                          SizedBox(width: AppSpacing.xs),
 
                           _ActionButton(
                             icon: Icons.delete_outline_rounded,
@@ -155,14 +141,14 @@ class _TeamCardState extends State<TeamCard> {
                     ],
                   ),
 
-                  const SizedBox(height: AppSpacing.lg),
+                  SizedBox(height: AppSpacing.lg),
 
-                  const Divider(
+                  Divider(
                     color: AppColors.border,
                     height: 1,
                   ),
 
-                  const SizedBox(height: AppSpacing.md),
+                  SizedBox(height: AppSpacing.md),
 
                   // ───────────────── Stats ─────────────────
                   Row(
@@ -176,7 +162,7 @@ class _TeamCardState extends State<TeamCard> {
                         color: _accentColor,
                       ),
 
-                      const SizedBox(width: AppSpacing.md),
+                      SizedBox(width: AppSpacing.md),
 
                       _StatBadge(
                         icon: Icons.folder_outlined,
@@ -191,7 +177,7 @@ class _TeamCardState extends State<TeamCard> {
 
                   // ───────────────── Chips ─────────────────
                   if (memberCount > 0 || projectCount > 0) ...[
-                    const SizedBox(height: AppSpacing.md),
+                    SizedBox(height: AppSpacing.md),
 
                     SizedBox(
                       height: 30,
@@ -238,7 +224,7 @@ class _TeamCardState extends State<TeamCard> {
                                 bgColor:
                                 AppColors.projectChip,
                                 textColor:
-                                const Color(0xFF1D4ED8),
+                                AppColors.primary,
                                 icon:
                                 Icons.folder_outlined,
                               ),
@@ -252,7 +238,7 @@ class _TeamCardState extends State<TeamCard> {
                               bgColor:
                               AppColors.projectChip,
                               textColor:
-                              const Color(0xFF1D4ED8),
+                              AppColors.primary,
                             ),
                         ],
                       ),
@@ -286,17 +272,17 @@ class _TeamAvatar extends StatelessWidget {
       height: 42,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Center(
         child: Text(
           name.isNotEmpty
               ? name[0].toUpperCase()
               : '?',
-          style: const TextStyle(
+          style: GoogleFonts.inter(
             color: Colors.white,
             fontSize: 18,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -327,13 +313,13 @@ class _ActionButton extends StatelessWidget {
       message: tooltip,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
           width: 30,
           height: 30,
           decoration: BoxDecoration(
             color: bgColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
             icon,
@@ -371,7 +357,7 @@ class _StatBadge extends StatelessWidget {
           color: AppColors.textTertiary,
         ),
 
-        const SizedBox(width: 4),
+        SizedBox(width: 4),
 
         Text(
           value,
@@ -381,7 +367,7 @@ class _StatBadge extends StatelessWidget {
           ),
         ),
 
-        const SizedBox(width: 3),
+        SizedBox(width: 4),
 
         Text(
           label,
@@ -416,7 +402,8 @@ class _Chip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(50),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -428,12 +415,12 @@ class _Chip extends StatelessWidget {
               color: textColor,
             ),
 
-            const SizedBox(width: 3),
+            SizedBox(width: 4),
           ],
 
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w500,
               color: textColor,

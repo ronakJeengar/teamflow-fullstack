@@ -63,7 +63,7 @@ class InviteMemberSheet extends HookConsumerWidget {
             onSubmitted: (_) => submit(),
           ),
 
-          const SizedBox(height: 16),
+          SizedBox(height: 16),
 
           const AppSheetLabel('Role'),
 
@@ -81,7 +81,7 @@ class InviteMemberSheet extends HookConsumerWidget {
             },
           ),
 
-          const SizedBox(height: 24),
+          SizedBox(height: 24),
 
           AppSheetActions(
             confirmLabel: 'Send Invite',

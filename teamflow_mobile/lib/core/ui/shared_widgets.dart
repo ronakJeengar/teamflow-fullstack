@@ -1,6 +1,9 @@
+import 'package:teamflow_mobile/core/theme/app_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/material.dart';
 import 'app_tokens.dart';
-import 'app_ui.dart';
+
+// ─── Brand mark ──────────────────────────────────────────────────────────────
 
 class AppBrandMark extends StatelessWidget {
   const AppBrandMark({super.key});
@@ -8,26 +11,25 @@ class AppBrandMark extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
             color: AppTokens.brand,
-            borderRadius: BorderRadius.circular(AppTokens.r14),
+            borderRadius: BorderRadius.circular(AppTokens.r8),
           ),
-          child: const Center(
-            child: Icon(Icons.bolt_rounded, color: Colors.white, size: 24),
-          ),
+          child: Icon(Icons.hub_rounded, color: Colors.white, size: 20),
         ),
-        const SizedBox(width: AppTokens.s10),
-        const Text(
-          'TeamFlow',
-          style: TextStyle(
-            fontSize: 17,
+        SizedBox(width: AppTokens.s10),
+        Text(
+          'teamflow',
+          style: GoogleFonts.inter(
+            fontSize: 18,
             fontWeight: FontWeight.w800,
             color: AppTokens.textPrimary,
-            letterSpacing: -0.5,
+            letterSpacing: -0.8,
           ),
         ),
       ],
@@ -35,34 +37,39 @@ class AppBrandMark extends StatelessWidget {
   }
 }
 
+// ─── Field label ──────────────────────────────────────────────────────────────
+
 class AppFieldLabel extends StatelessWidget {
   final String label;
 
-  const AppFieldLabel({super.key, required this.label});
+  AppFieldLabel({super.key, required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: GoogleFonts.inter(
         fontSize: 13,
         fontWeight: FontWeight.w600,
         color: AppTokens.textPrimary,
+        letterSpacing: -0.1,
       ),
     );
   }
 }
 
+// ─── Input field ─────────────────────────────────────────────────────────────
+
 class AppInputField extends StatefulWidget {
   final TextEditingController controller;
-  final FocusNode? focusNode;
+  final FocusNode focusNode;
   final String hint;
   final IconData icon;
   final bool obscureText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onSubmitted;
-  final FormFieldValidator<String>? validator;
+  final String? Function(String?)? validator;
   final bool enabled;
   final Widget? suffix;
   final TextCapitalization textCapitalization;
@@ -70,7 +77,7 @@ class AppInputField extends StatefulWidget {
   const AppInputField({
     super.key,
     required this.controller,
-    this.focusNode,
+    required this.focusNode,
     required this.hint,
     required this.icon,
     this.obscureText = false,
@@ -89,106 +96,81 @@ class AppInputField extends StatefulWidget {
 
 class _AppInputFieldState extends State<AppInputField> {
   bool _focused = false;
-  bool _hasError = false;
 
   @override
   void initState() {
     super.initState();
-    widget.focusNode?.addListener(_onFocusChange);
+    widget.focusNode.addListener(_onFocusChange);
   }
 
   void _onFocusChange() {
-    setState(() => _focused = widget.focusNode?.hasFocus ?? false);
+    setState(() => _focused = widget.focusNode.hasFocus);
   }
 
   @override
   void dispose() {
-    widget.focusNode?.removeListener(_onFocusChange);
+    widget.focusNode.removeListener(_onFocusChange);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: const Duration(milliseconds: 140),
       decoration: BoxDecoration(
         color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r14),
+        borderRadius: BorderRadius.circular(AppTokens.r8),
         border: Border.all(
-          color: _hasError
-              ? AppTokens.danger
-              : _focused
-              ? AppTokens.borderFocus
-              : AppTokens.border,
-          width: _focused || _hasError ? 1.5 : 1,
+          color: _focused ? AppTokens.brand : AppTokens.border,
+          width: 1,
         ),
-        boxShadow: _focused
-            ? [
-                BoxShadow(
-                  color: AppTokens.brand.withOpacity(0.08),
-                  blurRadius: 0,
-                  spreadRadius: 3,
-                ),
-              ]
-            : [],
       ),
-      child: Row(
-        children: [
-          const SizedBox(width: AppTokens.s14),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            child: Icon(
-              widget.icon,
-              size: 18,
-              color: _focused ? AppTokens.brand : AppTokens.textHint,
-            ),
+      child: TextFormField(
+        controller: widget.controller,
+        focusNode: widget.focusNode,
+        obscureText: widget.obscureText,
+        keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        onFieldSubmitted: widget.onSubmitted,
+        validator: widget.validator,
+        enabled: widget.enabled,
+        textCapitalization: widget.textCapitalization,
+        style: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+          color: AppTokens.textPrimary,
+          letterSpacing: -0.2,
+        ),
+        decoration: InputDecoration(
+          hintText: widget.hint,
+          hintStyle: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w400,
+            color: AppTokens.textHint,
           ),
-          const SizedBox(width: AppTokens.s10),
-          Expanded(
-            child: TextFormField(
-              controller: widget.controller,
-              focusNode: widget.focusNode,
-              obscureText: widget.obscureText,
-              keyboardType: widget.keyboardType,
-              textInputAction: widget.textInputAction,
-              textCapitalization: widget.textCapitalization,
-              onFieldSubmitted: widget.onSubmitted,
-              enabled: widget.enabled,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
-                color: AppTokens.textPrimary,
-              ),
-              decoration: InputDecoration(
-                hintText: widget.hint,
-                hintStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: AppTokens.textHint,
-                ),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: AppTokens.s16, horizontal: AppTokens.s8
-                ),
-                errorStyle: const TextStyle(height: 0, fontSize: 0),
-              ),
-              validator: (v) {
-                final err = widget.validator?.call(v);
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) setState(() => _hasError = err != null);
-                });
-                return err;
-              },
-            ),
+          prefixIcon: Icon(
+            widget.icon,
+            size: 18,
+            color: _focused ? AppTokens.brand : AppTokens.textHint,
           ),
-          if (widget.suffix != null) widget.suffix!,
-          const SizedBox(width: AppTokens.s4),
-        ],
+          suffixIcon: widget.suffix,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: AppTokens.s16,
+            horizontal: AppTokens.s4,
+          ),
+          errorStyle: GoogleFonts.inter(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: AppTokens.danger,
+          ),
+        ),
       ),
     );
   }
 }
+
+// ─── Visibility toggle ────────────────────────────────────────────────────────
 
 class AppVisibilityToggle extends StatelessWidget {
   final bool obscure;
@@ -205,73 +187,92 @@ class AppVisibilityToggle extends StatelessWidget {
     return GestureDetector(
       onTap: onToggle,
       child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s12),
+        padding: const EdgeInsets.only(right: AppTokens.s4),
         child: Icon(
-          obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+          obscure
+              ? Icons.visibility_off_outlined
+              : Icons.visibility_outlined,
           size: 18,
-          color: AppTokens.textHint,
+          color: AppTokens.textSecondary,
         ),
       ),
     );
   }
 }
 
-class AppPrimaryButton extends StatelessWidget {
+// ─── Primary button ───────────────────────────────────────────────────────────
+
+class AppPrimaryButton extends StatefulWidget {
   final String label;
   final bool isLoading;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const AppPrimaryButton({
     super.key,
     required this.label,
-    required this.isLoading,
-    required this.onPressed,
+    this.isLoading = false,
+    this.onPressed,
   });
+
+  @override
+  State<AppPrimaryButton> createState() => _AppPrimaryButtonState();
+}
+
+class _AppPrimaryButtonState extends State<AppPrimaryButton> {
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: isLoading ? null : onPressed,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        height: 52,
-        decoration: BoxDecoration(
-          color: isLoading ? AppTokens.brand.withOpacity(0.7) : AppTokens.brand,
-          borderRadius: BorderRadius.circular(AppTokens.r14),
-          boxShadow: isLoading
-              ? []
-              : [
-                  BoxShadow(
-                    color: AppTokens.brand.withOpacity(0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-        ),
-        child: Center(
-          child: isLoading
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    letterSpacing: -0.2,
-                  ),
-                ),
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onPressed?.call();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          height: 48,
+          decoration: BoxDecoration(
+            color: widget.onPressed != null && !widget.isLoading
+                ? AppTokens.brand
+                : AppTokens.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppTokens.r8),
+            border: Border.all(color: AppTokens.border, width: 1),
+          ),
+          child: Center(
+            child: widget.isLoading
+                ? SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor:
+                AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+                : Text(
+              widget.label,
+              style: GoogleFonts.inter(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.3,
+                color: widget.onPressed != null
+                    ? Colors.white
+                    : AppTokens.textHint,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
 
 class AppErrorBanner extends StatelessWidget {
   final String message;
@@ -282,27 +283,26 @@ class AppErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.s14,
+        horizontal: AppTokens.s16,
         vertical: AppTokens.s12,
       ),
       decoration: BoxDecoration(
         color: AppTokens.dangerSurface,
         borderRadius: BorderRadius.circular(AppTokens.r12),
-        border: Border.all(color: AppTokens.danger.withOpacity(0.2)),
+        border: Border.all(color: AppTokens.dangerBorder),
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
             size: 16,
             color: AppTokens.danger,
           ),
-          const SizedBox(width: AppTokens.s8),
+          SizedBox(width: AppTokens.s10),
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 color: AppTokens.danger,
@@ -316,37 +316,40 @@ class AppErrorBanner extends StatelessWidget {
   }
 }
 
+// ─── Or divider ───────────────────────────────────────────────────────────────
+
 class AppOrDivider extends StatelessWidget {
-  const AppOrDivider({super.key});
+  AppOrDivider({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Expanded(child: Divider(color: AppTokens.border, thickness: 1)),
+        Expanded(child: Container(height: 1, color: AppTokens.border)),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTokens.s12),
-          child: const Text(
+          child: Text(
             'or',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+            style: AppTokens.labelSm.copyWith(
               color: AppTokens.textHint,
+              letterSpacing: 0.5,
             ),
           ),
         ),
-        const Expanded(child: Divider(color: AppTokens.border, thickness: 1)),
+        Expanded(child: Container(height: 1, color: AppTokens.border)),
       ],
     );
   }
 }
+
+// ─── Auth nav prompt ──────────────────────────────────────────────────────────
 
 class AppAuthNavPrompt extends StatelessWidget {
   final String question;
   final String actionLabel;
   final VoidCallback onTap;
 
-  const AppAuthNavPrompt({
+  AppAuthNavPrompt({
     super.key,
     required this.question,
     required this.actionLabel,
@@ -360,21 +363,22 @@ class AppAuthNavPrompt extends StatelessWidget {
       children: [
         Text(
           question,
-          style: const TextStyle(
+          style: GoogleFonts.inter(
             fontSize: 14,
-            fontWeight: FontWeight.w400,
             color: AppTokens.textSecondary,
+            fontWeight: FontWeight.w400,
           ),
         ),
-        const SizedBox(width: AppTokens.s6),
+        SizedBox(width: AppTokens.s6),
         GestureDetector(
           onTap: onTap,
           child: Text(
             actionLabel,
-            style: const TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w700,
               color: AppTokens.brand,
+              letterSpacing: -0.2,
             ),
           ),
         ),
@@ -383,57 +387,332 @@ class AppAuthNavPrompt extends StatelessWidget {
   }
 }
 
-const _kAvatarPalette = [
-  (Color(0xFFEDE9FE), Color(0xFF7C3AED)),
-  (Color(0xFFD1FAE5), Color(0xFF059669)),
-  (Color(0xFFFEF3C7), Color(0xFFD97706)),
-  (Color(0xFFDBEAFE), Color(0xFF2563EB)),
-  (Color(0xFFFCE7F3), Color(0xFFDB2777)),
-  (Color(0xFFFFEDD5), Color(0xFFEA580C)),
-  (Color(0xFFF0FDF4), Color(0xFF16A34A)),
-];
+// ─── Icon button ──────────────────────────────────────────────────────────────
+
+class AppIconButton extends StatefulWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+  final Color? color;
+
+  const AppIconButton({
+    super.key,
+    required this.icon,
+    required this.onTap,
+    this.color,
+  });
+
+  @override
+  State<AppIconButton> createState() => _AppIconButtonState();
+}
+
+class _AppIconButtonState extends State<AppIconButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: _pressed ? AppTokens.surfaceDeep : AppTokens.surfaceAlt,
+          borderRadius: BorderRadius.circular(AppTokens.r12),
+          border: Border.all(color: AppTokens.border),
+        ),
+        child: Icon(
+          widget.icon,
+          size: 18,
+          color: widget.color ?? AppTokens.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Action button (small icon-only, edit/delete) ────────────────────────────
+
+class AppActionButton extends StatefulWidget {
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const AppActionButton({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  State<AppActionButton> createState() => _AppActionButtonState();
+}
+
+class _AppActionButtonState extends State<AppActionButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) {
+        setState(() => _pressed = false);
+        widget.onTap();
+      },
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 120),
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: _pressed
+              ? widget.color.withOpacity(0.14)
+              : widget.color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(AppTokens.r10),
+        ),
+        child: Icon(widget.icon, size: 16, color: widget.color),
+      ),
+    );
+  }
+}
+
+// ─── Avatar ──────────────────────────────────────────────────────────────────
 
 class AppAvatar extends StatelessWidget {
   final String name;
   final double size;
 
-  const AppAvatar({super.key, required this.name, this.size = 40});
+  const AppAvatar({super.key, required this.name, required this.size});
 
   String get _initials {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    final words = name.trim().split(RegExp(r'\s+'));
+    if (words.length >= 2) {
+      return '${words[0][0]}${words[1][0]}'.toUpperCase();
     }
-    return name.isNotEmpty
-        ? name.substring(0, name.length.clamp(0, 2)).toUpperCase()
-        : '?';
+    return name.substring(0, name.length.clamp(0, 2)).toUpperCase();
   }
 
-  (Color, Color) get _colors {
-    if (name.isEmpty) return _kAvatarPalette[0];
-    return _kAvatarPalette[name.codeUnitAt(0) % _kAvatarPalette.length];
+  Color _colorFromName(String name) {
+    final colors = [
+      AppColors.primary,
+      AppColors.primary,
+      AppColors.primary,
+      AppColors.success,
+      AppColors.warning,
+      AppColors.danger,
+      AppColors.primary,
+    ];
+    int hash = 0;
+    for (final c in name.codeUnits) {
+      hash = (hash * 31 + c) & 0xFFFFFFFF;
+    }
+    return colors[hash % colors.length];
   }
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = _colors;
+    final bg = _colorFromName(name);
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
+      decoration: BoxDecoration(
+        color: bg,
+        shape: BoxShape.circle,
+      ),
       child: Center(
         child: Text(
           _initials,
-          style: TextStyle(
+          style: GoogleFonts.inter(
             fontSize: size * 0.34,
-            fontWeight: FontWeight.w700,
-            color: fg,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            letterSpacing: -0.5,
           ),
         ),
       ),
     );
   }
 }
+
+// ─── Role badge ───────────────────────────────────────────────────────────────
+
+class AppRoleBadge extends StatelessWidget {
+  final String role;
+
+  const AppRoleBadge({super.key, required this.role});
+
+  ({String label, Color color, Color surface, Color border}) get _style =>
+      switch (role.toUpperCase()) {
+        'OWNER' => (
+        label: 'Owner',
+        color: AppTokens.brand,
+        surface: AppTokens.brandSurface,
+        border: AppTokens.brandBorder,
+        ),
+        'ADMIN' => (
+        label: 'Admin',
+        color: AppTokens.warning,
+        surface: AppTokens.warningSurface,
+        border: AppTokens.warningBorder,
+        ),
+        'MEMBER' => (
+        label: 'Member',
+        color: AppTokens.success,
+        surface: AppTokens.successSurface,
+        border: AppTokens.successBorder,
+        ),
+        _ => (
+        label: 'Viewer',
+        color: AppTokens.textSecondary,
+        surface: AppTokens.surfaceAlt,
+        border: AppTokens.border,
+        ),
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final s = _style;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTokens.s8,
+        vertical: AppTokens.s4,
+      ),
+      decoration: BoxDecoration(
+        color: s.surface,
+        borderRadius: BorderRadius.circular(AppTokens.r8),
+        border: Border.all(color: s.border, width: 1),
+      ),
+      child: Text(
+        s.label,
+        style: GoogleFonts.inter(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: s.color,
+          letterSpacing: 0.1,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Loading view ─────────────────────────────────────────────────────────────
+
+class AppLoadingView extends StatelessWidget {
+  final String message;
+
+  const AppLoadingView({super.key, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(AppTokens.brand),
+            ),
+          ),
+          SizedBox(height: AppTokens.s16),
+          Text(message, style: AppTokens.bodySm),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Error view ───────────────────────────────────────────────────────────────
+
+class AppErrorView extends StatelessWidget {
+  final String title;
+  final String message;
+  final VoidCallback onRetry;
+
+  const AppErrorView({
+    super.key,
+    required this.title,
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTokens.s32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppTokens.dangerSurface,
+                borderRadius: BorderRadius.circular(AppTokens.r8),
+                border: Border.all(color: AppTokens.dangerBorder),
+              ),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                size: 26,
+                color: AppTokens.danger,
+              ),
+            ),
+            SizedBox(height: AppTokens.s20),
+            Text(
+              title,
+              style: GoogleFonts.inter(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTokens.textPrimary,
+                letterSpacing: -0.3,
+              ),
+            ),
+            SizedBox(height: AppTokens.s8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTokens.bodySm.copyWith(height: 1.6),
+            ),
+            SizedBox(height: AppTokens.s24),
+            GestureDetector(
+              onTap: onRetry,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppTokens.s20,
+                  vertical: AppTokens.s12,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTokens.brand,
+                  borderRadius: BorderRadius.circular(AppTokens.r8),
+                ),
+                child: Text(
+                  'Try again',
+                  style: GoogleFonts.inter(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
 
 class AppEmptyState extends StatelessWidget {
   final IconData icon;
@@ -470,28 +749,32 @@ class AppEmptyState extends StatelessWidget {
               height: 64,
               decoration: BoxDecoration(
                 color: iconSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r20),
+                borderRadius: BorderRadius.circular(AppTokens.r8),
+                border: Border.all(
+                  color: iconColor.withOpacity(0.15),
+                  width: 1.5,
+                ),
               ),
               child: Icon(icon, size: 28, color: iconColor),
             ),
-            const SizedBox(height: AppTokens.s20),
+            SizedBox(height: AppTokens.s20),
             Text(
               title,
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppTokens.textPrimary,
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: AppTokens.s6),
+            SizedBox(height: AppTokens.s8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
               style: AppTokens.bodySm.copyWith(height: 1.6),
             ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: AppTokens.s24),
+            if (onAction != null && actionLabel != null) ...[
+              SizedBox(height: AppTokens.s24),
               GestureDetector(
                 onTap: onAction,
                 child: Container(
@@ -501,23 +784,22 @@ class AppEmptyState extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTokens.brand,
-                    borderRadius: BorderRadius.circular(AppTokens.r12),
+                    borderRadius: BorderRadius.circular(AppTokens.r8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        actionIcon ?? Icons.add_rounded,
-                        size: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: AppTokens.s8),
+                      if (actionIcon != null) ...[
+                        Icon(actionIcon, size: 15, color: Colors.white),
+                        SizedBox(width: AppTokens.s6),
+                      ],
                       Text(
                         actionLabel!,
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: GoogleFonts.inter(
+                          fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: Colors.white,
+                          letterSpacing: -0.2,
                         ),
                       ),
                     ],
@@ -532,209 +814,30 @@ class AppEmptyState extends StatelessWidget {
   }
 }
 
-class AppLoadingView extends StatelessWidget {
-  final String? message;
-
-  const AppLoadingView({super.key, this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: AppTokens.brand,
-            ),
-          ),
-          if (message != null) ...[
-            const SizedBox(height: AppTokens.s16),
-            Text(message!, style: AppTokens.bodySm),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class AppErrorView extends StatelessWidget {
-  final String title;
-  final String message;
-  final VoidCallback? onRetry;
-
-  const AppErrorView({
-    super.key,
-    this.title = 'Something went wrong',
-    required this.message,
-    this.onRetry,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: AppTokens.dangerSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r20),
-              ),
-              child: const Icon(
-                Icons.error_outline_rounded,
-                size: 28,
-                color: AppTokens.danger,
-              ),
-            ),
-            const SizedBox(height: AppTokens.s20),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppTokens.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppTokens.s8),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: AppTokens.bodySm.copyWith(height: 1.6),
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: AppTokens.s24),
-              AppPrimaryButton(
-                label: 'Try again',
-                isLoading: false,
-                onPressed: onRetry!,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class AppIconButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-  final double size;
-  final Color? backgroundColor;
-  final Color? iconColor;
-
-  const AppIconButton({
-    super.key,
-    required this.icon,
-    required this.onTap,
-    this.size = 40,
-    this.backgroundColor,
-    this.iconColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: backgroundColor ?? AppTokens.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppTokens.r12),
-        ),
-        child: Icon(
-          icon,
-          size: size * 0.45,
-          color: iconColor ?? AppTokens.textSecondary,
-        ),
-      ),
-    );
-  }
-}
-
-class AppActionButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const AppActionButton({
-    super.key,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(AppTokens.r8),
-        ),
-        child: Icon(icon, size: 15, color: color),
-      ),
-    );
-  }
-}
+// ─── Snackbar ────────────────────────────────────────────────────────────────
 
 void showAppSnackBar(
-  BuildContext context,
-  String message, {
-  Color backgroundColor = AppTokens.danger,
-}) {
+    BuildContext context,
+    String message, {
+      Color? backgroundColor,
+    }) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
-      content: Text(message),
-      backgroundColor: backgroundColor,
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      margin: const EdgeInsets.all(AppTokens.s16),
-    ),
-  );
-}
-
-class AppRoleBadge extends StatelessWidget {
-  final String role;
-
-  const AppRoleBadge({super.key, required this.role});
-
-  @override
-  Widget build(BuildContext context) {
-    final lower = role.toLowerCase();
-    final (bg, fg, label) = switch (lower) {
-      'owner' => (AppColors.brandSurface, AppColors.primary, 'Owner'),
-      'admin' => (AppColors.warningSurface, AppColors.warning, 'Admin'),
-      _ => (AppColors.surfaceAlt, AppColors.textSecondary, 'Member'),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.1,
-          color: fg,
+      content: Text(
+        message,
+        style: GoogleFonts.inter(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: Colors.white,
         ),
       ),
-    );
-  }
+      backgroundColor: backgroundColor ?? AppTokens.textPrimary,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.r12),
+      ),
+      margin: const EdgeInsets.all(AppTokens.s16),
+      duration: const Duration(seconds: 3),
+    ),
+  );
 }
