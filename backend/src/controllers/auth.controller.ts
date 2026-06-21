@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
-import { failure, success } from "../utils/response.js";
+import { successResponse, errorResponse } from "../utils/response.js";
 
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
@@ -15,7 +15,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      failure(res, "All fields are required", 400);
+      errorResponse(res, "All fields are required", 400);
       return;
     }
 
@@ -24,7 +24,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (existingUser) {
-      failure(res, "Email already registered", 400);
+      errorResponse(res, "Email already registered", 400);
       return;
     }
 
@@ -45,10 +45,10 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       },
     });
 
-    success(res, "Registration successful", user, 201);
+    successResponse(res, user, "Registration successful", 201);
   } catch (error) {
     console.error("Register error:", error);
-    failure(res, "Internal server error", 500);
+    errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -63,22 +63,31 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     });
 
     if (!user) {
-      failure(res, "Invalid credentials", 401);
+      errorResponse(res, "Invalid credentials", 401);
       return;
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-      failure(res, "Invalid credentials", 401);
+      errorResponse(res, "Invalid credentials", 401);
       return;
     }
+
+    // Default to the first workspace owned or member of, if none switch activeWorkspaceId will be done later
+    const workspaceMember = await prisma.workspaceMember.findFirst({
+      where: { userId: user.id },
+      orderBy: { joinedAt: "asc" },
+    });
+
+    const activeWorkspaceId = workspaceMember ? workspaceMember.workspaceId : undefined;
 
     const accessToken = jwt.sign(
       {
         userId: user.id,
         email: user.email,
         role: user.role,
+        activeWorkspaceId,
       },
       JWT_ACCESS_SECRET,
       { expiresIn: "15m" },
@@ -102,15 +111,16 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    success(res, "Login successful", {
+    successResponse(res, {
       id: user.id,
       name: user.name,
       email: user.email,
       role: user.role,
-    });
+      activeWorkspaceId,
+    }, "Login successful");
   } catch (error) {
     console.error("Login error:", error);
-    failure(res, "Internal server error", 500);
+    errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -132,19 +142,59 @@ export const getCurrentUser = async (
         id: true,
         name: true,
         email: true,
+        avatar: true,
+        bio: true,
         role: true,
       },
     });
 
     if (!user) {
-      failure(res, "User not found", 404);
+      errorResponse(res, "User not found", 404);
       return;
     }
 
-    success(res, "User fetched successfully", user);
+    successResponse(res, user, "User fetched successfully");
   } catch (error) {
     console.error("Get current user error:", error);
-    failure(res, "Internal server error", 500);
+    errorResponse(res, "Internal server error", 500);
+  }
+};
+
+/* ========================= UPDATE PROFILE ========================= */
+
+export const updateProfile = async (
+  req: AuthRequest,
+  res: Response,
+): Promise<void> => {
+  try {
+    const userId = req.user!.userId;
+    const { name, avatar, bio, password } = req.body;
+
+    const data: any = {};
+    if (name !== undefined) data.name = name;
+    if (avatar !== undefined) data.avatar = avatar;
+    if (bio !== undefined) data.bio = bio;
+    if (password !== undefined) {
+      data.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        avatar: true,
+        bio: true,
+        role: true,
+      },
+    });
+
+    successResponse(res, updatedUser, "Profile updated successfully");
+  } catch (error) {
+    console.error("Update profile error:", error);
+    errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -171,16 +221,16 @@ export const getMyMemberships = async (
       },
     });
 
-    success(res, "Memberships fetched successfully", memberships);
+    successResponse(res, memberships, "Memberships fetched successfully");
   } catch (error) {
     console.error("Get memberships error:", error);
-    failure(res, "Internal server error", 500);
+    errorResponse(res, "Internal server error", 500);
   }
 };
 
 /* ========================= REFRESH ========================= */
 
-export const refresh = (req: Request, res: Response): void => {
+export const refresh = async (req: Request, res: Response): Promise<void> => {
   const token = req.cookies?.refreshToken;
 
   if (!token) {
@@ -193,8 +243,34 @@ export const refresh = (req: Request, res: Response): void => {
       userId: string;
     };
 
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      errorResponse(res, "User not found", 401);
+      return;
+    }
+
+    const workspaceMember = await prisma.workspaceMember.findFirst({
+      where: { userId: user.id },
+      orderBy: { joinedAt: "asc" },
+    });
+
+    const activeWorkspaceId = workspaceMember ? workspaceMember.workspaceId : undefined;
+
     const accessToken = jwt.sign(
-      { userId: decoded.userId },
+      {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        activeWorkspaceId,
+      },
       JWT_ACCESS_SECRET,
       { expiresIn: "15m" },
     );
@@ -206,9 +282,9 @@ export const refresh = (req: Request, res: Response): void => {
       maxAge: 15 * 60 * 1000,
     });
 
-    success(res, "Token refreshed successfully", { accessToken });
+    successResponse(res, { accessToken }, "Token refreshed successfully");
   } catch {
-    failure(res, "Invalid refresh token", 403);
+    errorResponse(res, "Invalid refresh token", 403);
   }
 };
 
@@ -218,5 +294,5 @@ export const logout = (req: Request, res: Response): void => {
   res.clearCookie("accessToken");
   res.clearCookie("refreshToken");
 
-  success(res, "Logged out successfully", null);
+  successResponse(res, null, "Logged out successfully");
 };
