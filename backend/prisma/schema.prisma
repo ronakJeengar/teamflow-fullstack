@@ -11,20 +11,43 @@ model Task {
   title        String
   description  String?
   status       TaskStatus @default(TODO)
+  priority     Priority   @default(MEDIUM)
+  dueDate      DateTime?
+  tags         String[]   @default([])
   projectId    String
   createdById  String
-  createdBy    User       @relation("UserTasks", fields: [createdById], references: [id])
   assignedToId String?
+  
+  // NEW
+  comments     Comment[]
+  activities   ActivityLog[]
+  
+  createdBy    User       @relation("UserTasks", fields: [createdById], references: [id])
   assignedTo   User?      @relation("AssignedTasks", fields: [assignedToId], references: [id])
   project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  
+  @@index([projectId])
+  @@index([assignedToId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([createdById])
 }
 
 enum TaskStatus {
   TODO
   IN_PROGRESS
+  REVIEW
+  BLOCKED
   DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
 }
 
 model Project {
@@ -63,29 +86,46 @@ enum Visibility {
 }
 
 model User {
-  id              String           @id @default(uuid())
-  name            String
-  email           String           @unique
-  password        String
-  avatar          String? // profile picture URL
-  bio             String?
-  role            Role             @default(USER)
-  ownedTeams      Team[]           @relation("TeamOwner")
-  teamMembers     TeamMember[]
-  projects        Project[]
-  tasks           Task[]           @relation("UserTasks")
-  assignedTasks   Task[]           @relation("AssignedTasks")
-  sentInvitations TeamInvitation[] @relation("InvitationSender")
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id                String            @id @default(uuid())
+  name              String
+  email             String            @unique
+  password          String
+  avatar            String? // profile picture URL
+  bio               String?
+  role              Role              @default(USER)
+  ownedTeams        Team[]            @relation("TeamOwner")
+  teamMembers       TeamMember[]
+  projects          Project[]
+  tasks             Task[]            @relation("UserTasks")
+  assignedTasks     Task[]            @relation("AssignedTasks")
+  sentInvitations   TeamInvitation[]  @relation("InvitationSender")
+  
+  comments          Comment[]
+  notifications     Notification[]    @relation("UserNotifications")
+  sentNotifications Notification[]    @relation("SentNotifications")
+  activityLogs      ActivityLog[]
+  ownedWorkspaces   Workspace[]       @relation("WorkspaceOwner")
+  workspaceMembers  WorkspaceMember[]
+  
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 }
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  action    String
+  action    String   // e.g. "created this task", "added to Website Redesign"
   userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  taskId    String?
+  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   projectId String?
+  teamId    String?
+  metadata  Json?    // extra data like old/new status
   createdAt DateTime @default(now())
+
+  @@index([taskId])
+  @@index([userId])
+  @@index([projectId])
 }
 
 enum Role {
@@ -106,10 +146,14 @@ model Team {
   projects    Project[]
   invitations TeamInvitation[]
 
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([ownerId])
+  @@index([workspaceId])
 }
 
 model TeamMember {
@@ -159,4 +203,74 @@ enum InvitationStatus {
   ACCEPTED
   EXPIRED
   CANCELLED
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  taskId    String
+  userId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String           // recipient
+  senderId  String?          // who triggered it
+  type      NotificationType
+  title     String
+  body      String
+  taskId    String?
+  projectId String?
+  teamId    String?
+  isRead    Boolean          @default(false)
+  user      User             @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  sender    User?            @relation("SentNotifications", fields: [senderId], references: [id])
+  createdAt DateTime         @default(now())
+
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_COMMENTED
+  TASK_STATUS_CHANGED
+  PROJECT_ADDED
+  TEAM_INVITED
+  MENTION
+}
+
+model Workspace {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  color       String   @default("#7C5CFF")
+  ownerId     String
+  owner       User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  members     WorkspaceMember[]
+  teams       Team[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerId])
+}
+
+model WorkspaceMember {
+  id          String    @id @default(uuid())
+  workspaceId String
+  userId      String
+  role        TeamMemberRole @default(MEMBER)
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId])
 }
