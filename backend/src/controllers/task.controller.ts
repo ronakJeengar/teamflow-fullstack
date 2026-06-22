@@ -514,11 +514,20 @@ export const deleteTask = async (req: AuthRequest, res: Response) => {
       return errorResponse(res, "Project not found", 404);
     }
 
+    const member = await prisma.teamMember.findFirst({
+      where: { teamId: project.teamId, userId },
+    });
+
+    if (!member) {
+      return errorResponse(res, "Access denied. Not a team member.", 403);
+    }
+
     const isCreator = task.createdById === userId;
     const isProjectOwner = project.ownerId === userId;
+    const isTeamOwnerOrAdmin = ["OWNER", "ADMIN"].includes(member.role);
 
-    if (!isCreator && !isProjectOwner) {
-      return errorResponse(res, "Access denied. Only the task creator or project owner can delete this task.", 403);
+    if (!isCreator && !isProjectOwner && !isTeamOwnerOrAdmin) {
+      return errorResponse(res, "Access denied. Only the task creator, project owner, or team admins/owners can delete this task.", 403);
     }
 
     await prisma.task.delete({ where: { id } });

@@ -1,17 +1,39 @@
 import { Response } from "express";
 import { prisma } from "../prisma/client.js";
 import { AuthRequest } from "../middleware/auth.middleware.js";
-import { failure, success } from "../utils/response.js";
-
-export type TeamMemberRole = "OWNER" | "ADMIN" | "MEMBER" | "VIEWER";
+import { successResponse, errorResponse } from "../utils/response.js";
+import { TeamMemberRole } from "@prisma/client";
 
 // Create a new team
 export const createTeam = async (req: AuthRequest, res: Response) => {
   try {
-    const { name, description, avatar } = req.body;
+    const { name, description, avatar, workspaceId } = req.body;
     const userId = req.user!.userId;
 
-    if (!name) return failure(res, "Team name is required", 400);
+    if (!name) {
+      return errorResponse(res, "Team name is required", 400);
+    }
+
+    if (workspaceId) {
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        include: {
+          members: {
+            where: { userId },
+          },
+        },
+      });
+
+      if (!workspace) {
+        return errorResponse(res, "Workspace not found", 404);
+      }
+
+      const isWsMember =
+        workspace.ownerId === userId || workspace.members.length > 0;
+      if (!isWsMember) {
+        return errorResponse(res, "Access denied. Not a member of this workspace.", 403);
+      }
+    }
 
     const team = await prisma.team.create({
       data: {
@@ -19,19 +41,21 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
         description,
         avatar,
         ownerId: userId,
+        workspaceId: workspaceId || null,
         members: {
           create: {
             userId,
-            role: "OWNER" as TeamMemberRole,
+            role: TeamMemberRole.OWNER,
           },
         },
       },
       include: { members: true },
     });
-    return success(res, "Team created successfully", team, 201);
+
+    return successResponse(res, team, "Team created successfully", 201);
   } catch (error) {
     console.error("Error creating team:", error);
-    return failure(res, "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -39,17 +63,28 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
 export const getMyTeams = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
+    const workspaceId = req.query.workspaceId as string | undefined;
+
+    const whereClause: any = {
+      userId,
+    };
+
+    if (workspaceId) {
+      whereClause.team = {
+        workspaceId,
+      };
+    }
 
     const memberships = await prisma.teamMember.findMany({
-      where: { userId },
+      where: whereClause,
       include: { team: true },
     });
 
     const teams = memberships.map((m) => m.team);
-    success(res, "Teams retrieved successfully", teams);
+    return successResponse(res, teams, "Teams retrieved successfully");
   } catch (error) {
     console.error("Error fetching teams:", error);
-    return failure(res, "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -84,17 +119,21 @@ export const getTeamDetails = async (req: AuthRequest, res: Response) => {
       },
     });
 
-    if (!team) return failure(res, "Team not found", 404);
+    if (!team) {
+      return errorResponse(res, "Team not found", 404);
+    }
 
     const isOwner = team.ownerId === userId;
     const isMember = team.members.some((m) => m.userId === userId);
 
-    if (!isOwner && !isMember) return failure(res, "Access Denied", 403);
+    if (!isOwner && !isMember) {
+      return errorResponse(res, "Access Denied", 403);
+    }
 
-    success(res, "Team details retrieved successfully", team);
+    return successResponse(res, team, "Team details retrieved successfully");
   } catch (error) {
     console.error("Get Team Details error:", error);
-    return failure(res, "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -102,24 +141,32 @@ export const getTeamDetails = async (req: AuthRequest, res: Response) => {
 export const updateTeam = async (req: AuthRequest, res: Response) => {
   try {
     const { teamId } = req.params;
-    const { name, description, avatar } = req.body;
+    const { name, description, avatar, workspaceId } = req.body;
     const userId = req.user!.userId;
 
     const team = await prisma.team.findUnique({ where: { id: teamId } });
-    if (!team) return failure(res, "Team not found", 404);
+    if (!team) {
+      return errorResponse(res, "Team not found", 404);
+    }
 
-    if (team.ownerId !== userId)
-      return failure(res, "Not allowed to update this team", 403);
+    if (team.ownerId !== userId) {
+      return errorResponse(res, "Not allowed to update this team", 403);
+    }
 
     const updatedTeam = await prisma.team.update({
       where: { id: teamId },
-      data: { name, description, avatar },
+      data: {
+        name,
+        description,
+        avatar,
+        workspaceId: workspaceId !== undefined ? workspaceId : undefined,
+      },
     });
 
-    success(res, "Team updated successfully", updatedTeam);
+    return successResponse(res, updatedTeam, "Team updated successfully");
   } catch (err: any) {
     console.error("Update error:", err);
-    return failure(res, "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 };
 
@@ -131,19 +178,18 @@ export const deleteTeam = async (req: AuthRequest, res: Response) => {
     const team = await prisma.team.findUnique({ where: { id: teamId } });
 
     if (!team) {
-      return failure(res, "Team not found", 404);
+      return errorResponse(res, "Team not found", 404);
     }
 
-    // Ensure userId is compared as a string UUID
     if (team.ownerId !== String(userId)) {
-      return failure(res, "Not allowed to delete this team", 403);
+      return errorResponse(res, "Not allowed to delete this team", 403);
     }
 
     const deletedTeam = await prisma.team.delete({ where: { id: teamId } });
 
-    success(res, "Team deleted successfully", deletedTeam);
+    return successResponse(res, deletedTeam, "Team deleted successfully");
   } catch (err: any) {
     console.error("Delete error:", err);
-    return failure(res, "Internal server error", 500);
+    return errorResponse(res, "Internal server error", 500);
   }
 };

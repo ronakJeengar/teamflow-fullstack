@@ -257,12 +257,35 @@ export const refresh = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const workspaceMember = await prisma.workspaceMember.findFirst({
-      where: { userId: user.id },
-      orderBy: { joinedAt: "asc" },
-    });
+    let activeWorkspaceId: string | undefined;
+    const expiredAccessToken = req.cookies?.accessToken;
+    if (expiredAccessToken) {
+      try {
+        const decodedAccess = jwt.verify(expiredAccessToken, JWT_ACCESS_SECRET, {
+          ignoreExpiration: true,
+        }) as { activeWorkspaceId?: string };
+        activeWorkspaceId = decodedAccess.activeWorkspaceId;
+      } catch (err) {
+        // Ignore verify errors for expired/malformed token and fall back
+      }
+    }
 
-    const activeWorkspaceId = workspaceMember ? workspaceMember.workspaceId : undefined;
+    if (activeWorkspaceId) {
+      const isMember = await prisma.workspaceMember.findFirst({
+        where: { workspaceId: activeWorkspaceId, userId: user.id },
+      });
+      if (!isMember) {
+        activeWorkspaceId = undefined;
+      }
+    }
+
+    if (!activeWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId: user.id },
+        orderBy: { joinedAt: "asc" },
+      });
+      activeWorkspaceId = workspaceMember ? workspaceMember.workspaceId : undefined;
+    }
 
     const accessToken = jwt.sign(
       {

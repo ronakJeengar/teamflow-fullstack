@@ -12,6 +12,29 @@ export const io = new Server(server, {
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
+
+  // Join personal room on auth
+  socket.on("join:user", (userId: string) => {
+    socket.join(`user:${userId}`);
+  });
+
+  // Join task room when viewing task detail
+  socket.on("join:task", (taskId: string) => {
+    socket.join(`task:${taskId}`);
+  });
+
+  socket.on("leave:task", (taskId: string) => {
+    socket.leave(`task:${taskId}`);
+  });
+
+  // Join project room
+  socket.on("join:project", (projectId: string) => {
+    socket.join(`project:${projectId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
 });
 
 app.get("/test", (req, res) => {
@@ -23,6 +46,6 @@ app.get("/test", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

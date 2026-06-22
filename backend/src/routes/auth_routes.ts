@@ -6,6 +6,7 @@ import {
   getCurrentUser,
   logout,
   getMyMemberships,
+  updateProfile,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.middleware.js";
 
@@ -15,6 +16,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/refresh", refresh);
 router.get("/me", authenticate, getCurrentUser);
+router.patch("/me", authenticate, updateProfile);
 router.get("/memberships", authenticate, getMyMemberships);
 router.get("/logout", authenticate, logout);
 

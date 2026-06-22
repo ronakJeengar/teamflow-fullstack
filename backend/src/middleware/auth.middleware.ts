@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-interface JwtPayload {
+export interface JwtPayload {
   userId: string;
   email: string;
   role?: string;
+  activeWorkspaceId?: string;
 }
 
 export interface AuthRequest<
