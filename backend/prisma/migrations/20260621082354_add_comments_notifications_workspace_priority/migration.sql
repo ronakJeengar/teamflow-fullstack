@@ -160,6 +160,8 @@ CREATE INDEX IF NOT EXISTS "Task_status_idx" ON "Task"("status");
 CREATE INDEX IF NOT EXISTS "Task_dueDate_idx" ON "Task"("dueDate");
 
 -- AddForeignKey
+DELETE FROM "ActivityLog" WHERE "userId" NOT IN (SELECT "id" FROM "User");
+
 DO $$ BEGIN
   ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 EXCEPTION
