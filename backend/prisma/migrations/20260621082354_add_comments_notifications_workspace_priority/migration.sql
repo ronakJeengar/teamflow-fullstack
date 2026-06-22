@@ -6,7 +6,11 @@ EXCEPTION
 END $$;
 
 -- CreateEnum
-CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNED', 'TASK_COMMENTED', 'TASK_STATUS_CHANGED', 'PROJECT_ADDED', 'TEAM_INVITED', 'MENTION');
+DO $$ BEGIN
+  CREATE TYPE "NotificationType" AS ENUM ('TASK_ASSIGNED', 'TASK_COMMENTED', 'TASK_STATUS_CHANGED', 'PROJECT_ADDED', 'TEAM_INVITED', 'MENTION');
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AlterEnum
 -- This migration adds more than one value to an enum.
