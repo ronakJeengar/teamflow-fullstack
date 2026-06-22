@@ -20,24 +20,52 @@ END $$;
 -- the enum.
 
 
-ALTER TYPE "TaskStatus" ADD VALUE 'REVIEW';
-ALTER TYPE "TaskStatus" ADD VALUE 'BLOCKED';
+ALTER TYPE "TaskStatus" ADD VALUE IF NOT EXISTS 'REVIEW';
+ALTER TYPE "TaskStatus" ADD VALUE IF NOT EXISTS 'BLOCKED';
 
 -- AlterTable
-ALTER TABLE "ActivityLog" ADD COLUMN     "metadata" JSONB,
-ADD COLUMN     "taskId" TEXT,
-ADD COLUMN     "teamId" TEXT;
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD COLUMN "metadata" JSONB;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD COLUMN "taskId" TEXT;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD COLUMN "teamId" TEXT;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
 
 -- AlterTable
-ALTER TABLE "Task" ADD COLUMN     "dueDate" TIMESTAMP(3),
-ADD COLUMN     "priority" "Priority" NOT NULL DEFAULT 'MEDIUM',
-ADD COLUMN     "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
+DO $$ BEGIN
+  ALTER TABLE "Task" ADD COLUMN "dueDate" TIMESTAMP(3);
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "Task" ADD COLUMN "priority" "Priority" NOT NULL DEFAULT 'MEDIUM';
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
+DO $$ BEGIN
+  ALTER TABLE "Task" ADD COLUMN "tags" TEXT[] DEFAULT ARRAY[]::TEXT[];
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
 
 -- AlterTable
-ALTER TABLE "Team" ADD COLUMN     "workspaceId" TEXT;
+DO $$ BEGIN
+  ALTER TABLE "Team" ADD COLUMN "workspaceId" TEXT;
+EXCEPTION
+  WHEN duplicate_column THEN null;
+END $$;
 
 -- CreateTable
-CREATE TABLE "Comment" (
+CREATE TABLE IF NOT EXISTS "Comment" (
     "id" TEXT NOT NULL,
     "content" TEXT NOT NULL,
     "taskId" TEXT NOT NULL,
@@ -49,7 +77,7 @@ CREATE TABLE "Comment" (
 );
 
 -- CreateTable
-CREATE TABLE "Notification" (
+CREATE TABLE IF NOT EXISTS "Notification" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "senderId" TEXT,
@@ -66,7 +94,7 @@ CREATE TABLE "Notification" (
 );
 
 -- CreateTable
-CREATE TABLE "Workspace" (
+CREATE TABLE IF NOT EXISTS "Workspace" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "slug" TEXT NOT NULL,
@@ -79,7 +107,7 @@ CREATE TABLE "Workspace" (
 );
 
 -- CreateTable
-CREATE TABLE "WorkspaceMember" (
+CREATE TABLE IF NOT EXISTS "WorkspaceMember" (
     "id" TEXT NOT NULL,
     "workspaceId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
@@ -90,73 +118,113 @@ CREATE TABLE "WorkspaceMember" (
 );
 
 -- CreateIndex
-CREATE INDEX "Comment_taskId_idx" ON "Comment"("taskId");
+CREATE INDEX IF NOT EXISTS "Comment_taskId_idx" ON "Comment"("taskId");
 
 -- CreateIndex
-CREATE INDEX "Comment_userId_idx" ON "Comment"("userId");
+CREATE INDEX IF NOT EXISTS "Comment_userId_idx" ON "Comment"("userId");
 
 -- CreateIndex
-CREATE INDEX "Notification_userId_isRead_idx" ON "Notification"("userId", "isRead");
+CREATE INDEX IF NOT EXISTS "Notification_userId_isRead_idx" ON "Notification"("userId", "isRead");
 
 -- CreateIndex
-CREATE INDEX "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
+CREATE INDEX IF NOT EXISTS "Notification_userId_createdAt_idx" ON "Notification"("userId", "createdAt");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Workspace_slug_key" ON "Workspace"("slug");
+CREATE UNIQUE INDEX IF NOT EXISTS "Workspace_slug_key" ON "Workspace"("slug");
 
 -- CreateIndex
-CREATE INDEX "Workspace_ownerId_idx" ON "Workspace"("ownerId");
+CREATE INDEX IF NOT EXISTS "Workspace_ownerId_idx" ON "Workspace"("ownerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "WorkspaceMember_workspaceId_userId_key" ON "WorkspaceMember"("workspaceId", "userId");
+CREATE UNIQUE INDEX IF NOT EXISTS "WorkspaceMember_workspaceId_userId_key" ON "WorkspaceMember"("workspaceId", "userId");
 
 -- CreateIndex
-CREATE INDEX "ActivityLog_taskId_idx" ON "ActivityLog"("taskId");
+CREATE INDEX IF NOT EXISTS "ActivityLog_taskId_idx" ON "ActivityLog"("taskId");
 
 -- CreateIndex
-CREATE INDEX "ActivityLog_userId_idx" ON "ActivityLog"("userId");
+CREATE INDEX IF NOT EXISTS "ActivityLog_userId_idx" ON "ActivityLog"("userId");
 
 -- CreateIndex
-CREATE INDEX "ActivityLog_projectId_idx" ON "ActivityLog"("projectId");
+CREATE INDEX IF NOT EXISTS "ActivityLog_projectId_idx" ON "ActivityLog"("projectId");
 
 -- CreateIndex
-CREATE INDEX "Task_projectId_idx" ON "Task"("projectId");
+CREATE INDEX IF NOT EXISTS "Task_projectId_idx" ON "Task"("projectId");
 
 -- CreateIndex
-CREATE INDEX "Task_assignedToId_idx" ON "Task"("assignedToId");
+CREATE INDEX IF NOT EXISTS "Task_assignedToId_idx" ON "Task"("assignedToId");
 
 -- CreateIndex
-CREATE INDEX "Task_status_idx" ON "Task"("status");
+CREATE INDEX IF NOT EXISTS "Task_status_idx" ON "Task"("status");
 
 -- CreateIndex
-CREATE INDEX "Task_dueDate_idx" ON "Task"("dueDate");
+CREATE INDEX IF NOT EXISTS "Task_dueDate_idx" ON "Task"("dueDate");
 
 -- AddForeignKey
-ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "ActivityLog" ADD CONSTRAINT "ActivityLog_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Team" ADD CONSTRAINT "Team_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Team" ADD CONSTRAINT "Team_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Comment" ADD CONSTRAINT "Comment_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Notification" ADD CONSTRAINT "Notification_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Notification" ADD CONSTRAINT "Notification_senderId_fkey" FOREIGN KEY ("senderId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Workspace" ADD CONSTRAINT "Workspace_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Workspace" ADD CONSTRAINT "Workspace_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_workspaceId_fkey" FOREIGN KEY ("workspaceId") REFERENCES "Workspace"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "WorkspaceMember" ADD CONSTRAINT "WorkspaceMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN null;
+END $$;
