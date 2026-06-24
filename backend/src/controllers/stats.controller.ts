@@ -113,6 +113,47 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Aggregations for workspace and project metrics
+    const userTeams = await prisma.teamMember.findMany({
+      where: { userId },
+      select: { teamId: true },
+    });
+    const teamIds = userTeams.map((ut) => ut.teamId);
+
+    const projects = await prisma.project.findMany({
+      where: { teamId: { in: teamIds } },
+      select: { id: true },
+    });
+    const projectIds = projects.map((p) => p.id);
+    const project_count = projects.length;
+
+    const membersCountResult = await prisma.teamMember.groupBy({
+      by: ['userId'],
+      where: { teamId: { in: teamIds } },
+    });
+    const member_count = membersCountResult.length;
+
+    const task_count = await prisma.task.count({
+      where: { projectId: { in: projectIds } },
+    });
+
+    const taskCountPerProjectQuery = await prisma.task.groupBy({
+      by: ['projectId'],
+      where: { projectId: { in: projectIds } },
+      _count: { id: true },
+    });
+    const task_count_per_project = taskCountPerProjectQuery.map((t) => ({
+      projectId: t.projectId,
+      count: t._count.id,
+    }));
+
+    const active_tasks_count = await prisma.task.count({
+      where: { assignedToId: userId, NOT: { status: "DONE" } },
+    });
+    const completed_tasks_count = await prisma.task.count({
+      where: { assignedToId: userId, status: "DONE" },
+    });
+
     return successResponse(res, {
       tasksDueToday,
       inProgress,
@@ -120,6 +161,12 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       blocked,
       completedThisWeek,
       sparklines,
+      project_count,
+      member_count,
+      task_count,
+      task_count_per_project,
+      active_tasks_count,
+      completed_tasks_count,
     });
   } catch (error) {
     console.error("Error calculating dashboard stats:", error);

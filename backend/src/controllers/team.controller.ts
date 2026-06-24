@@ -77,7 +77,31 @@ export const getMyTeams = async (req: AuthRequest, res: Response) => {
 
     const memberships = await prisma.teamMember.findMany({
       where: whereClause,
-      include: { team: true },
+      include: {
+        team: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+            projects: {
+              include: {
+                _count: {
+                  select: { tasks: true },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     const teams = memberships.map((m) => m.team);

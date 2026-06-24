@@ -139,6 +139,9 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
       const { _count, ...rest } = project;
       return {
         ...rest,
+        _count: {
+          tasks: totalTasks,
+        },
         progress: progressPercent,
         totalTasks,
         completedTasks,

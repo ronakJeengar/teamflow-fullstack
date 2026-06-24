@@ -30,45 +30,39 @@ app.use(express.json());
 
 // Auth
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/auth", authRoutes);
 
 // Teams
 app.use("/api/v1/teams", teamRoutes);
-app.use("/api/teams", teamRoutes);
 
 // Projects
 app.use("/api/v1/projects", projectRoutes);
-// app.use("/api/projects", projectRoutes);
 
 // Tasks
 app.use("/api/v1/tasks", taskRoutes);
-app.use("/api/tasks", taskRoutes);
 
 // Members
 app.use("/api/v1/teams/:teamId/members", memberRoutes);
-app.use("/api/teams/:teamId/members", memberRoutes);
 
 // Invitations
 app.use("/api/v1/invitations", invitationRoutes);
-app.use("/api/invitations", invitationRoutes);
 
 // Notifications
-app.use("/api/notifications", notificationRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
-// Comments (/api/tasks/:taskId/comments)
-app.use("/api", commentRoutes);
+// Comments (/api/v1/tasks/:taskId/comments)
+app.use("/api/v1", commentRoutes);
 
 // Search
-app.use("/api/search", searchRoutes);
+app.use("/api/v1/search", searchRoutes);
 
 // Stats
-app.use("/api/stats", statsRoutes);
+app.use("/api/v1/stats", statsRoutes);
 
 // Workspaces
-app.use("/api/workspaces", workspaceRoutes);
+app.use("/api/v1/workspaces", workspaceRoutes);
 
 // Activities
-app.use("/api/activities", activityRoutes);
+app.use("/api/v1/activities", activityRoutes);
 
 app.use(errorHandler);
 
