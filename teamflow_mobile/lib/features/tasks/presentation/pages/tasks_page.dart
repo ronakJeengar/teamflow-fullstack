@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/ui/app_tokens.dart';
 import '../../../../core/ui/shared_widgets.dart';
+import '../../../../core/widgets/task_card.dart';
 import '../../../auth/presentation/widgets/logout_modal.dart';
 import '../../data/models/task_model.dart';
 import '../../domain/entitties/task_entity.dart';
@@ -12,6 +13,10 @@ import '../providers/task_providers.dart';
 import '../widget/create_task_sheet.dart';
 import '../widget/delete_task_sheet.dart';
 import '../widget/edit_task_sheet.dart';
+import 'package:teamflow_mobile/features/auth/presentation/providers/providers.dart';
+import 'package:teamflow_mobile/features/auth/domain/entities/membership_entity.dart';
+import 'package:teamflow_mobile/features/teams/domain/entities/team_member_entity.dart';
+import 'package:teamflow_mobile/features/teams/presentation/providers/team_details_providers.dart';
 
 class _ColumnConfig {
   final String title;
@@ -68,37 +73,21 @@ const _columns = [
   ),
 ];
 
-enum _Priority { high, medium, low }
-
-extension _PriorityX on _Priority {
-  Color get color =>
-      const [Color(0xFFEF4444), Color(0xFFF59E0B), Color(0xFF687280)][index];
-
-  Color get surface =>
-      const [Color(0x1AEF4444), Color(0x1AF59E0B), Color(0x1A687280)][index];
-
-  String get label => ['High', 'Med', 'Low'][index];
-
-  IconData get icon => const [
-    Icons.keyboard_double_arrow_up_rounded,
-    Icons.remove_rounded,
-    Icons.keyboard_double_arrow_down_rounded,
-  ][index];
-
-  static _Priority fromTask(TaskEntity task) => _Priority.high;
-}
-
 class TasksPage extends HookConsumerWidget {
   final String projectId;
+  final String teamId;
 
-  const TasksPage({super.key, required this.projectId});
+  const TasksPage({super.key, required this.projectId, required this.teamId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateNotifierProvider);
+    final memberships = authState.memberships;
+
     useEffect(() {
-      Future.microtask(
-        () => ref.read(taskStateNotifierProvider.notifier).loadTasks(projectId),
-      );
+      Future.microtask(() {
+        ref.read(taskStateNotifierProvider.notifier).loadTasks(projectId);
+      });
       return null;
     }, [projectId]);
 
@@ -106,9 +95,22 @@ class TasksPage extends HookConsumerWidget {
     final activeTab = useState(0);
     final dragTarget = useState<int?>(null);
 
+    // Direct lookup using the passed teamId — no reverse project search needed
+    final membership = memberships.firstWhere(
+          (m) => m.team.id == teamId,
+      orElse: () => const MembershipEntity(
+        role: 'VIEWER',
+        team: MembershipTeamEntity(id: '', name: ''),
+      ),
+    );
+
+    final userRole = membership.role.toUpperCase();
+    final isViewer = userRole == 'VIEWER';
+    final screenWidth = MediaQuery.of(context).size.width;
+
     final tasksByStatus = [
-      state.tasks.where((e) => e.status == TaskStatus.TODO).toList(),
-      state.tasks.where((e) => e.status == TaskStatus.IN_PROGRESS).toList(),
+      state.tasks.where((e) => e.status == TaskStatus.TODO || e.status == TaskStatus.BLOCKED).toList(),
+      state.tasks.where((e) => e.status == TaskStatus.IN_PROGRESS || e.status == TaskStatus.REVIEW).toList(),
       state.tasks.where((e) => e.status == TaskStatus.DONE).toList(),
     ];
 
@@ -121,16 +123,28 @@ class TasksPage extends HookConsumerWidget {
             activeTab: activeTab.value,
             counts: tasksByStatus.map((l) => l.length).toList(),
             dragTarget: dragTarget.value,
+            isViewer: isViewer,
             onTabChanged: (i) {
               activeTab.value = i;
               HapticFeedback.selectionClick();
             },
             onDragOver: (i) => dragTarget.value = i,
             onDragLeft: () => dragTarget.value = null,
-            onDropped: (task, i) {
+            onDropped: isViewer ? (_, __) {} : (task, i) {
               dragTarget.value = null;
               final newStatus = _columns[i].status;
               if (task.status == newStatus) return;
+
+              // Verify permission
+              final currentUserId = ref.read(authStateNotifierProvider).user?.id ?? '';
+              final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(userRole);
+              final isAssignee = task.assignedToId == currentUserId;
+
+              if (!isOwnerOrAdminOrManager && !isAssignee) {
+                showAppSnackBar(context, "You don't have permission to modify this task");
+                return;
+              }
+
               activeTab.value = i;
               ref
                   .read(updateTaskControllerProvider.notifier)
@@ -147,12 +161,14 @@ class TasksPage extends HookConsumerWidget {
               config: _columns[activeTab.value],
               tasks: tasksByStatus[activeTab.value],
               tabKey: activeTab.value,
+              userRole: userRole,
+              teamId: teamId,
             ),
           ),
         ],
       ),
-      floatingActionButton: MediaQuery.of(context).size.width < 768
-          ? _Fab(projectId: projectId)
+      floatingActionButton: (screenWidth < 768 && !isViewer)
+          ? _Fab(projectId: projectId, teamId: teamId)
           : null,
     );
   }
@@ -167,6 +183,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onDragLeft;
   final VoidCallback onLogoutTap;
   final void Function(TaskEntity, int) onDropped;
+  final bool isViewer;
 
   const _TopBar({
     required this.activeTab,
@@ -177,6 +194,7 @@ class _TopBar extends StatelessWidget {
     required this.onDragLeft,
     required this.onDropped,
     required this.onLogoutTap,
+    required this.isViewer,
   });
 
   @override
@@ -218,23 +236,16 @@ class _TopBar extends StatelessWidget {
                         transitionBuilder: (child, anim) => FadeTransition(
                           opacity: anim,
                           child: SlideTransition(
-                            position:
-                                Tween<Offset>(
-                                  begin: const Offset(-0.1, 0),
-                                  end: Offset.zero,
-                                ).animate(
-                                  CurvedAnimation(
-                                    parent: anim,
-                                    curve: Curves.easeOut,
-                                  ),
-                                ),
+                            position: Tween<Offset>(
+                              begin: const Offset(-0.1, 0),
+                              end: Offset.zero,
+                            ).animate(
+                              CurvedAnimation(parent: anim, curve: Curves.easeOut),
+                            ),
                             child: child,
                           ),
                         ),
-                        child: _StatusPill(
-                          config: col,
-                          key: ValueKey(activeTab),
-                        ),
+                        child: _StatusPill(config: col, key: ValueKey(activeTab)),
                       ),
 
                       SizedBox(height: AppTokens.s8),
@@ -246,23 +257,18 @@ class _TopBar extends StatelessWidget {
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 260),
                               switchInCurve: Curves.easeOut,
-                              transitionBuilder: (child, anim) =>
-                                  FadeTransition(
-                                    opacity: anim,
-                                    child: SlideTransition(
-                                      position:
-                                          Tween<Offset>(
-                                            begin: const Offset(0, 0.12),
-                                            end: Offset.zero,
-                                          ).animate(
-                                            CurvedAnimation(
-                                              parent: anim,
-                                              curve: Curves.easeOut,
-                                            ),
-                                          ),
-                                      child: child,
-                                    ),
+                              transitionBuilder: (child, anim) => FadeTransition(
+                                opacity: anim,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.12),
+                                    end: Offset.zero,
+                                  ).animate(
+                                    CurvedAnimation(parent: anim, curve: Curves.easeOut),
                                   ),
+                                  child: child,
+                                ),
+                              ),
                               child: Text(
                                 col.title,
                                 key: ValueKey('title_$activeTab'),
@@ -276,9 +282,7 @@ class _TopBar extends StatelessWidget {
                                 ScaleTransition(scale: a, child: c),
                             child: Text(
                               '${counts[activeTab]}',
-                              key: ValueKey(
-                                'cnt_$activeTab${counts[activeTab]}',
-                              ),
+                              key: ValueKey('cnt_$activeTab${counts[activeTab]}'),
                               style: GoogleFonts.inter(
                                 fontSize: 52,
                                 fontWeight: FontWeight.w800,
@@ -319,6 +323,7 @@ class _TopBar extends StatelessWidget {
 
                 return DragTarget<TaskEntity>(
                   onWillAcceptWithDetails: (d) {
+                    if (isViewer) return false;
                     if (d.data.status == c.status) return false;
                     onDragOver(i);
                     return true;
@@ -494,11 +499,15 @@ class _Body extends StatelessWidget {
   final _ColumnConfig config;
   final List<TaskEntity> tasks;
   final int tabKey;
+  final String userRole;
+  final String teamId;
 
   const _Body({
     required this.config,
     required this.tasks,
     required this.tabKey,
+    required this.userRole,
+    required this.teamId,
   });
 
   @override
@@ -534,6 +543,8 @@ class _Body extends StatelessWidget {
             task: tasks[i],
             index: i,
             accentColor: config.accent,
+            userRole: userRole,
+            teamId: teamId,
           ),
         ),
       ),
@@ -548,79 +559,19 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                color: config.accentSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r8),
-              ),
-              child: Icon(config.icon, size: 28, color: config.accent),
-            ),
-            SizedBox(height: AppTokens.s20),
-            Text(
-              'Nothing here yet',
-              style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: AppTokens.textPrimary,
-                letterSpacing: -0.3,
-              ),
-            ),
-            SizedBox(height: AppTokens.s6),
-            Text(
-              'Tasks in "${config.title}" will appear here.\nDrag cards from other columns to move them.',
-              textAlign: TextAlign.center,
-              style: AppTokens.bodySm.copyWith(height: 1.6),
-            ),
-            SizedBox(height: AppTokens.s24),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTokens.s16,
-                vertical: AppTokens.s10,
-              ),
-              decoration: BoxDecoration(
-                color: config.accentSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r8),
-                border: Border.all(color: config.accentMuted),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.swap_horiz_rounded,
-                    size: 15,
-                    color: config.accent,
-                  ),
-                  SizedBox(width: AppTokens.s6),
-                  Text(
-                    'Drop tasks here',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: config.accent,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+    return AppEmptyState(
+      icon: config.icon,
+      title: 'Nothing here yet',
+      subtitle: 'Tasks in "${config.title}" will appear here.\nDrag cards from other columns to move them.',
     );
   }
 }
 
 class _Fab extends StatelessWidget {
   final String projectId;
+  final String teamId;
 
-  const _Fab({required this.projectId});
+  const _Fab({required this.projectId, required this.teamId});
 
   @override
   Widget build(BuildContext context) {
@@ -631,7 +582,7 @@ class _Fab extends StatelessWidget {
           context: context,
           isScrollControlled: true,
           backgroundColor: Colors.transparent,
-          builder: (_) => CreateTaskSheet(projectId: projectId),
+          builder: (_) => CreateTaskSheet(projectId: projectId, teamId: teamId),
         );
       },
       backgroundColor: AppTokens.brand,
@@ -642,22 +593,26 @@ class _Fab extends StatelessWidget {
   }
 }
 
-class _DraggableCard extends StatefulWidget {
+class _DraggableCard extends ConsumerStatefulWidget {
   final TaskEntity task;
   final int index;
   final Color accentColor;
+  final String userRole;
+  final String teamId;
 
   const _DraggableCard({
     required this.task,
     required this.index,
     required this.accentColor,
+    required this.userRole,
+    required this.teamId,
   });
 
   @override
-  State<_DraggableCard> createState() => _DraggableCardState();
+  ConsumerState<_DraggableCard> createState() => _DraggableCardState();
 }
 
-class _DraggableCardState extends State<_DraggableCard>
+class _DraggableCardState extends ConsumerState<_DraggableCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
   late Animation<double> _scale;
@@ -690,25 +645,56 @@ class _DraggableCardState extends State<_DraggableCard>
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) =>
-        EditTaskSheet(task: widget.task, projectId: widget.task.projectId),
+    builder: (_) => EditTaskSheet(task: widget.task, projectId: widget.task.projectId, teamId: widget.teamId),
   );
 
   void _showDelete(BuildContext context) => showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) =>
-        DeleteTaskSheet(task: widget.task, projectId: widget.task.projectId),
+    builder: (_) => DeleteTaskSheet(task: widget.task, projectId: widget.task.projectId),
   );
 
   @override
   Widget build(BuildContext context) {
-    final cardContent = _TaskCard(
+    final currentUserId = ref.watch(authStateNotifierProvider).user?.id ?? '';
+    final role = widget.userRole.toUpperCase();
+    final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(role);
+    final isAssignee = widget.task.assignedToId == currentUserId;
+
+    final canEdit = isOwnerOrAdminOrManager || isAssignee;
+    final canDelete = isOwnerOrAdminOrManager; // Remove creator ownership
+    final isViewer = role == 'VIEWER';
+
+    final teamDetailState = ref.watch(teamDetailStateNotifierProvider);
+    final assigneeMember = teamDetailState.members.cast<TeamMemberEntity?>().firstWhere(
+      (m) => m?.userId == widget.task.assignedToId,
+      orElse: () => null,
+    );
+    final assigneeName = assigneeMember?.user?.name;
+
+    final cardContent = TaskCard(
       task: widget.task,
+      canEdit: canEdit,
+      canDelete: canDelete,
+      assigneeName: assigneeName,
       onEdit: () => _showEdit(context),
       onDelete: () => _showDelete(context),
+      onCheckboxChanged: (checked) {
+        if (!canEdit) {
+          showAppSnackBar(context, "You don't have permission to modify this task");
+          return;
+        }
+        final newStatus = checked ? TaskStatus.DONE : TaskStatus.TODO;
+        ref
+            .read(updateTaskControllerProvider.notifier)
+            .moveTask(taskId: widget.task.id, newStatus: newStatus);
+      },
     );
+
+    if (isViewer) {
+      return cardContent;
+    }
 
     return LongPressDraggable<TaskEntity>(
       data: widget.task,
@@ -719,227 +705,29 @@ class _DraggableCardState extends State<_DraggableCard>
       },
       onDraggableCanceled: (_, __) => _ctrl.reverse(),
       onDragEnd: (_) => _ctrl.reverse(),
-      feedback: Material(
-        color: Colors.transparent,
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width - (AppTokens.s20 * 2),
-          child: Transform.scale(
-            scale: 1.03,
-            child: _TaskCard(
-              task: widget.task,
-              isFloating: true,
-              onEdit: () {},
-              onDelete: () {},
+      feedback: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Material(
+          color: Colors.transparent,
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width - (AppTokens.s20 * 2),
+            child: Transform.scale(
+              scale: 1.03,
+              child: TaskCard(
+                task: widget.task,
+                isFloating: true,
+                canEdit: false,
+                canDelete: false,
+                assigneeName: assigneeName,
+                onEdit: () {},
+                onDelete: () {},
+              ),
             ),
           ),
         ),
       ),
       childWhenDragging: FadeTransition(opacity: _opacity, child: cardContent),
       child: ScaleTransition(scale: _scale, child: cardContent),
-    );
-  }
-}
-
-class _TaskCard extends StatelessWidget {
-  final TaskEntity task;
-  final bool isFloating;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _TaskCard({
-    required this.task,
-    this.isFloating = false,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  _ColumnConfig get _col => _columns.firstWhere(
-    (c) => c.status == task.status,
-    orElse: () => _columns[0],
-  );
-
-  _Priority get _priority => _PriorityX.fromTask(task);
-
-  @override
-  Widget build(BuildContext context) {
-    final col = _col;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTokens.surface,
-        borderRadius: BorderRadius.circular(AppTokens.r8),
-        border: Border.all(
-          color: isFloating ? col.accent.withOpacity(0.3) : AppTokens.borderAlt,
-          width: isFloating ? 1.5 : 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.r8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-
-            Padding(
-              padding: const EdgeInsets.all(AppTokens.s16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      _PriorityBadge(priority: _priority),
-                      const Spacer(),
-                      if (!isFloating) ...[
-                        // ← AppActionButton replaces _ActionBtn
-                        AppActionButton(
-                          icon: Icons.edit_rounded,
-                          color: AppTokens.brand,
-                          onTap: onEdit,
-                        ),
-                        SizedBox(width: AppTokens.s6),
-                        AppActionButton(
-                          icon: Icons.delete_outline_rounded,
-                          color: AppTokens.danger,
-                          onTap: onDelete,
-                        ),
-                      ],
-                    ],
-                  ),
-
-                  SizedBox(height: AppTokens.s12),
-
-                  Text(task.title, style: AppTokens.titleMd),
-
-                  if (task.description?.isNotEmpty ?? false) ...[
-                    SizedBox(height: AppTokens.s6),
-                    Text(
-                      task.description!,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTokens.bodySm,
-                    ),
-                  ],
-
-                  SizedBox(height: AppTokens.s16),
-
-                  Row(
-                    children: [
-                      // ← AppAvatar replaces _Avatar
-                      AppAvatar(name: 'John Doe', size: 28),
-                      SizedBox(width: AppTokens.s8),
-                      Expanded(
-                        child: Text(
-                          'John Doe',
-                          style: GoogleFonts.inter(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTokens.textSecondary,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (!isFloating)
-                        Icon(
-                          Icons.drag_indicator_rounded,
-                          size: 14,
-                          color: AppTokens.borderMid,
-                        ),
-                      SizedBox(width: AppTokens.s8),
-                      _DateChip(iso: task.createdAt.toIso8601String()),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PriorityBadge extends StatelessWidget {
-  final _Priority priority;
-
-  const _PriorityBadge({required this.priority});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.s8,
-        vertical: AppTokens.s4,
-      ),
-      decoration: BoxDecoration(
-        color: priority.surface,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(priority.icon, size: 11, color: priority.color),
-          SizedBox(width: AppTokens.s4),
-          Text(
-            priority.label,
-            style: GoogleFonts.inter(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: priority.color,
-              letterSpacing: 0.1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DateChip extends StatelessWidget {
-  final String? iso;
-
-  const _DateChip({this.iso});
-
-  String _format(String? iso) {
-    if (iso == null) return '';
-    try {
-      final d = DateTime.parse(iso);
-      const m = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return '${m[d.month - 1]} ${d.day}';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final label = _format(iso);
-    if (label.isEmpty) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTokens.s8,
-        vertical: AppTokens.s4,
-      ),
-      decoration: BoxDecoration(
-        color: AppTokens.surfaceAlt,
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        label,
-        style: AppTokens.labelSm.copyWith(fontFamily: 'monospace'),
-      ),
     );
   }
 }

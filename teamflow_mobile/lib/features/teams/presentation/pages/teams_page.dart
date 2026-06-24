@@ -7,6 +7,7 @@ import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/navigation_helper.dart';
 import '../../../../core/ui/app_tokens.dart';
 import '../../../../core/ui/shared_widgets.dart';
+import '../../../../core/widgets/teamflow_shell.dart';
 import '../../../auth/presentation/providers/providers.dart';
 import '../../../auth/presentation/widgets/logout_modal.dart';
 import '../../domain/entities/team_entity.dart';
@@ -15,6 +16,7 @@ import '../providers/teams_state_notifier.dart';
 import '../widget/create_team_model.dart';
 import '../widget/delete_team_model.dart';
 import '../widget/edit_team_model.dart';
+import '../widget/team_card.dart';
 
 class TeamsPage extends HookConsumerWidget {
   const TeamsPage({super.key});
@@ -91,54 +93,57 @@ class TeamsPage extends HookConsumerWidget {
               )
               .toList();
 
-    return Scaffold(
-      backgroundColor: AppTokens.bg,
-      body: Stack(
-        children: [
-          _Body(
-            teamsState: teamsState,
-            allTeams: allTeams,
-            filtered: filtered,
-            searchCtrl: searchCtrl,
-            searchQuery: searchQuery.value,
-            searchFocused: searchFocused.value,
-            currentUserId: currentUserId,
-            onCreateTap: showCreate,
-            onLogoutTap: () => showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const LogoutSheet(),
-            ),
-            onEdit: (team) {
-              editingTeam.value = team;
-              editNameCtrl.text = team.name;
-              editDescCtrl.text = team.description ?? '';
-            },
-            onDelete: (team) => deletingTeam.value = team,
-            onRetry: () =>
-                ref.read(teamsStateNotifierProvider.notifier).loadTeams(),
-            onSearchFocusChanged: (v) => searchFocused.value = v,
-          ),
-
-          if (editingTeam.value != null)
-            EditTeamModal(
-              nameController: editNameCtrl,
-              descController: editDescCtrl,
-              onCancel: () => editingTeam.value = null,
-              onSave: saveEdit,
+    return TeamFlowShell(
+      activeTab: 'Teams',
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Stack(
+          children: [
+            _Body(
+              teamsState: teamsState,
+              allTeams: allTeams,
+              filtered: filtered,
+              searchCtrl: searchCtrl,
+              searchQuery: searchQuery.value,
+              searchFocused: searchFocused.value,
+              currentUserId: currentUserId,
+              onCreateTap: showCreate,
+              onLogoutTap: () => showModalBottomSheet(
+                context: context,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const LogoutSheet(),
+              ),
+              onEdit: (team) {
+                editingTeam.value = team;
+                editNameCtrl.text = team.name;
+                editDescCtrl.text = team.description ?? '';
+              },
+              onDelete: (team) => deletingTeam.value = team,
+              onRetry: () =>
+                  ref.read(teamsStateNotifierProvider.notifier).loadTeams(),
+              onSearchFocusChanged: (v) => searchFocused.value = v,
             ),
 
-          if (deletingTeam.value != null)
-            DeleteTeamModal(
-              teamName: deletingTeam.value!.name,
-              onCancel: () => deletingTeam.value = null,
-              onConfirm: confirmDelete,
-            ),
-        ],
+            if (editingTeam.value != null)
+              EditTeamModal(
+                nameController: editNameCtrl,
+                descController: editDescCtrl,
+                onCancel: () => editingTeam.value = null,
+                onSave: saveEdit,
+              ),
+
+            if (deletingTeam.value != null)
+              DeleteTeamModal(
+                teamName: deletingTeam.value!.name,
+                onCancel: () => deletingTeam.value = null,
+                onConfirm: confirmDelete,
+              ),
+          ],
+        ),
+        floatingActionButton: MediaQuery.of(context).size.width < 768
+            ? _Fab(onTap: showCreate)
+            : null,
       ),
-      floatingActionButton: MediaQuery.of(context).size.width < 768
-          ? _Fab(onTap: showCreate)
-          : null,
     );
   }
 }
@@ -284,7 +289,6 @@ class _Body extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: AppTokens.s10),
                   child: TeamCard(
                     team: filtered[i],
-                    currentUserId: currentUserId,
                     onTap: () => NavigationHelper.instance.pushTeamDetails(
                       filtered[i].id,
                     ),
@@ -486,146 +490,6 @@ class _SearchBarState extends State<_SearchBar> {
   }
 }
 
-class TeamCard extends StatefulWidget {
-  final TeamEntity team;
-  final String currentUserId;
-  final VoidCallback onTap;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const TeamCard({
-    super.key,
-    required this.team,
-    required this.currentUserId,
-    required this.onTap,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  @override
-  State<TeamCard> createState() => TeamCardState();
-}
-
-class TeamCardState extends State<TeamCard> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final team = widget.team;
-    final isOwner = team.ownerId == widget.currentUserId;
-
-    final memberLabel =
-        '${team.members.length} member${team.members.length == 1 ? '' : 's'}';
-    final projectLabel =
-        '${team.projects.length} project${team.projects.length == 1 ? '' : 's'}';
-
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedScale(
-        scale: _pressed ? 0.985 : 1.0,
-        duration: const Duration(milliseconds: 120),
-        curve: Curves.easeOut,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTokens.surface,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTokens.border),
-          ),
-          padding: const EdgeInsets.all(AppTokens.s14),
-          child: Row(
-            children: [
-              AppAvatar(name: team.name, size: 46),
-
-              SizedBox(width: AppTokens.s12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            team.name,
-                            style: AppTokens.titleMd,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        if (isOwner)
-                          Container(
-                            margin: const EdgeInsets.only(left: AppTokens.s6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppTokens.s6,
-                              vertical: AppTokens.s2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTokens.brandSurface,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              'Owner',
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppTokens.brand,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                    SizedBox(height: AppTokens.s6),
-                    Row(
-                      children: [
-                        _MetaChip(
-                          icon: Icons.people_outline_rounded,
-                          label: memberLabel,
-                        ),
-                        SizedBox(width: AppTokens.s10),
-                        _MetaChip(
-                          icon: Icons.folder_outlined,
-                          label: projectLabel,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              SizedBox(width: AppTokens.s8),
-
-              if (isOwner) ...[
-                AppActionButton(
-                  icon: Icons.edit_rounded,
-                  color: AppTokens.brand,
-                  onTap: widget.onEdit,
-                ),
-                SizedBox(width: AppTokens.s6),
-                AppActionButton(
-                  icon: Icons.delete_outline_rounded,
-                  color: AppTokens.danger,
-                  onTap: widget.onDelete,
-                ),
-                SizedBox(width: AppTokens.s6),
-              ],
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: AppTokens.textHint,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _Fab extends StatelessWidget {
   final VoidCallback onTap;
 
@@ -638,26 +502,7 @@ class _Fab extends StatelessWidget {
       backgroundColor: AppTokens.brand,
       elevation: 0,
       shape: const CircleBorder(),
-      child: Icon(Icons.add_rounded, color: Colors.white, size: 24),
-    );
-  }
-}
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MetaChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 11, color: AppTokens.textHint),
-        SizedBox(width: 4),
-        Text(label, style: AppTokens.labelXs),
-      ],
+      child: const Icon(Icons.add_rounded, color: Colors.white, size: 24),
     );
   }
 }

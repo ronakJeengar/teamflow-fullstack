@@ -9,6 +9,8 @@ import '../../features/auth/presentation/providers/auth_notifier_listener.dart';
 import '../../features/auth/presentation/providers/auth_state_notifier.dart';
 import '../../features/auth/presentation/providers/providers.dart';
 import '../../features/invitation/presentation/pages/invitation_page.dart';
+import '../../features/projects/projects_page.dart';
+import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/tasks/presentation/pages/tasks_page.dart';
 import '../../features/teams/presentation/pages/team_detail_page.dart';
 import '../../features/teams/presentation/pages/teams_page.dart';
@@ -49,6 +51,12 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: Routes.projects,
+        name: RouteNames.projects,
+        builder: (_, __) => const ProjectsPage(),
+      ),
+
+      GoRoute(
         path: Routes.teams,
         name: RouteNames.teams,
         builder: (_, __) => const TeamsPage(),
@@ -74,8 +82,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         name: RouteNames.tasks,
         builder: (_, state) {
           final projectId = state.pathParameters['projectId']!;
-          return TasksPage(projectId: projectId);
+          final teamId = state.pathParameters['teamId']!;
+          return TasksPage(projectId: projectId, teamId: teamId,);
         },
+      ),
+
+      GoRoute(
+        path: Routes.settings,
+        name: RouteNames.settings,
+        builder: (_, __) => const SettingsPage(),
       ),
     ],
 
@@ -120,6 +135,28 @@ final goRouterProvider = Provider<GoRouter>((ref) {
             }
           }
           return Routes.teams;
+        }
+
+        // Redirect unauthorized team detail deep links
+        if (currentLocation.startsWith('/teams/')) {
+          final teamId = state.pathParameters['teamId'];
+          if (teamId != null) {
+            final hasAccess = authState.memberships.any((m) => m.team.id == teamId);
+            if (!hasAccess) {
+              return Routes.teams;
+            }
+          }
+        }
+
+        // Redirect unauthorized task board deep links
+        if (currentLocation.startsWith('/teams/') && currentLocation.contains('/projects/') && currentLocation.endsWith('/tasks')) {
+          final teamId = state.pathParameters['teamId'];
+          if (teamId != null) {
+            final hasAccess = authState.memberships.any((m) => m.team.id == teamId);
+            if (!hasAccess) {
+              return Routes.teams;
+            }
+          }
         }
       }
       return null;

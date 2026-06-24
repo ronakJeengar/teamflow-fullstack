@@ -116,4 +116,20 @@ class AuthRepositoryImpl implements AuthRepository {
       return left(ServerFailure('Unexpected error'));
     }
   }
+
+  @override
+  Future<Either<Failure, UserEntity>> updateProfile({String? name, String? bio, String? password}) async {
+    try {
+      final UserModel user = await remoteDataSource.updateProfile(
+        name: name,
+        bio: bio,
+        password: password,
+      );
+      return right(user.toEntity());
+    } on ServerException catch (e) {
+      return left(ServerFailure(e.message));
+    } catch (_) {
+      return left(ServerFailure('Unexpected error'));
+    }
+  }
 }

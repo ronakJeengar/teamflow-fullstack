@@ -38,6 +38,7 @@ final createProjectControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );
 
@@ -48,6 +49,7 @@ final updateProjectControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );
 
@@ -58,6 +60,7 @@ final deleteProjectControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );
 
@@ -70,6 +73,7 @@ final addMemberControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );
 
@@ -80,6 +84,7 @@ final removeMemberControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );
 
@@ -90,5 +95,6 @@ final updateMemberControllerProvider =
         teamDetailStateNotifier: ref.read(
           teamDetailStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );

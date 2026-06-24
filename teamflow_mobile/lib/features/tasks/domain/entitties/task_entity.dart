@@ -16,5 +16,8 @@ abstract class TaskEntity with _$TaskEntity {
     String? assignedToId,
     required DateTime createdAt,
     required DateTime updatedAt,
+    String? priority,
+    DateTime? dueDate,
+    List<String>? tags,
   }) = _TaskEntity;
 }

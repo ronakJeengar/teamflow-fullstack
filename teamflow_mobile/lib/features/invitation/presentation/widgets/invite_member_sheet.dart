@@ -3,6 +3,8 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/ui/app_ui.dart';
+import '../../../../core/navigation/navigation_helper.dart';
+import '../../../teams/presentation/providers/team_details_providers.dart';
 import '../providers/invitations_providers.dart';
 
 class InviteMemberSheet extends HookConsumerWidget {
@@ -21,7 +23,36 @@ class InviteMemberSheet extends HookConsumerWidget {
 
     final isLoading = controllerState is AsyncLoading;
 
+    // React to invitation send results
+    ref.listen<AsyncValue<void>>(
+      sendInvitationControllerProvider,
+      (previous, next) {
+        next.whenOrNull(
+          data: (_) {
+            if (context.mounted) {
+              // 1. dismiss bottom sheet
+              Navigator.of(context).pop();
+              // 2. show success snackbar
+              NavigationHelper.instance.showSuccessSnackBar('Invitation sent successfully');
+              // 3. refresh team details and members
+              ref.read(teamDetailStateNotifierProvider.notifier).loadTeamDetail(teamId);
+              // 4. clear inputs and errors
+              emailCtrl.clear();
+              emailError.value = null;
+            }
+          },
+          error: (err, _) {
+            if (context.mounted) {
+              NavigationHelper.instance.showErrorSnackBar(err.toString());
+            }
+          },
+        );
+      },
+    );
+
     Future<void> submit() async {
+      if (isLoading) return;
+
       final email = emailCtrl.text.trim();
 
       if (email.isEmpty) {
@@ -38,12 +69,6 @@ class InviteMemberSheet extends HookConsumerWidget {
             email: email,
             role: selectedRole.value,
           );
-
-      if (ref.read(sendInvitationControllerProvider) is! AsyncError) {
-        if (context.mounted) {
-          Navigator.of(context).pop();
-        }
-      }
     }
 
     return AppSheetShell(
@@ -68,7 +93,7 @@ class InviteMemberSheet extends HookConsumerWidget {
           const AppSheetLabel('Role'),
 
           DropdownButtonFormField<String>(
-            value: selectedRole.value,
+            initialValue: selectedRole.value,
             items: const [
               DropdownMenuItem(value: 'MEMBER', child: Text('Member')),
               DropdownMenuItem(value: 'VIEWER', child: Text('Viewer')),
@@ -87,7 +112,7 @@ class InviteMemberSheet extends HookConsumerWidget {
             confirmLabel: 'Send Invite',
             isLoading: isLoading,
             onCancel: isLoading ? null : () => Navigator.of(context).pop(),
-            onConfirm: submit,
+            onConfirm: isLoading ? null : submit,
           ),
         ],
       ),

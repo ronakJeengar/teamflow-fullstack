@@ -43,6 +43,7 @@ class ApiEndpoints {
 
   /// ================= TASKS =================
   static const String createTask = 'tasks/create';
+  static const String getMyTasks = 'tasks/my';
 
   static String getTasks(String projectId) => 'tasks/$projectId';
 
@@ -68,4 +69,34 @@ class ApiEndpoints {
   /// DELETE /api/v1/teams/:teamId/invitations/:token
   static String cancelInvitation(String teamId, String token) =>
       'invitations/$teamId/invitations/$token';
+
+  /// ================= WORKSPACES =================
+  static const String workspaces = 'workspaces';
+  static String switchWorkspace(String workspaceId) => 'workspaces/$workspaceId/switch';
+  static String getWorkspaceById(String id) => 'workspaces/$id';
+  static String updateWorkspace(String id) => 'workspaces/$id';
+
+  /// ================= STATS =================
+  static const String dashboardStats = 'stats/dashboard';
+  static String projectStats(String projectId) => 'stats/project/$projectId';
+
+  /// ================= NOTIFICATIONS =================
+  static const String notifications = 'notifications';
+  static const String readAllNotifications = 'notifications/read-all';
+  static const String unreadNotificationsCount = 'notifications/unread-count';
+  static String markNotificationAsRead(String id) => 'notifications/$id/read';
+  static String deleteNotification(String id) => 'notifications/$id';
+
+  /// ================= COMMENTS =================
+  static String getComments(String taskId) => 'tasks/$taskId/comments';
+  static String createComment(String taskId) => 'tasks/$taskId/comments';
+  static String updateComment(String taskId, String commentId) => 'tasks/$taskId/comments/$commentId';
+  static String deleteComment(String taskId, String commentId) => 'tasks/$taskId/comments/$commentId';
+
+  /// ================= SEARCH =================
+  static const String search = 'search';
+
+  /// ================= ACTIVITIES =================
+  static String getTaskActivities(String taskId) => 'activities/tasks/$taskId';
+  static String getProjectActivities(String projectId) => 'activities/projects/$projectId';
 }

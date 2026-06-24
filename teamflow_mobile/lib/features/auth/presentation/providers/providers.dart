@@ -60,5 +60,6 @@ final logoutControllerProvider =
         invitationsStateNotifier: ref.read(
           invitationsStateNotifierProvider.notifier,
         ),
+        ref: ref,
       ),
     );

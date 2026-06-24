@@ -9,6 +9,7 @@ extension UserModelMapper on UserModel {
       name: name,
       email: email,
       avatar: avatar,
+      bio: bio,
     );
   }
 }
@@ -21,6 +22,7 @@ extension UserEntityMapper on UserEntity {
       name: name,
       email: email,
       avatar: avatar,
+      bio: bio,
     );
   }
 }

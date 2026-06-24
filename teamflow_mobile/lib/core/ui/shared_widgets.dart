@@ -727,8 +727,8 @@ class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     super.key,
     required this.icon,
-    required this.iconColor,
-    required this.iconSurface,
+    this.iconColor = AppTokens.brandMuted,
+    this.iconSurface = Colors.transparent,
     required this.title,
     required this.subtitle,
     this.actionLabel,
@@ -740,70 +740,77 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppTokens.s32),
+        padding: const EdgeInsets.all(AppTokens.s24),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: iconSurface,
-                borderRadius: BorderRadius.circular(AppTokens.r8),
+                shape: BoxShape.circle,
                 border: Border.all(
-                  color: iconColor.withOpacity(0.15),
-                  width: 1.5,
+                  color: AppTokens.border,
+                  width: 1,
                 ),
+                color: Colors.transparent,
               ),
-              child: Icon(icon, size: 28, color: iconColor),
+              child: Icon(icon, size: 24, color: AppTokens.brandMuted),
             ),
-            SizedBox(height: AppTokens.s20),
+            const SizedBox(height: 16),
             Text(
               title,
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: AppTokens.textPrimary,
-                letterSpacing: -0.3,
               ),
             ),
-            SizedBox(height: AppTokens.s8),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: AppTokens.bodySm.copyWith(height: 1.6),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppTokens.textSecondary,
+                  height: 1.4,
+                ),
+              ),
             ),
             if (onAction != null && actionLabel != null) ...[
-              SizedBox(height: AppTokens.s24),
-              GestureDetector(
-                onTap: onAction,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppTokens.s20,
-                    vertical: AppTokens.s12,
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTokens.brand,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  decoration: BoxDecoration(
-                    color: AppTokens.brand,
-                    borderRadius: BorderRadius.circular(AppTokens.r8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (actionIcon != null) ...[
-                        Icon(actionIcon, size: 15, color: Colors.white),
-                        SizedBox(width: AppTokens.s6),
-                      ],
-                      Text(
-                        actionLabel!,
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                          letterSpacing: -0.2,
-                        ),
-                      ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (actionIcon != null) ...[
+                      Icon(actionIcon, size: 15, color: Colors.white),
+                      const SizedBox(width: 8),
                     ],
-                  ),
+                    Text(
+                      actionLabel!,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

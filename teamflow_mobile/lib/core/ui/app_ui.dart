@@ -9,6 +9,7 @@ library app_ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // SECTION 1 · COLOR SYSTEM
@@ -73,6 +74,7 @@ abstract class AppColors {
   static const Color textSecondary = Color(0xFF8893A6);
   static const Color textHint      = Color(0xFF687280);
   static const Color textMuted     = Color(0xFF687280);
+  static const Color muted         = Color(0xFF687280);
 
   static const Color dark = textPrimary;
 
@@ -309,6 +311,7 @@ class AppPrimaryButton extends StatelessWidget {
               ? _bg.withOpacity(0.65)
               : _bg,
           borderRadius: BorderRadius.circular(AppRadius.sm),
+          boxShadow: _shadow,
         ),
         child: Center(
           child: isLoading
@@ -1006,8 +1009,8 @@ class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     super.key,
     required this.icon,
-    this.iconColor = AppColors.primary,
-    this.iconSurface = AppColors.brandSurface,
+    this.iconColor = AppColors.textMuted,
+    this.iconSurface = Colors.transparent,
     required this.title,
     required this.subtitle,
     this.actionLabel,
@@ -1019,65 +1022,77 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 64,
-              height: 64,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: iconSurface,
-                borderRadius: BorderRadius.circular(AppRadius.sm),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.border,
+                  width: 1,
+                ),
+                color: Colors.transparent,
               ),
-              child: Icon(icon, size: 28, color: iconColor),
+              child: Icon(icon, size: 24, color: AppColors.textMuted),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
-                letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: AppSpacing.xs + 2),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: AppText.bodySm.copyWith(height: 1.6),
+            const SizedBox(height: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 240),
+              child: Text(
+                subtitle,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.textSecondary,
+                  height: 1.4,
+                ),
+              ),
             ),
             if (onAction != null && actionLabel != null) ...[
-              const SizedBox(height: AppSpacing.xxl),
-              GestureDetector(
-                onTap: onAction,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.xl,
-                    vertical: AppSpacing.md,
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: onAction,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  decoration: BoxDecoration(
-                    color: iconColor,
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (actionIcon != null) ...[
-                        Icon(actionIcon, size: 16, color: Colors.white),
-                        const SizedBox(width: AppSpacing.sm),
-                      ],
-                      Text(
-                        actionLabel!,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        ),
-                      ),
+                  elevation: 0,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (actionIcon != null) ...[
+                      Icon(actionIcon, size: 15, color: Colors.white),
+                      const SizedBox(width: 8),
                     ],
-                  ),
+                    Text(
+                      actionLabel!,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

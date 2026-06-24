@@ -89,4 +89,17 @@ class TasksRepositoryImpl implements TasksRepository {
       return Left(ServerFailure(e.message));
     }
   }
+
+  @override
+  Future<Either<Failure, List<TaskEntity>>> getMyTasks() async {
+    try {
+      final tasks = await remoteDataSource.getMyTasks();
+
+      return Right(
+        tasks.map((task) => task.toEntity()).toList(),
+      );
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    }
+  }
 }

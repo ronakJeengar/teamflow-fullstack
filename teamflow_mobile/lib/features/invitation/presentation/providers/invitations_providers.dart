@@ -4,6 +4,7 @@ import 'package:hooks_riverpod/legacy.dart';
 import '../../../../core/di/injection.dart';
 
 import '../../../teams/presentation/providers/teams_providers.dart';
+import '../../../auth/presentation/providers/providers.dart';
 import '../../domain/usecases/my_invitations_usecase.dart';
 import '../../domain/usecases/send_invitation_usecase.dart';
 import '../../domain/usecases/accept_invitation_usecase.dart';
@@ -52,6 +53,7 @@ final acceptInvitationControllerProvider =
           invitationsStateNotifierProvider.notifier,
         ),
         teamsStateNotifier: ref.read(teamsStateNotifierProvider.notifier),
+        authStateNotifier: ref.read(authStateNotifierProvider.notifier),
       ),
     );
 // ── Cancel Invitation ──────────────────────────────────

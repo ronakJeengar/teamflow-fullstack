@@ -191,17 +191,26 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 48,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border.all(color: AppColors.border, width: 1),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
+    final (textColor, bgColor) = switch (status.toLowerCase()) {
+      'success' || 'completed' || 'done' => (AppColors.success, AppColors.success.withOpacity(0.1)),
+      'warning' || 'in progress' || 'doing' => (AppColors.warning, AppColors.warning.withOpacity(0.1)),
+      'danger' || 'todo' || 'blocked' => (AppColors.danger, AppColors.danger.withOpacity(0.1)),
+      _ => (AppColors.muted, AppColors.muted.withOpacity(0.1)),
+    };
+
+    return Stack(
+      children: [
+        Container(
+          height: 48,
+          padding: const EdgeInsets.only(left: 16, right: 12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            border: Border.all(color: AppColors.border, width: 1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              SizedBox(
             width: 20,
             height: 20,
             child: Checkbox(
@@ -260,6 +269,23 @@ class TaskCard extends StatelessWidget {
           ],
         ],
       ),
+    ),
+        Positioned(
+          left: 0,
+          top: 0,
+          bottom: 0,
+          child: Container(
+            width: 3,
+            decoration: BoxDecoration(
+              color: textColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(8),
+                bottomLeft: Radius.circular(8),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

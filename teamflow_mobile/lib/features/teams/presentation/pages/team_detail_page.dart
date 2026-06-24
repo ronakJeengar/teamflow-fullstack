@@ -9,6 +9,7 @@ import '../../../../core/navigation/app_navigation.dart';
 import '../../../../core/navigation/navigation_helper.dart';
 import '../../../../core/ui/app_tokens.dart';
 import '../../../../core/ui/shared_widgets.dart';
+import '../../../../core/widgets/project_card.dart';
 import '../../../auth/presentation/providers/providers.dart';
 import '../../../auth/presentation/widgets/logout_modal.dart';
 import '../../../invitation/presentation/widgets/invite_member_sheet.dart';
@@ -141,11 +142,6 @@ class _Body extends StatelessWidget {
     return match.isEmpty ? 'VIEWER' : match.first.role.name;
   }
 
-  String? get _ownerUserId {
-    final owner = state.members.where((m) => m.role.name == 'OWNER');
-    return owner.isEmpty ? null : owner.first.userId;
-  }
-
   bool get _canManage => ['OWNER', 'ADMIN'].contains(_currentUserRole);
 
   /// Role-based remove permission:
@@ -203,6 +199,7 @@ class _Body extends StatelessWidget {
             index: tabIndex,
             children: [
               _ProjectsTab(
+                teamId: teamId,
                 projects: projects,
                 canManage: _canManage,
                 onNewProject: onCreateProject,
@@ -601,12 +598,10 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
   late Animation<double> _pillAnim;
-  int _prevSelected = 0;
 
   @override
   void initState() {
     super.initState();
-    _prevSelected = widget.selected;
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 240),
@@ -629,7 +624,6 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
       _ctrl
         ..reset()
         ..forward();
-      _prevSelected = old.selected;
     }
   }
 
@@ -691,7 +685,7 @@ class _SmoothTabStripState extends State<_SmoothTabStrip>
                                   duration: const Duration(milliseconds: 180),
                                   child: Icon(
                                     widget.icons[i],
-                                    key: ValueKey('${i}_${isSelected}'),
+                                    key: ValueKey('${i}_$isSelected'),
                                     size: 13,
                                     color: isSelected
                                         ? AppTokens.brand
@@ -779,6 +773,7 @@ class _PrimaryBtn extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _ProjectsTab extends StatelessWidget {
+  final String teamId;
   final List<ProjectEntity> projects;
   final bool canManage;
   final VoidCallback onNewProject;
@@ -786,6 +781,7 @@ class _ProjectsTab extends StatelessWidget {
   final ValueChanged<ProjectEntity> onDelete;
 
   const _ProjectsTab({
+    required this.teamId,
     required this.projects,
     required this.canManage,
     required this.onNewProject,
@@ -820,135 +816,13 @@ class _ProjectsTab extends StatelessWidget {
       itemCount: projects.length,
       itemBuilder: (_, i) => Padding(
         padding: const EdgeInsets.only(bottom: AppTokens.s10),
-        child: _ProjectCard(
+        child: ProjectCard(
           project: projects[i],
           canManage: canManage,
           onEdit: () => onEdit(projects[i]),
           onDelete: () => onDelete(projects[i]),
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _ProjectCard extends StatelessWidget {
-  final ProjectEntity project;
-  final bool canManage;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-
-  const _ProjectCard({
-    required this.project,
-    required this.canManage,
-    required this.onEdit,
-    required this.onDelete,
-  });
-
-  String get _dateStr {
-    try {
-      final d = DateTime.parse(project.createdAt);
-      const m = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return '${m[d.month - 1]} ${d.day}';
-    } catch (_) {
-      return '';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppTokens.surface,
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(8),
-        onTap: () => NavigationHelper.instance.pushTasks(project.id),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppTokens.border),
-          ),
-          padding: const EdgeInsets.all(AppTokens.s14),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: AppTokens.brandSurface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.folder_rounded,
-                  size: 20,
-                  color: AppTokens.brand,
-                ),
-              ),
-              SizedBox(width: AppTokens.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.name,
-                      style: AppTokens.titleMd,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    SizedBox(height: AppTokens.s4),
-                    Row(
-                      children: [
-                        _MetaChip(
-                          icon: Icons.check_circle_outline_rounded,
-                          label: '${project.count?.tasks ?? 0} tasks',
-                        ),
-                        if (_dateStr.isNotEmpty) ...[
-                          SizedBox(width: AppTokens.s8),
-                          _MetaChip(
-                            icon: Icons.today_outlined,
-                            label: _dateStr,
-                          ),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (canManage) ...[
-                SizedBox(width: AppTokens.s8),
-                AppActionButton(
-                  icon: Icons.edit_rounded,
-                  color: AppTokens.brand,
-                  onTap: onEdit,
-                ),
-                SizedBox(width: AppTokens.s6),
-                AppActionButton(
-                  icon: Icons.delete_outline_rounded,
-                  color: AppTokens.danger,
-                  onTap: onDelete,
-                ),
-              ] else
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: AppTokens.textHint,
-                ),
-            ],
-          ),
+          onTap: () =>
+              NavigationHelper.instance.pushTasks(projects[i].id, teamId),
         ),
       ),
     );
@@ -1259,27 +1133,6 @@ class _RoleBadge extends StatelessWidget {
           letterSpacing: 0.1,
         ),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _MetaChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const _MetaChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 11, color: AppTokens.textHint),
-        SizedBox(width: 4),
-        Text(label, style: AppTokens.labelXs),
-      ],
     );
   }
 }

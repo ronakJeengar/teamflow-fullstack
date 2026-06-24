@@ -5,6 +5,7 @@ class Routes {
   static const login = '/login';
   static const signup = '/signup';
   static const home = '/home';
+  static const projects = '/projects';
 
   // Teams
   static const teams = '/teams';
@@ -16,9 +17,12 @@ class Routes {
   static const invitations = '/invitations';
 
   // Tasks
-  static const tasks = '/projects/:projectId/tasks';
+  static const tasks = '/teams/:teamId/projects/:projectId/tasks';
 
-  static String tasksPath(String projectId) => '/projects/$projectId/tasks';
+  static String tasksPath(String teamId, String projectId) => '/teams/$teamId/projects/$projectId/tasks';
+
+  // Settings
+  static const settings = '/settings';
 }
 
 class RouteNames {
@@ -28,6 +32,7 @@ class RouteNames {
   static const login = 'login';
   static const signup = 'signup';
   static const home = 'home';
+  static const projects = 'projects';
 
   // Teams
   static const teams = 'teams';
@@ -38,4 +43,7 @@ class RouteNames {
 
   // Tasks
   static const tasks = 'tasks';
+
+  // Settings
+  static const settings = 'settings';
 }

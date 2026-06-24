@@ -3,7 +3,6 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../../../../core/ui/app_ui.dart';
-import '../../../projects/domain/entitties/project_entity.dart';
 import '../providers/team_details_providers.dart';
 
 class CreateProjectSheet extends HookConsumerWidget {
@@ -37,7 +36,9 @@ class CreateProjectSheet extends HookConsumerWidget {
           .createProject(teamId: teamId, name: name);
 
       if (ref.read(createProjectControllerProvider) is! AsyncError) {
-        Navigator.of(context).pop();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 

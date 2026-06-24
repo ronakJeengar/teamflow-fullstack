@@ -1,5 +1,9 @@
 import 'package:hooks_riverpod/legacy.dart';
+import 'package:dartz/dartz.dart';
 
+import '../../../../core/error/failures.dart';
+import '../../../../core/di/injection.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../domain/entities/membership_entity.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/get_current_user_usecase.dart';
@@ -127,5 +131,37 @@ class AuthStateNotifier extends StateNotifier<AuthState> {
         );
       },
     );
+  }
+
+  Future<void> refreshUserSession() async {
+    final result = await getCurrentUserUseCase();
+    await result.fold(
+      (_) async {},
+      (user) async {
+        if (user != null) {
+          await authenticate(user);
+        }
+      },
+    );
+  }
+
+  Future<Either<Failure, UserEntity>> updateProfile({
+    String? name,
+    String? bio,
+    String? password,
+  }) async {
+    final authRepository = sl<AuthRepository>();
+    final result = await authRepository.updateProfile(
+      name: name,
+      bio: bio,
+      password: password,
+    );
+    result.fold(
+      (_) {},
+      (user) {
+        state = state.copyWith(user: user);
+      },
+    );
+    return result;
   }
 }

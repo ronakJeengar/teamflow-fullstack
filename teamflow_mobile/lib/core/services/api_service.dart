@@ -7,13 +7,15 @@ class ApiService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   late final Future<void> _cookieReady;
   String? _cookie;
+  bool _isRefreshing = false;
+  final List<({RequestOptions options, ErrorInterceptorHandler handler})> _failedRequestsQueue = [];
+
 
   ApiService({
-    // String baseUrl = 'https://teamflow-fullstack.onrender.com/api/v1/',
-    String baseUrl = 'http://10.0.2.2:3000/api/v1/',
+    String? baseUrl,
   }) : _dio = Dio(
     BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:3000/api/v1/'),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 10),
       responseType: ResponseType.json,
@@ -55,9 +57,61 @@ class ApiService {
           handler.next(response);
         },
         onError: (error, handler) async {
-          // If 401, clear the stored cookie so stale token doesn't persist
+          final requestOptions = error.requestOptions;
+          final path = requestOptions.path;
+
           if (error.response?.statusCode == 401) {
-            await clearCookie();
+            // Prevent refresh loop if the request is login, register, or refresh itself
+            if (path.contains('auth/login') ||
+                path.contains('auth/register') ||
+                path.contains('auth/refresh')) {
+              await clearCookie();
+              return handler.next(error);
+            }
+
+            if (_isRefreshing) {
+              _failedRequestsQueue.add((options: requestOptions, handler: handler));
+              return;
+            }
+
+            _isRefreshing = true;
+
+            try {
+              final refreshResponse = await _dio.post('auth/refresh');
+
+              if (refreshResponse.statusCode == 200) {
+                _isRefreshing = false;
+                await _cookieReady;
+
+                if (_cookie != null) {
+                  requestOptions.headers['cookie'] = _cookie!;
+                }
+
+                for (final queued in _failedRequestsQueue) {
+                  if (_cookie != null) {
+                    queued.options.headers['cookie'] = _cookie!;
+                  }
+                  _dio.fetch(queued.options).then(
+                    (res) => queued.handler.resolve(res),
+                    onError: (err) => queued.handler.next(err),
+                  );
+                }
+                _failedRequestsQueue.clear();
+
+                final retryResponse = await _dio.fetch(requestOptions);
+                return handler.resolve(retryResponse);
+              }
+            } catch (refreshError) {
+              _isRefreshing = false;
+              await clearCookie();
+
+              for (final queued in _failedRequestsQueue) {
+                queued.handler.next(error);
+              }
+              _failedRequestsQueue.clear();
+
+              return handler.next(error);
+            }
           }
           handler.next(error);
         },

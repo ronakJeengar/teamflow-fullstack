@@ -16,6 +16,11 @@ _TaskModel _$TaskModelFromJson(Map<String, dynamic> json) => _TaskModel(
   assignedToId: json['assignedToId'] as String?,
   createdAt: DateTime.parse(json['createdAt'] as String),
   updatedAt: DateTime.parse(json['updatedAt'] as String),
+  priority: json['priority'] as String?,
+  dueDate: json['dueDate'] == null
+      ? null
+      : DateTime.parse(json['dueDate'] as String),
+  tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
 );
 
 Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
@@ -29,10 +34,15 @@ Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
       'assignedToId': instance.assignedToId,
       'createdAt': instance.createdAt.toIso8601String(),
       'updatedAt': instance.updatedAt.toIso8601String(),
+      'priority': instance.priority,
+      'dueDate': instance.dueDate?.toIso8601String(),
+      'tags': instance.tags,
     };
 
 const _$TaskStatusEnumMap = {
   TaskStatus.TODO: 'TODO',
   TaskStatus.IN_PROGRESS: 'IN_PROGRESS',
+  TaskStatus.REVIEW: 'REVIEW',
+  TaskStatus.BLOCKED: 'BLOCKED',
   TaskStatus.DONE: 'DONE',
 };

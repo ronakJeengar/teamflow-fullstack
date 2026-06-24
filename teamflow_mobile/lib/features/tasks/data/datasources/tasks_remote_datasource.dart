@@ -16,6 +16,8 @@ abstract class TasksRemoteDataSource {
 
   Future<List<TaskModel>> getTasks(String projectId);
 
+  Future<List<TaskModel>> getMyTasks();
+
   Future<TaskModel> updateTask({
     required String taskId,
     String? title,
@@ -43,15 +45,18 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
     String? priority,
   }) async {
     try {
-      final String? desc;
-      if (description == null) {
-        desc = '';
-      } else {
-        desc = description;
-      }
+      final body = <String, dynamic>{
+        'title': title,
+        'description': description ?? '',
+        'projectId': projectId,
+      };
+      if (assigneeId != null) body['assignedToId'] = assigneeId;
+      if (status != null) body['status'] = status;
+      if (priority != null) body['priority'] = priority;
+
       final response = await apiService.post<TaskModel>(
         ApiEndpoints.createTask,
-        body: {'title': title, 'description': desc, 'projectId': projectId},
+        body: body,
         fromJson: (json) => TaskModel.fromJson(json),
       );
 
@@ -73,12 +78,9 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
   @override
   Future<List<TaskModel>> getTasks(String projectId) async {
     try {
-      final response = await apiService.get<List<TaskModel>>(
+      final response = await apiService.getList<TaskModel>(
         ApiEndpoints.getTasks(projectId),
-        fromJson: (json) {
-          final items = (json as Map<String, dynamic>)['items'] as List;
-          return items.map((e) => TaskModel.fromJson(e)).toList();
-        },
+        fromJson: (json) => TaskModel.fromJson(json),
       );
 
       if (response.status && response.data != null) {
@@ -106,7 +108,7 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
       if (description != null) body['description'] = description;
       if (status != null) body['status'] = status;
       if (priority != null) body['priority'] = priority;
-      if (assigneeId != null) body['assigneeId'] = assigneeId;
+      if (assigneeId != null) body['assignedToId'] = assigneeId;
 
       final response = await apiService.patch<TaskModel>(
         ApiEndpoints.updateTask(taskId),
@@ -145,6 +147,23 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
       }
     } catch (e) {
       throw ServerException('Delete task failed');
+    }
+  }
+
+  @override
+  Future<List<TaskModel>> getMyTasks() async {
+    try {
+      final response = await apiService.getList<TaskModel>(
+        ApiEndpoints.getMyTasks,
+        fromJson: (json) => TaskModel.fromJson(json),
+      );
+
+      if (response.status && response.data != null) {
+        return response.data!;
+      }
+      return [];
+    } catch (e) {
+      throw ServerException('Failed to fetch user tasks');
     }
   }
 }

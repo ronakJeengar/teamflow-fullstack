@@ -6,6 +6,9 @@ import '../../../invitation/presentation/providers/invitations_state_notifier.da
 import '../../../teams/presentation/providers/teams_state_notifier.dart';
 import '../../../teams/presentation/providers/team_detail_state_notifier.dart';
 import '../../../tasks/presentation/providers/task_state_notifier.dart';
+import '../../../tasks/presentation/providers/task_providers.dart';
+import '../../../dashboard/presentation/providers/stats_providers.dart';
+import '../../../notifications/presentation/providers/notifications_providers.dart';
 
 import '../../domain/usecases/logout_usecase.dart';
 import 'auth_state_notifier.dart';
@@ -18,6 +21,7 @@ class LogoutController extends StateNotifier<AsyncValue<void>> {
   final TeamDetailStateNotifier teamDetailStateNotifier;
   final TasksStateNotifier tasksStateNotifier;
   final InvitationsStateNotifier invitationsStateNotifier;
+  final Ref? ref;
 
   LogoutController({
     required this.logoutUseCase,
@@ -26,6 +30,7 @@ class LogoutController extends StateNotifier<AsyncValue<void>> {
     required this.teamDetailStateNotifier,
     required this.tasksStateNotifier,
     required this.invitationsStateNotifier,
+    this.ref,
   }) : super(const AsyncData(null));
 
   Future<void> logout() async {
@@ -44,6 +49,13 @@ class LogoutController extends StateNotifier<AsyncValue<void>> {
         teamDetailStateNotifier.clear();
         tasksStateNotifier.clear();
         invitationsStateNotifier.clear();
+
+        if (ref != null) {
+          ref!.invalidate(myTasksProvider);
+          ref!.invalidate(dashboardStatsProvider);
+          ref!.invalidate(unreadNotificationsCountProvider);
+          ref!.invalidate(notificationsListProvider);
+        }
 
         state = const AsyncData(null);
       },

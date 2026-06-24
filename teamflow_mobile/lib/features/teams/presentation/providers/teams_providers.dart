@@ -24,6 +24,7 @@ final createTeamControllerProvider =
       (ref) => CreateTeamController(
         createTeamUsecase: sl<CreateTeamUseCase>(),
         teamsStateNotifier: ref.read(teamsStateNotifierProvider.notifier),
+        ref: ref,
       ),
     );
 
@@ -32,6 +33,7 @@ final updateTeamControllerProvider =
       (ref) => UpdateTeamController(
         updateTeamUsecase: sl<UpdateTeamUseCase>(),
         teamsStateNotifier: ref.read(teamsStateNotifierProvider.notifier),
+        ref: ref,
       ),
     );
 
@@ -40,5 +42,6 @@ final deleteTeamControllerProvider =
       (ref) => DeleteTeamController(
         deleteTeamUsecase: sl<DeleteTeamUseCase>(),
         teamsStateNotifier: ref.read(teamsStateNotifierProvider.notifier),
+        ref: ref,
       ),
     );

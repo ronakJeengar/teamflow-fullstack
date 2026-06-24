@@ -17,6 +17,9 @@ abstract class TasksRepository {
   /// Get Tasks
   Future<Either<Failure, List<TaskEntity>>> getTasks(String projectId);
 
+  /// Get Current User Tasks
+  Future<Either<Failure, List<TaskEntity>>> getMyTasks();
+
   /// Update Task
   Future<Either<Failure, TaskEntity>> updateTask({
     required String taskId,

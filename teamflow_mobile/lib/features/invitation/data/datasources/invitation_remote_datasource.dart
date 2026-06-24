@@ -90,40 +90,48 @@ class InvitationsRemoteDataSourceImpl implements InvitationRemoteDataSource {
   @override
   Future<List<InvitationModel>> getMyInvitations() async {
     // GET /my
-    final response = await apiService.get(
-      ApiEndpoints.getMyInvitations,
-      fromJson: (json) => json,
-    );
+    try {
+      final response = await apiService.getList<InvitationModel>(
+        ApiEndpoints.getMyInvitations,
+        fromJson: (json) => InvitationModel.fromJson(json),
+      );
 
-    if (!response.status) {
+      if (response.status && response.data != null) {
+        return response.data!;
+      }
+
       throw ServerException(
         response.message.isNotEmpty
             ? response.message
             : 'Failed to fetch invitations',
       );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Failed to fetch invitations');
     }
-
-    final invitations = response.data['invitations'] as List;
-    return invitations.map((e) => InvitationModel.fromJson(e)).toList();
   }
 
   @override
   Future<List<InvitationModel>> getTeamInvitations(String teamId) async {
     // GET /:teamId/invitations
-    final response = await apiService.get(
-      ApiEndpoints.getTeamInvitations(teamId),
-      fromJson: (json) => json,
-    );
+    try {
+      final response = await apiService.getList<InvitationModel>(
+        ApiEndpoints.getTeamInvitations(teamId),
+        fromJson: (json) => InvitationModel.fromJson(json),
+      );
 
-    if (!response.status) {
+      if (response.status && response.data != null) {
+        return response.data!;
+      }
+
       throw ServerException(
         response.message.isNotEmpty
             ? response.message
             : 'Failed to fetch team invitations',
       );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Failed to fetch team invitations');
     }
-
-    final invitations = response.data['invitations'] as List;
-    return invitations.map((e) => InvitationModel.fromJson(e)).toList();
   }
 }

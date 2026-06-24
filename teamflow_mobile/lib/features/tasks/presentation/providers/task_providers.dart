@@ -5,6 +5,8 @@ import '../../domain/usecases/creaet_task_usecase.dart';
 import '../../domain/usecases/delete_task_usecase.dart';
 import '../../domain/usecases/get_tasks_usecase.dart';
 import '../../domain/usecases/update_task_usecase.dart';
+import '../../domain/repository/tasks_repository.dart';
+import '../../domain/entitties/task_entity.dart';
 
 import 'create_task_controller.dart';
 import 'delete_task_controller.dart';
@@ -23,6 +25,7 @@ StateNotifierProvider<CreateTaskController, AsyncValue<void>>(
         (ref) => CreateTaskController(
         createTaskUseCase: sl<CreateTaskUseCase>(),
         taskStateNotifier: ref.read(taskStateNotifierProvider.notifier),
+        ref: ref,
     ),
 );
 
@@ -31,6 +34,7 @@ StateNotifierProvider<UpdateTaskController, AsyncValue<void>>(
         (ref) => UpdateTaskController(
         updateTaskUseCase: sl<UpdateTaskUseCase>(),
         taskStateNotifier: ref.read(taskStateNotifierProvider.notifier),
+        ref: ref,
     ),
 );
 
@@ -39,5 +43,19 @@ StateNotifierProvider<DeleteTaskController, AsyncValue<void>>(
         (ref) => DeleteTaskController(
         deleteTaskUseCase: sl<DeleteTaskUseCase>(),
         taskStateNotifier: ref.read(taskStateNotifierProvider.notifier),
+        ref: ref,
     ),
 );
+
+final tasksRepositoryProvider = Provider<TasksRepository>((ref) {
+  return sl<TasksRepository>();
+});
+
+final myTasksProvider = FutureProvider<List<TaskEntity>>((ref) async {
+  final repository = ref.watch(tasksRepositoryProvider);
+  final result = await repository.getMyTasks();
+  return result.fold(
+    (failure) => throw Exception(failure.message),
+    (tasks) => tasks,
+  );
+});

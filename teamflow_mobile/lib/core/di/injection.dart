@@ -69,15 +69,31 @@ import '../../features/teams/presentation/providers/teams_state_notifier.dart';
 import '../../features/teams/presentation/providers/update_team_controller.dart';
 
 import '../services/api_service.dart';
+import '../../features/notifications/data/datasources/notification_remote_datasource.dart';
+import '../../features/notifications/data/reposiotries/notification_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notification_repository.dart';
+import '../../features/dashboard/data/datasources/stats_remote_datasource.dart';
+import '../../features/dashboard/data/repositories/stats_repository_impl.dart';
+import '../../features/dashboard/domain/repositories/stats_repository.dart';
+import '../../features/dashboard/data/datasources/workspaces_remote_datasource.dart';
+import '../../features/dashboard/data/repositories/workspaces_repository_impl.dart';
+import '../../features/dashboard/domain/repositories/workspaces_repository.dart';
+import '../../features/tasks/data/datasources/comments_remote_datasource.dart';
+import '../../features/tasks/data/repository/comments_repository_impl.dart';
+import '../../features/tasks/domain/repository/comments_repository.dart';
+import '../../features/tasks/data/datasources/activities_remote_datasource.dart';
+import '../../features/tasks/data/repository/activities_repository_impl.dart';
+import '../../features/tasks/domain/repository/activities_repository.dart';
+import '../../features/search/data/datasources/search_remote_datasource.dart';
+import '../../features/search/data/repository/search_repository_impl.dart';
+import '../../features/search/domain/repository/search_repository.dart';
 
 final sl = GetIt.instance;
 
-Future<void> setupDI({String baseUrl = 'http://10.0.2.2:3000/api/v1/'}) async {
-  // =========================================================
-  // CORE
-  // =========================================================
+Future<void> setupDI({String? baseUrl}) async {
+  final effectiveBaseUrl = baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:3000/api/v1/');
 
-  sl.registerLazySingleton<ApiService>(() => ApiService(baseUrl: baseUrl));
+  sl.registerLazySingleton<ApiService>(() => ApiService(baseUrl: effectiveBaseUrl));
 
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(
@@ -313,6 +329,7 @@ Future<void> setupDI({String baseUrl = 'http://10.0.2.2:3000/api/v1/'}) async {
       acceptInvitationUseCase: sl<AcceptInvitationUseCase>(),
       invitationsStateNotifier: sl<InvitationsStateNotifier>(),
       teamsStateNotifier: sl<TeamsStateNotifier>(),
+      authStateNotifier: sl<AuthStateNotifier>(),
     ),
   );
 
@@ -321,5 +338,71 @@ Future<void> setupDI({String baseUrl = 'http://10.0.2.2:3000/api/v1/'}) async {
       cancelInvitationUseCase: sl<CancelInvitationUseCase>(),
       invitationsStateNotifier: sl<InvitationsStateNotifier>(),
     ),
+  );
+
+  // =========================================================
+  // NOTIFICATIONS FEATURE
+  // =========================================================
+  sl.registerLazySingleton<NotificationRemoteDataSource>(
+    () => NotificationRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<NotificationRepository>(
+    () => NotificationRepositoryImpl(sl()),
+  );
+
+  // =========================================================
+  // STATS FEATURE
+  // =========================================================
+  sl.registerLazySingleton<StatsRemoteDataSource>(
+    () => StatsRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<StatsRepository>(
+    () => StatsRepositoryImpl(sl()),
+  );
+
+  // =========================================================
+  // WORKSPACES FEATURE
+  // =========================================================
+  sl.registerLazySingleton<WorkspacesRemoteDataSource>(
+    () => WorkspacesRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<WorkspacesRepository>(
+    () => WorkspacesRepositoryImpl(sl()),
+  );
+
+  // =========================================================
+  // COMMENTS FEATURE
+  // =========================================================
+  sl.registerLazySingleton<CommentsRemoteDataSource>(
+    () => CommentsRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<CommentsRepository>(
+    () => CommentsRepositoryImpl(sl()),
+  );
+
+  // =========================================================
+  // ACTIVITIES FEATURE
+  // =========================================================
+  sl.registerLazySingleton<ActivitiesRemoteDataSource>(
+    () => ActivitiesRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<ActivitiesRepository>(
+    () => ActivitiesRepositoryImpl(sl()),
+  );
+
+  // =========================================================
+  // SEARCH FEATURE
+  // =========================================================
+  sl.registerLazySingleton<SearchRemoteDataSource>(
+    () => SearchRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<SearchRepository>(
+    () => SearchRepositoryImpl(sl()),
   );
 }

@@ -106,7 +106,7 @@ class TeamsRemoteDataSourceImpl implements TeamsRemoteDataSource {
     String? description,
   }) async {
     try {
-      final response = await apiService.put<Team>(
+      final response = await apiService.patch<Team>(
         ApiEndpoints.updateTeam(teamId),
         // ← was: '${ApiEndpoints.updateTeam}$teamId'
         body: {'name': name, 'description': description},

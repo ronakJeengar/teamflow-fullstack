@@ -1,7 +1,7 @@
 // lib/core/navigation/app_navigation.dart
 
 import '../router/routes.dart';
-import 'navigation_helper.dart';
+import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
 
 extension AppNavigation on NavigationHelper {
   // Auth Navigation
@@ -13,6 +13,8 @@ extension AppNavigation on NavigationHelper {
 
   void goToHome() => goToNamed(RouteNames.home);
 
+  void goToProjects() => goToNamed(RouteNames.projects);
+
   // Teams
   void goToTeams() => goToNamed(RouteNames.teams);
 
@@ -23,8 +25,13 @@ extension AppNavigation on NavigationHelper {
   void goToInvitations() => goToNamed(RouteNames.invitations);
 
   // Tasks
-  void goToTasks(String projectId) =>
-      goToNamed(RouteNames.tasks, params: {'projectId': projectId});
+  void goToTasks(String projectId, String teamId) => goToNamed(
+    RouteNames.tasks,
+    params: {'projectId': projectId, 'teamId': teamId},
+  );
+
+  // Settings
+  void goToSettings() => goToNamed(RouteNames.settings);
 
   // Push variants
   void pushLogin() => pushNamed(RouteNames.login);
@@ -33,6 +40,8 @@ extension AppNavigation on NavigationHelper {
 
   void pushHome() => pushNamed(RouteNames.home);
 
+  void pushProjects() => pushNamed(RouteNames.projects);
+
   void pushTeams() => pushNamed(RouteNames.teams);
 
   void pushInvitations() => pushNamed(RouteNames.invitations);
@@ -40,8 +49,12 @@ extension AppNavigation on NavigationHelper {
   void pushTeamDetails(String teamId) =>
       pushNamed(RouteNames.teamDetails, params: {'teamId': teamId});
 
-  void pushTasks(String projectId) =>
-      pushNamed(RouteNames.tasks, params: {'projectId': projectId});
+  void pushTasks(String projectId, String teamId) => pushNamed(
+    RouteNames.tasks,
+    params: {'projectId': projectId, 'teamId': teamId},
+  );
+
+  void pushSettings() => pushNamed(RouteNames.settings);
 
   // Replace variants
   void replaceWithLogin() => replaceNamed(RouteNames.login);
@@ -50,10 +63,16 @@ extension AppNavigation on NavigationHelper {
 
   void replaceWithHome() => replaceNamed(RouteNames.home);
 
+  void replaceWithProjects() => replaceNamed(RouteNames.projects);
+
   void replaceWithTeams() => replaceNamed(RouteNames.teams);
 
   void replaceWithInvitations() => replaceNamed(RouteNames.invitations);
 
-  void replaceWithTasks(String projectId) =>
-      replaceNamed(RouteNames.tasks, params: {'projectId': projectId});
+  void replaceWithTasks(String projectId, String teamId) => replaceNamed(
+    RouteNames.tasks,
+    params: {'projectId': projectId, 'teamId': teamId},
+  );
+
+  void replaceWithSettings() => replaceNamed(RouteNames.settings);
 }

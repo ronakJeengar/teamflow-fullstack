@@ -20,6 +20,8 @@ abstract class AuthRemoteDataSource {
   Future<UserModel?> getCurrentUser();
 
   Future<List<MembershipModel>> getMyMemberships();
+
+  Future<UserModel> updateProfile({String? name, String? bio, String? password});
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -137,6 +139,33 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             ? response.message
             : 'Failed to fetch memberships',
       );
+    } catch (e) {
+      if (e is ServerException) rethrow;
+      throw ServerException('Unexpected server error');
+    }
+  }
+
+  @override
+  Future<UserModel> updateProfile({String? name, String? bio, String? password}) async {
+    try {
+      final body = <String, dynamic>{};
+      if (name != null) body['name'] = name;
+      if (bio != null) body['bio'] = bio;
+      if (password != null && password.isNotEmpty) body['password'] = password;
+
+      final response = await apiService.patch<UserModel>(
+        ApiEndpoints.me,
+        body: body,
+        fromJson: (json) => UserModel.fromJson(json),
+      );
+
+      if (response.status && response.data != null) {
+        return response.data!;
+      } else {
+        throw ServerException(
+          response.message.isNotEmpty ? response.message : 'Update profile failed',
+        );
+      }
     } catch (e) {
       if (e is ServerException) rethrow;
       throw ServerException('Unexpected server error');

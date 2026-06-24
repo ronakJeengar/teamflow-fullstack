@@ -44,7 +44,9 @@ class EditProjectSheet extends HookConsumerWidget {
           .updateProject(projectId: project.id, name: name, teamId: teamId);
 
       if (ref.read(updateProjectControllerProvider) is! AsyncError) {
-        Navigator.of(context).pop();
+        if (context.mounted) {
+          Navigator.of(context).pop();
+        }
       }
     }
 

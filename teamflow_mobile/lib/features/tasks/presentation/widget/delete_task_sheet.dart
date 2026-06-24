@@ -34,7 +34,7 @@ class DeleteTaskSheet extends HookConsumerWidget {
     }
 
     return AppSheetShell(
-      title: 'Delete project',
+      title: 'Delete Task',
       child: Column(
         children: [
           Container(

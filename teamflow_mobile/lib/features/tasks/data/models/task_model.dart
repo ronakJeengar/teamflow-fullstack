@@ -6,7 +6,7 @@ part 'task_model.freezed.dart';
 
 part 'task_model.g.dart';
 
-enum TaskStatus { TODO, IN_PROGRESS, DONE }
+enum TaskStatus { TODO, IN_PROGRESS, REVIEW, BLOCKED, DONE }
 
 @freezed
 abstract class TaskModel with _$TaskModel {
@@ -20,6 +20,9 @@ abstract class TaskModel with _$TaskModel {
     String? assignedToId,
     required DateTime createdAt,
     required DateTime updatedAt,
+    String? priority,
+    DateTime? dueDate,
+    List<String>? tags,
   }) = _TaskModel;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) =>
@@ -38,6 +41,9 @@ extension TaskModelMapper on TaskModel {
       assignedToId: assignedToId,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      priority: priority,
+      dueDate: dueDate,
+      tags: tags,
     );
   }
 }
@@ -54,6 +60,9 @@ extension TaskEntityMapper on TaskEntity {
       assignedToId: assignedToId,
       createdAt: createdAt,
       updatedAt: updatedAt,
+      priority: priority,
+      dueDate: dueDate,
+      tags: tags,
     );
   }
 }
