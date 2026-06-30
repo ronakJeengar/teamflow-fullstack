@@ -30,6 +30,12 @@ class DummyTasksRepository implements TasksRepository {
     String? assigneeId,
     String? status,
     String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async => throw UnimplementedError();
   @override
   Future<Either<Failure, TaskEntity>> updateTask({
@@ -39,6 +45,12 @@ class DummyTasksRepository implements TasksRepository {
     String? status,
     String? priority,
     String? assigneeId,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async => throw UnimplementedError();
   @override
   Future<Either<Failure, void>> deleteTask(String taskId) async => throw UnimplementedError();

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dartz/dartz.dart';
+import 'package:teamflow_mobile/features/teams/presentation/providers/teams_providers.dart';
+import 'package:teamflow_mobile/features/auth/presentation/providers/providers.dart';
 import 'package:teamflow_mobile/core/error/failures.dart';
 import 'package:teamflow_mobile/features/teams/presentation/widget/team_card.dart';
 import 'package:teamflow_mobile/features/teams/domain/entities/team_entity.dart';
@@ -289,8 +292,16 @@ void main() {
       final controller = AcceptInvitationController(
         acceptInvitationUseCase: FakeAcceptInvitationUseCase(),
         invitationsStateNotifier: fakeInvitations,
-        teamsStateNotifier: fakeTeams,
-        authStateNotifier: fakeAuth,
+        read: <T>(provider) {
+          if (provider == teamsStateNotifierProvider.notifier) {
+            return fakeTeams as T;
+          }
+          if (provider == authStateNotifierProvider.notifier) {
+            return fakeAuth as T;
+          }
+          throw UnimplementedError();
+        },
+        invalidate: (provider) {},
       );
 
       await controller.acceptInvitation(token: 'token-abc');
