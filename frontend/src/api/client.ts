@@ -1,9 +1,53 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import { getOfflineQueue, saveOfflineQueue } from "./offlineManager.js";
 
 export const api = axios.create({
   baseURL: "http://localhost:3000/api/v1",
   withCredentials: true,
 });
+
+// Request Interceptor to check online/offline and cache reads
+api.interceptors.request.use(
+  (config) => {
+    const isMutation = ["post", "patch", "delete"].includes(config.method?.toLowerCase() || "");
+    
+    if (!navigator.onLine) {
+      if (config.method?.toLowerCase() === "get") {
+        const cached = localStorage.getItem(`cache_GET_${config.url}`);
+        if (cached) {
+          return Promise.resolve({
+            data: JSON.parse(cached),
+            status: 200,
+            statusText: "OK",
+            headers: {},
+            config,
+          } as any);
+        }
+        return Promise.reject(new AxiosError("No internet connection and no cache available"));
+      } else if (isMutation) {
+        const queue = getOfflineQueue();
+        const queuedItem = {
+          id: Math.random().toString(36).substring(2, 9),
+          method: config.method || "POST",
+          url: config.url || "",
+          data: config.data,
+          timestamp: new Date().toISOString(),
+        };
+        saveOfflineQueue([...queue, queuedItem]);
+
+        return Promise.resolve({
+          data: { success: true, message: "Offline operation queued", data: config.data },
+          status: 200,
+          statusText: "OK",
+          headers: {},
+          config,
+        } as any);
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -29,9 +73,17 @@ const isAuthEndpoint = (url?: string): boolean => {
   return authEndpoints.some((endpoint) => url.includes(endpoint));
 };
 
-// Response interceptor to handle token refresh
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config.method?.toLowerCase() === "get" && response.status === 200) {
+      try {
+        localStorage.setItem(`cache_GET_${response.config.url}`, JSON.stringify(response.data));
+      } catch (e) {
+        console.warn("Storage quota exceeded, unable to cache GET response");
+      }
+    }
+    return response;
+  },
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & {
       _retry?: boolean;

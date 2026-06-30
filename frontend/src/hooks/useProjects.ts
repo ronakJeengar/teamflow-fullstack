@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { api } from "../api/client";
+import type { Project } from "../types/Project";
 
-export const useProjects = () =>
-  useQuery({
-    queryKey: ["projects"],
+export const useProjects = (workspaceId?: string | null) =>
+  useQuery<Project[]>({
+    queryKey: ["projects", workspaceId],
     queryFn: async () => {
-      const res = await api.get("/projects");
-      return res.data;
+      if (!workspaceId) return [];
+      const res = await api.get("/projects", {
+        params: { workspaceId },
+      });
+      return res.data.data;
     },
+    enabled: !!workspaceId,
   });

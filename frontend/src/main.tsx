@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import "./index.css";
 import { AuthProvider } from "./auth/AuthProvider";
+import { WorkspaceProvider } from "./context/WorkspaceContext";
 import { ToastProvider } from "./context/ToastProvider";
 import { BrowserRouter } from "react-router-dom";
 
@@ -18,9 +19,11 @@ root.render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
+          <WorkspaceProvider>
+            <ToastProvider>
+              <App />
+            </ToastProvider>
+          </WorkspaceProvider>
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>

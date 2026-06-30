@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: string;
+  activeWorkspaceId?: string | null;
 }
 
 export interface AuthContextType {
@@ -13,6 +14,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
+  refreshUserSession?: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);

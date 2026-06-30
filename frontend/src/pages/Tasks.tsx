@@ -1,524 +1,377 @@
 import { useState, useMemo } from "react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  type DropResult,
-} from "@hello-pangea/dnd";
 import { useParams, useNavigate } from "react-router-dom";
-import { useTasks } from "../hooks/useTasks";
-import { useCreateTask } from "../hooks/useCreateTask";
-import { useUpdateTask } from "../hooks/useUpdateTask";
-import { useDeleteTask } from "../hooks/useDeleteTask";
-import type { Task } from "../types/Task";
-import { AxiosError } from "axios";
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../api/client";
+import { useProject } from "../hooks/useProject";
 import { useToast } from "../context/useToast";
-import ConfirmModal from "../components/ConfirmModel";
+import EditTaskModal from "../components/EditTaskModel";
+import type { Task, TaskPriority, TaskStatus } from "../types/Task";
+import type { Sprint } from "../types/Sprint";
+import type { TeamMember } from "../types/TeamMember";
 
-type TaskStatus = "TODO" | "IN_PROGRESS" | "DONE";
+type TaskViewMode = "board" | "list" | "calendar";
 
 interface TaskColumns {
   TODO: Task[];
   IN_PROGRESS: Task[];
+  REVIEW: Task[];
+  BLOCKED: Task[];
   DONE: Task[];
 }
 
 export default function Tasks() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const toast = useToast();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data, isLoading, error } = useTasks(projectId as string);
-  const createTask = useCreateTask(projectId as string);
-  const updateTask = useUpdateTask(projectId as string);
-  const deleteTask = useDeleteTask(projectId as string);
+  const [viewMode, setViewMode] = useState<TaskViewMode>("board");
+  const [showBacklog, setShowBacklog] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [newTitle, setNewTitle] = useState("");
-  const [newDescription, setNewDescription] = useState("");
+  // Create Task Form State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createTitle, setCreateTitle] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createStatus, setCreateStatus] = useState<TaskStatus>("TODO");
+  const [createPriority, setCreatePriority] = useState<TaskPriority>("LOW");
+  const [createPoints, setCreatePoints] = useState(0);
+  const [createSprintId, setCreateSprintId] = useState("");
+  const [createAssigneeId, setCreateAssigneeId] = useState("");
+  const [createIsBacklog, setCreateIsBacklog] = useState(false);
 
-  const [editTask, setEditTask] = useState<Task | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<Task | null>(null);
+  // Edit Task State
+  const [activeEditTask, setActiveEditTask] = useState<Task | null>(null);
 
-  const [optimisticBoard, setOptimisticBoard] = useState<TaskColumns | null>(
-    null,
-  );
+  // Optimistic Board drag drop state
+  const [optimisticBoard, setOptimisticBoard] = useState<TaskColumns | null>(null);
 
-  const tasks = useMemo(() => data || [], [data]);
+  // Calendar current Date state
+  const [calendarDate, setCalendarDate] = useState(new Date());
 
-  const serverBoard: TaskColumns = useMemo(
-    () => ({
-      TODO: tasks.filter((t: Task) => t.status === "TODO"),
-      IN_PROGRESS: tasks.filter((t: Task) => t.status === "IN_PROGRESS"),
-      DONE: tasks.filter((t: Task) => t.status === "DONE"),
-    }),
-    [tasks],
-  );
+  // 1. Fetch project details
+  const { data: project, isLoading: projectLoading } = useProject(projectId as string);
+  const teamId = project?.teamId || "";
 
-  const board = optimisticBoard || serverBoard;
+  // 2. Fetch project tasks
+  const { data: serverTasks = [], isLoading: tasksLoading } = useQuery<Task[]>({
+    queryKey: ["tasks", projectId],
+    queryFn: async () => {
+      const res = await api.get(`/tasks/project/${projectId}`);
+      return res.data?.data?.items ?? [];
+    },
+    enabled: !!projectId,
+  });
 
-  if (!projectId) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md">
-          <p className="text-gray-600">Project not found.</p>
-        </div>
-      </div>
-    );
-  }
+  // 3. Fetch team members
+  const { data: members = [] } = useQuery<TeamMember[]>({
+    queryKey: ["team-members", teamId],
+    queryFn: async () => {
+      const res = await api.get(`/teams/${teamId}/members`);
+      return res.data?.data ?? [];
+    },
+    enabled: !!teamId,
+  });
 
-  if (error) {
-    const isAuthError =
-      error instanceof AxiosError && error.response?.status === 401;
-
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md">
-          <div className="text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-red-500 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              {isAuthError ? "Authentication Required" : "Error Loading Tasks"}
-            </h2>
-            <p className="text-gray-600 mb-6">
-              {isAuthError
-                ? "Your session has expired. Please log in again."
-                : "Failed to load tasks. Please try again."}
-            </p>
-            <button
-              onClick={() => {
-                if (isAuthError) {
-                  localStorage.removeItem("token");
-                  navigate("/login");
-                } else {
-                  window.location.reload();
-                }
-              }}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all"
-            >
-              {isAuthError ? "Go to Login" : "Retry"}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const addTask = async () => {
-    if (!newTitle.trim()) {
-      toast.showToast("Please enter a task title", "error");
-      return;
-    }
-
-    try {
-      await createTask.mutateAsync(
-        {
-          title: newTitle,
-          description: newDescription || undefined,
-        },
-        {
-          onSuccess: () => {
-            toast.showToast("Task created successfully");
-            setNewTitle("");
-            setNewDescription("");
-            setOptimisticBoard(null);
-          },
-          onError: () => toast.showToast("Failed to create task", "error"),
-        },
-      );
-    } catch (err) {
-      console.error("Error creating task:", err);
-    }
-  };
-
-  const saveEdit = async () => {
-    if (!editTask) return;
-
-    if (!editTask.title.trim()) {
-      toast.showToast("Task title cannot be empty", "error");
-      return;
-    }
-
-    try {
-      await updateTask.mutateAsync(
-        {
-          id: editTask.id,
-          title: editTask.title,
-          description: editTask.description,
-          status: editTask.status,
-        },
-        {
-          onSuccess: () => {
-            toast.showToast("Task updated successfully");
-            setEditTask(null);
-            setOptimisticBoard(null);
-          },
-          onError: () => toast.showToast("Failed to update task", "error"),
-        },
-      );
-    } catch (err) {
-      console.error("Error updating task:", err);
-    }
-  };
-
-  const confirmDeleteTask = async () => {
-    if (!confirmDelete) return;
-
-    try {
-      await deleteTask.mutateAsync(confirmDelete.id, {
-        onSuccess: () => {
-          toast.showToast("Task deleted");
-          setOptimisticBoard(null);
-        },
-        onError: () => toast.showToast("Delete failed", "error"),
+  // 4. Fetch sprints
+  const { data: sprints = [] } = useQuery<Sprint[]>({
+    queryKey: ["team-sprints", teamId],
+    queryFn: async () => {
+      const res = await api.get("/sprints", {
+        params: { teamId, workspaceId: project?.team?.workspaceId },
       });
+      return res.data?.data ?? [];
+    },
+    enabled: !!teamId && !!project?.team?.workspaceId,
+  });
 
-      setConfirmDelete(null);
-    } catch (err) {
-      console.error("Error deleting task:", err);
-    }
-  };
+  // Create Task Mutation
+  const createTaskMutation = useMutation({
+    mutationFn: async () => {
+      await api.post("/tasks", {
+        title: createTitle,
+        description: createDesc || null,
+        status: createStatus,
+        priority: createPriority,
+        storyPoints: createPoints || null,
+        sprintId: createSprintId || null,
+        assignedToId: createAssigneeId || null,
+        projectId,
+        isBacklog: createIsBacklog,
+      });
+    },
+    onSuccess: () => {
+      showToast("Task created successfully!", "success");
+      setCreateTitle("");
+      setCreateDesc("");
+      setCreateStatus("TODO");
+      setCreatePriority("LOW");
+      setCreatePoints(0);
+      setCreateSprintId("");
+      setCreateAssigneeId("");
+      setCreateIsBacklog(false);
+      setShowCreateModal(false);
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || "Failed to create task", "error");
+    },
+  });
 
+  // Drag Drop Update Mutation
+  const dragUpdateMutation = useMutation({
+    mutationFn: async ({ taskId, newStatus }: { taskId: string; newStatus: TaskStatus }) => {
+      await api.patch(`/tasks/${taskId}`, { status: newStatus });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+      setOptimisticBoard(null);
+    },
+    onError: () => {
+      showToast("Failed to sync card movement, reverting", "error");
+      setOptimisticBoard(null);
+    },
+  });
+
+  // Delete Task Mutation
+  const deleteTaskMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/tasks/${id}`);
+    },
+    onSuccess: () => {
+      showToast("Task deleted successfully", "success");
+      queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || "Failed to delete task", "error");
+    },
+  });
+
+  // Filter tasks based on Search query and Backlog filter
+  const filteredTasks = useMemo(() => {
+    return serverTasks.filter((t) => {
+      // 1. Backlog filter
+      if (!showBacklog && t.isBacklog) return false;
+      // 2. Search query filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = t.title.toLowerCase().includes(query);
+        const matchesDesc = t.description?.toLowerCase().includes(query) ?? false;
+        return matchesTitle || matchesDesc;
+      }
+      return true;
+    });
+  }, [serverTasks, showBacklog, searchQuery]);
+
+  // Construct Board Columns structure
+  const boardColumns: TaskColumns = useMemo(() => {
+    return {
+      TODO: filteredTasks.filter((t) => t.status === "TODO"),
+      IN_PROGRESS: filteredTasks.filter((t) => t.status === "IN_PROGRESS"),
+      REVIEW: filteredTasks.filter((t) => t.status === "REVIEW"),
+      BLOCKED: filteredTasks.filter((t) => t.status === "BLOCKED"),
+      DONE: filteredTasks.filter((t) => t.status === "DONE"),
+    };
+  }, [filteredTasks]);
+
+  const activeBoard = optimisticBoard || boardColumns;
+
+  // Drag and Drop Handler
   const handleDragEnd = (result: DropResult) => {
-    const { destination, source } = result;
-
+    const { destination, source, draggableId } = result;
     if (!destination) return;
+    if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return;
-    }
+    const sourceStatus = source.droppableId as TaskStatus;
+    const destStatus = destination.droppableId as TaskStatus;
 
-    const sourceCol = source.droppableId as TaskStatus;
-    const destCol = destination.droppableId as TaskStatus;
-
-    const newBoard = structuredClone(board);
-    const [movedTask] = newBoard[sourceCol].splice(source.index, 1);
-    movedTask.status = destCol;
-    newBoard[destCol].splice(destination.index, 0, movedTask);
+    // Apply Optimistic update locally
+    const newBoard = structuredClone(activeBoard);
+    const [movedTask] = newBoard[sourceStatus].splice(source.index, 1);
+    movedTask.status = destStatus;
+    newBoard[destStatus].splice(destination.index, 0, movedTask);
 
     setOptimisticBoard(newBoard);
 
-    updateTask.mutate(
-      {
-        id: movedTask.id,
-        title: movedTask.title,
-        description: movedTask.description,
-        status: destCol,
-      },
-      {
-        onSuccess: () => {
-          toast.showToast("Task moved");
-          setOptimisticBoard(null);
-        },
-        onError: () => {
-          toast.showToast("Move failed, reverting", "error");
-          setOptimisticBoard(null);
-        },
-      },
-    );
+    // Call API patch
+    dragUpdateMutation.mutate({ taskId: draggableId, newStatus: destStatus });
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      addTask();
-    }
+  // Helper Calendar Months Generator
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const days = [];
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let d = 1; d <= totalDays; d++) days.push(new Date(year, month, d));
+    return days;
   };
 
-  const handleEditKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      saveEdit();
-    } else if (e.key === "Escape") {
-      setEditTask(null);
-    }
+  const calendarDays = getDaysInMonth(calendarDate);
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const priorityColors: Record<string, string> = {
+    LOW: "bg-slate-100 text-slate-700 border-slate-200",
+    MEDIUM: "bg-blue-50 text-blue-700 border-blue-100",
+    HIGH: "bg-orange-50 text-orange-700 border-orange-100",
+    URGENT: "bg-red-100 text-red-700 border-red-200 animate-pulse",
   };
 
-  if (isLoading) {
+  const statusColors: Record<string, string> = {
+    TODO: "bg-slate-100 text-slate-700",
+    IN_PROGRESS: "bg-indigo-50 text-indigo-700",
+    REVIEW: "bg-amber-50 text-amber-700",
+    BLOCKED: "bg-rose-50 text-rose-700",
+    DONE: "bg-emerald-50 text-emerald-700",
+  };
+
+  if (projectLoading || tasksLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse mb-2"></div>
-            <div className="h-4 w-64 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200">
-            <div className="h-12 bg-gray-200 rounded animate-pulse mb-3"></div>
-            <div className="h-24 bg-gray-200 rounded animate-pulse mb-3"></div>
-            <div className="h-12 bg-gray-200 rounded animate-pulse"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-gray-100 p-4 rounded-xl min-h-[500px]">
-                <div className="h-6 w-32 bg-gray-200 rounded animate-pulse mb-4"></div>
-                {[1, 2, 3].map((j) => (
-                  <div
-                    key={j}
-                    className="bg-white p-4 rounded-xl mb-3 h-24 animate-pulse"
-                  ></div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
       </div>
     );
   }
 
-  const columnConfig = [
-    { id: "TODO" as TaskStatus, title: "📝 To Do", color: "bg-gray-100" },
-    {
-      id: "IN_PROGRESS" as TaskStatus,
-      title: "🚧 In Progress",
-      color: "bg-blue-50",
-    },
-    { id: "DONE" as TaskStatus, title: "✅ Done", color: "bg-green-50" },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 sm:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-2">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-white rounded-lg transition-colors"
-              aria-label="Back to projects"
-            >
-              <svg
-                className="w-6 h-6 text-gray-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </button>
-            <h1 className="text-4xl font-bold text-gray-900">Tasks</h1>
-          </div>
-          <p className="text-gray-600 ml-14">
-            Drag and drop tasks between columns
-          </p>
-        </div>
-
-        {/* Create Task Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-6 border border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Create New Task
-          </h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="Task title..."
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              onKeyPress={handleKeyPress}
-              aria-label="Task title"
-            />
-
-            <textarea
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
-              rows={3}
-              placeholder="Task description (optional)..."
-              value={newDescription}
-              onChange={(e) => setNewDescription(e.target.value)}
-              aria-label="Task description"
-            />
-
-            <button
-              onClick={addTask}
-              disabled={!newTitle.trim() || createTask.isPending}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium"
-            >
-              {createTask.isPending ? "Adding..." : "Add Task"}
-            </button>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      
+      {/* Title & Navigation Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-100 pb-5">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigate(`/teams/${teamId}`)}
+            className="p-1.5 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 font-inter">{project?.name} Tasks</h1>
+            <p className="text-xs text-gray-500 font-inter mt-1">Status columns, backlog assignment, and list view toggles.</p>
           </div>
         </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 text-white bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-lg font-inter flex items-center gap-2 shadow-xs cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Task
+        </button>
+      </div>
 
-        {/* Task Board */}
+      {/* Mode Selectors & Query Controls */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-4 border border-gray-200 rounded-xl shadow-xs">
+        
+        {/* Toggle Mode */}
+        <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200/80">
+          {(["board", "list", "calendar"] as TaskViewMode[]).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => setViewMode(mode)}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold font-inter capitalize transition-all cursor-pointer ${
+                viewMode === mode
+                  ? "bg-white text-indigo-600 shadow-xs"
+                  : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+
+        {/* Filters */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="px-3 py-1.5 border border-gray-300 rounded-lg text-xs font-inter w-48 bg-white focus:outline-hidden"
+          />
+          <button
+            onClick={() => setShowBacklog(!showBacklog)}
+            className={`px-3 py-1.5 rounded-lg border text-xs font-bold font-inter transition-all cursor-pointer ${
+              showBacklog
+                ? "bg-indigo-50 border-indigo-200 text-indigo-700"
+                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+            }`}
+          >
+            {showBacklog ? "Hide Backlog" : "Show Backlog"}
+          </button>
+        </div>
+
+      </div>
+
+      {/* BOARD VIEW */}
+      {viewMode === "board" && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {columnConfig.map((column) => (
-              <div
-                key={column.id}
-                className={`${column.color} p-4 rounded-xl min-h-[500px]`}
-              >
-                {/* ✅ Column Header - Outside Droppable */}
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-bold text-lg text-gray-900">
-                    {column.title}
-                  </h2>
-                  <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-600 shadow-sm">
-                    {board[column.id].length}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start min-h-[500px]">
+            {([
+              { id: "TODO", title: "📝 To Do", color: "bg-slate-50 border-slate-100" },
+              { id: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-50/50 border-blue-100" },
+              { id: "REVIEW", title: "👀 Review", color: "bg-amber-50/50 border-amber-100" },
+              { id: "BLOCKED", title: "🚫 Blocked", color: "bg-rose-50/50 border-rose-100" },
+              { id: "DONE", title: "✅ Done", color: "bg-emerald-50/50 border-emerald-100" },
+            ] as const).map((col) => (
+              <div key={col.id} className={`${col.color} border rounded-xl p-4 flex flex-col h-[550px]`}>
+                <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-2 shrink-0">
+                  <h3 className="font-bold text-gray-900 text-xs tracking-wider uppercase font-inter">{col.title}</h3>
+                  <span className="text-[10px] bg-white border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded-full font-inter">
+                    {activeBoard[col.id]?.length || 0}
                   </span>
                 </div>
-
-                {/* ✅ Droppable Area - Only for tasks */}
-                <Droppable droppableId={column.id}>
-                  {(provided, snapshot) => (
+                
+                <Droppable droppableId={col.id}>
+                  {(provided) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`space-y-3 min-h-[400px] transition-colors rounded-lg ${
-                        snapshot.isDraggingOver
-                          ? "bg-blue-100 bg-opacity-50"
-                          : ""
-                      }`}
+                      className="flex-1 overflow-y-auto space-y-3 pr-1"
                     >
-                      {board[column.id].map((task: Task, index: number) => (
-                        <Draggable
-                          draggableId={task.id}
-                          index={index}
-                          key={task.id}
-                          isDragDisabled={editTask?.id === task.id}
-                        >
-                          {(provided, snapshot) => (
+                      {activeBoard[col.id]?.map((task, idx) => (
+                        <Draggable key={task.id} draggableId={task.id} index={idx}>
+                          {(dragProv) => (
                             <div
-                              className={`group bg-white p-4 rounded-xl shadow-sm border border-gray-200 transition-all ${
-                                snapshot.isDragging
-                                  ? "shadow-2xl ring-2 ring-blue-500 scale-105"
-                                  : "hover:shadow-md"
-                              }`}
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              role="button"
-                              aria-grabbed={snapshot.isDragging}
-                              tabIndex={0}
+                              ref={dragProv.innerRef}
+                              {...dragProv.draggableProps}
+                              {...dragProv.dragHandleProps}
+                              onClick={() => setActiveEditTask(task)}
+                              className="p-3 bg-white border border-gray-200/80 hover:border-indigo-400 hover:shadow-xs rounded-xl transition-all cursor-pointer space-y-2.5"
                             >
-                              {editTask?.id === task.id ? (
-                                <>
-                                  <input
-                                    type="text"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                                    value={editTask.title}
-                                    onChange={(e) =>
-                                      setEditTask({
-                                        ...editTask,
-                                        title: e.target.value,
-                                      })
-                                    }
-                                    onKeyDown={handleEditKeyDown}
-                                    autoFocus
-                                    aria-label="Edit task title"
-                                  />
-
-                                  <textarea
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-                                    rows={3}
-                                    value={editTask.description || ""}
-                                    onChange={(e) =>
-                                      setEditTask({
-                                        ...editTask,
-                                        description: e.target.value,
-                                      })
-                                    }
-                                    onKeyDown={handleEditKeyDown}
-                                    aria-label="Edit task description"
-                                  />
-
-                                  <div className="text-xs text-gray-500 mb-2">
-                                    Press Enter to save, Escape to cancel
+                              <div className="flex items-start justify-between gap-2">
+                                <p className="text-xs font-bold text-gray-900 leading-snug line-clamp-2 font-inter">
+                                  {task.title}
+                                </p>
+                                <span className={`text-[9px] font-bold px-1 rounded-full uppercase shrink-0 font-inter ${priorityColors[task.priority]}`}>
+                                  {task.priority}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-[10px] text-gray-500 font-inter pt-1.5 border-t border-gray-50">
+                                <div className="flex items-center gap-1.5">
+                                  <div className="w-5 h-5 rounded-full bg-slate-900 border border-slate-800 text-white font-bold flex items-center justify-center text-[9px] font-inter">
+                                    {task.assignedTo?.name?.charAt(0).toUpperCase() || "U"}
                                   </div>
-
-                                  <div className="flex gap-2">
-                                    <button
-                                      onClick={saveEdit}
-                                      disabled={updateTask.isPending}
-                                      className="flex-1 px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 focus:ring-4 focus:ring-green-200 disabled:opacity-50 transition-all font-medium"
-                                    >
-                                      {updateTask.isPending
-                                        ? "Saving..."
-                                        : "Save"}
-                                    </button>
-                                    <button
-                                      onClick={() => setEditTask(null)}
-                                      className="flex-1 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-all font-medium"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="flex items-start gap-2 mb-2">
-                                    <svg
-                                      className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5"
-                                      fill="none"
-                                      viewBox="0 0 24 24"
-                                      stroke="currentColor"
-                                    >
-                                      <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M4 6h16M4 12h16M4 18h16"
-                                      />
-                                    </svg>
-                                    <h3 className="font-semibold text-gray-900 flex-1">
-                                      {task.title}
-                                    </h3>
-                                  </div>
-
-                                  {task.description && (
-                                    <p className="text-gray-600 text-sm mb-3 ml-7 whitespace-pre-wrap">
-                                      {task.description}
-                                    </p>
-                                  )}
-
-                                  {/* ✅ Show buttons on hover for cleaner UI */}
-                                  <div className="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={() => setEditTask(task)}
-                                      className="flex-1 px-3 py-1.5 text-sm bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-all font-medium"
-                                      aria-label={`Edit ${task.title}`}
-                                    >
-                                      Edit
-                                    </button>
-
-                                    <button
-                                      onClick={() => setConfirmDelete(task)}
-                                      className="flex-1 px-3 py-1.5 text-sm bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-all font-medium"
-                                      aria-label={`Delete ${task.title}`}
-                                    >
-                                      Delete
-                                    </button>
-                                  </div>
-                                </>
-                              )}
+                                  <span className="text-[9px] font-bold text-gray-400 font-inter truncate w-16">
+                                    {task.assignedTo?.name || "Unassigned"}
+                                  </span>
+                                </div>
+                                <span className="text-[9px] bg-slate-100 text-slate-500 font-bold px-1 rounded-sm font-inter">
+                                  {task.storyPoints || 0} SP
+                                </span>
+                              </div>
                             </div>
                           )}
                         </Draggable>
                       ))}
-
-                      {/* ✅ Placeholder MUST be inside droppable */}
                       {provided.placeholder}
-
-                      {/* Empty state */}
-                      {board[column.id].length === 0 && (
-                        <div className="text-center py-12 text-gray-400">
-                          <p className="text-sm">Drop tasks here</p>
-                        </div>
-                      )}
                     </div>
                   )}
                 </Droppable>
@@ -526,48 +379,306 @@ export default function Tasks() {
             ))}
           </div>
         </DragDropContext>
+      )}
 
-        {/* Task Statistics */}
-        {tasks.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-gray-900">
-                  {board.TODO.length}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">To Do</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-blue-600">
-                  {board.IN_PROGRESS.length}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">In Progress</p>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="text-center">
-                <p className="text-3xl font-bold text-green-600">
-                  {board.DONE.length}
-                </p>
-                <p className="text-sm text-gray-600 mt-1">Completed</p>
-              </div>
+      {/* LIST VIEW */}
+      {viewMode === "list" && (
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xs">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-gray-50 text-gray-500 font-bold uppercase tracking-wider border-b border-gray-200 font-inter">
+                <th className="p-4">Task Title</th>
+                <th className="p-4">Status</th>
+                <th className="p-4">Priority</th>
+                <th className="p-4">Story Points</th>
+                <th className="p-4">Assignee</th>
+                <th className="p-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredTasks.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-gray-500 font-semibold font-inter">
+                    No tasks found matching your filters.
+                  </td>
+                </tr>
+              ) : (
+                filteredTasks.map((t) => (
+                  <tr key={t.id} className="hover:bg-gray-50 transition-colors">
+                    <td
+                      onClick={() => setActiveEditTask(t)}
+                      className="p-4 font-bold text-gray-900 cursor-pointer font-inter"
+                    >
+                      {t.title}
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-inter ${statusColors[t.status]}`}>
+                        {t.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-inter border ${priorityColors[t.priority]}`}>
+                        {t.priority}
+                      </span>
+                    </td>
+                    <td className="p-4 font-mono font-bold text-gray-700 font-inter">{t.storyPoints || 0} SP</td>
+                    <td className="p-4 font-inter text-gray-600">{t.assignedTo?.name || "Unassigned"}</td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => {
+                          if (window.confirm("Delete this task?")) {
+                            deleteTaskMutation.mutate(t.id);
+                          }
+                        }}
+                        className="text-gray-400 hover:text-red-600 p-1 cursor-pointer"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* CALENDAR VIEW */}
+      {viewMode === "calendar" && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <h3 className="font-bold text-gray-900 text-sm font-inter">Project Task Scheduler</h3>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() - 1, 1))}
+                className="p-1 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-600 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <span className="text-sm font-bold text-gray-800 font-inter min-w-36 text-center">
+                {calendarDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })}
+              </span>
+              <button
+                onClick={() => setCalendarDate(new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 1))}
+                className="p-1 hover:bg-gray-100 border border-gray-200 rounded-lg text-gray-600 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Confirm Delete Modal */}
-      {confirmDelete && (
-        <ConfirmModal
-          open={!!confirmDelete}
-          title="Delete Task?"
-          message="This action cannot be undone."
-          onConfirm={confirmDeleteTask}
-          onClose={() => setConfirmDelete(null)}
+          <div className="grid grid-cols-7 gap-2 text-center text-xs font-bold text-gray-400 uppercase tracking-wider font-inter">
+            {weekDays.map((d) => <div key={d} className="py-1">{d}</div>)}
+          </div>
+
+          <div className="grid grid-cols-7 gap-2 border border-gray-100 rounded-xl bg-gray-50 p-2 min-h-[300px]">
+            {calendarDays.map((day, idx) => {
+              if (!day) return <div key={`empty-${idx}`} className="bg-transparent" />;
+
+              const dayTasks = filteredTasks.filter((t) => {
+                if (!t.dueDate) return false;
+                const due = new Date(t.dueDate);
+                return (
+                  due.getDate() === day.getDate() &&
+                  due.getMonth() === day.getMonth() &&
+                  due.getFullYear() === day.getFullYear()
+                );
+              });
+
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="bg-white border border-gray-200/80 rounded-lg p-2 min-h-20 flex flex-col justify-between"
+                >
+                  <span className="text-xs font-bold text-gray-400 font-inter">{day.getDate()}</span>
+                  <div className="flex-1 overflow-y-auto space-y-1 mt-1">
+                    {dayTasks.map((t) => (
+                      <div
+                        key={t.id}
+                        onClick={() => setActiveEditTask(t)}
+                        title={t.title}
+                        className="text-[9px] font-bold text-white px-1.5 py-0.5 rounded-sm truncate cursor-pointer leading-tight"
+                        style={{
+                          backgroundColor:
+                            t.priority === "URGENT"
+                              ? "#ef4444"
+                              : t.priority === "HIGH"
+                                ? "#f97316"
+                                : t.priority === "MEDIUM"
+                                  ? "#3b82f6"
+                                  : "#94a3b8",
+                        }}
+                      >
+                        {t.title}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Add/Create Task Modal Form */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-lg font-inter">Create Task</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                createTaskMutation.mutate();
+              }}
+              className="p-6 space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Task title..."
+                  value={createTitle}
+                  onChange={(e) => setCreateTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Description</label>
+                <textarea
+                  placeholder="Add details..."
+                  value={createDesc}
+                  onChange={(e) => setCreateDesc(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter focus:ring-2 focus:ring-indigo-500 h-20"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Initial Status</label>
+                  <select
+                    value={createStatus}
+                    onChange={(e) => setCreateStatus(e.target.value as TaskStatus)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
+                  >
+                    <option value="TODO">Todo</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="REVIEW">Review</option>
+                    <option value="BLOCKED">Blocked</option>
+                    <option value="DONE">Done</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Priority Tier</label>
+                  <select
+                    value={createPriority}
+                    onChange={(e) => setCreatePriority(e.target.value as TaskPriority)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
+                  >
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Assignee</label>
+                  <select
+                    value={createAssigneeId}
+                    onChange={(e) => setCreateAssigneeId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
+                  >
+                    <option value="">Unassigned</option>
+                    {members.map((m) => (
+                      <option key={m.id} value={m.user?.id || ""}>{m.user?.name || "Unknown User"}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Story Points (SP)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={createPoints}
+                    onChange={(e) => setCreatePoints(parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 items-center">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Sprint Planning</label>
+                  <select
+                    value={createSprintId}
+                    onChange={(e) => setCreateSprintId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
+                  >
+                    <option value="">Backlog (No Sprint)</option>
+                    {sprints.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.status})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 pt-5">
+                  <input
+                    id="createIsBacklogCheckbox"
+                    type="checkbox"
+                    checked={createIsBacklog}
+                    onChange={(e) => setCreateIsBacklog(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="createIsBacklogCheckbox" className="text-xs font-semibold text-gray-700 font-inter cursor-pointer">
+                    Place in Backlog
+                  </label>
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm font-medium rounded-lg font-inter cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg font-inter cursor-pointer transition-colors"
+                >
+                  Create Task
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal mounting */}
+      {activeEditTask && (
+        <EditTaskModal
+          task={activeEditTask}
+          projectId={projectId as string}
+          teamId={teamId}
+          onClose={() => {
+            setActiveEditTask(null);
+            queryClient.invalidateQueries({ queryKey: ["tasks", projectId] });
+          }}
         />
       )}
+
     </div>
   );
 }

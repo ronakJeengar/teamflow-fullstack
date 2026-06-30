@@ -1,427 +1,361 @@
 import { useState } from "react";
-import { useProjects } from "../hooks/useProjects";
-// import CreateProjectModal from "../components/CreateProjectModel";
 import { useNavigate } from "react-router-dom";
-import { useUpdateProject } from "../hooks/useUpdateProject";
-import { useDeleteProject } from "../hooks/useDeleteProject";
-import { useAuth } from "../auth/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { api } from "../api/client";
+import { useWorkspace } from "../context/WorkspaceContext";
+import { useToast } from "../context/useToast";
+import { useProjects } from "../hooks/useProjects";
 import type { Project } from "../types/Project";
+import type { Team } from "../types/Team";
 
 export default function Projects() {
-  const { data, isLoading, error } = useProjects();
-  const { user, logout } = useAuth();
-  // const [open, setOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [deleteProject, setDeleteProject] = useState<Project | null>(null);
-  const [editName, setEditName] = useState("");
+  const { activeWorkspaceId } = useWorkspace();
+  const { showToast } = useToast();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const updateMutation = useUpdateProject();
-  const deleteMutation = useDeleteProject();
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editColor, setEditColor] = useState("");
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
-  };
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [createDesc, setCreateDesc] = useState("");
+  const [createColor, setCreateColor] = useState("#4f46e5");
+  const [createTeamId, setCreateTeamId] = useState("");
+
+  // 1. Fetch Projects list scoped by activeWorkspaceId
+  const { data: projects = [], isLoading } = useProjects(activeWorkspaceId);
+
+  // 2. Fetch Teams for project creation targets
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ["teams", activeWorkspaceId],
+    queryFn: async () => {
+      if (!activeWorkspaceId) return [];
+      const res = await api.get("/teams", {
+        params: { workspaceId: activeWorkspaceId },
+      });
+      return res.data?.data ?? [];
+    },
+    enabled: !!activeWorkspaceId,
+  });
+
+  // Create Project Mutation
+  const createProjectMutation = useMutation({
+    mutationFn: async () => {
+      if (!createTeamId) throw new Error("Team selection is required");
+      await api.post(`/projects/${createTeamId}/create`, {
+        name: createName,
+        description: createDesc || null,
+        color: createColor,
+      });
+    },
+    onSuccess: () => {
+      showToast("Project created successfully!", "success");
+      setCreateName("");
+      setCreateDesc("");
+      setCreateColor("#4f46e5");
+      setCreateTeamId("");
+      setShowCreateModal(false);
+      queryClient.invalidateQueries({ queryKey: ["projects", activeWorkspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats", activeWorkspaceId] });
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || "Failed to create project", "error");
+    },
+  });
+
+  // Update Project Mutation
+  const updateProjectMutation = useMutation({
+    mutationFn: async ({ id, name, color }: { id: string; name: string; color: string }) => {
+      // Find teamId of the project to update
+      const proj = projects.find((p) => p.id === id);
+      if (!proj) throw new Error("Project not found");
+      await api.patch(`/projects/${proj.teamId}/${id}`, { name, color });
+    },
+    onSuccess: () => {
+      showToast("Project updated successfully!", "success");
+      setEditingProject(null);
+      queryClient.invalidateQueries({ queryKey: ["projects", activeWorkspaceId] });
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || "Failed to update project", "error");
+    },
+  });
+
+  // Delete Project Mutation
+  const deleteProjectMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const proj = projects.find((p) => p.id === id);
+      if (!proj) throw new Error("Project not found");
+      await api.delete(`/projects/${proj.teamId}/${id}`);
+    },
+    onSuccess: () => {
+      showToast("Project deleted", "success");
+      queryClient.invalidateQueries({ queryKey: ["projects", activeWorkspaceId] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats", activeWorkspaceId] });
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || "Failed to delete project", "error");
+    },
+  });
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading projects...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600" />
       </div>
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md">
-          <div className="text-center">
-            <svg
-              className="mx-auto h-12 w-12 text-red-500 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Error Loading Projects
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Failed to load projects. Please try again.
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all"
-            >
-              Retry
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const projects = data || [];
-
-  const saveProject = async () => {
-    if (!editingProject) return;
-    await updateMutation.mutateAsync({
-      id: editingProject.id,
-      name: editName,
-    });
-    setEditingProject(null);
+  const handleCreateProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!createName.trim() || !createTeamId) return;
+    createProjectMutation.mutate();
   };
 
-  const confirmDelete = async () => {
-    if (!deleteProject) return;
-    await deleteMutation.mutateAsync(deleteProject.id);
-    setDeleteProject(null);
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProject || !editName.trim()) return;
+    updateProjectMutation.mutate({ id: editingProject.id, name: editName, color: editColor });
   };
+
+  const colors = ["#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header with User Info and Logout */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                Projects
-              </h1>
-              <p className="text-gray-600">Manage and organize your projects</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* User Info */}
-              <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {user?.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <div className="text-sm">
-                  <p className="font-medium text-gray-900">{user?.name}</p>
-                  <p className="text-gray-500 text-xs">{user?.email}</p>
-                </div>
-              </div>
-
-              {/* Create Project Button */}
-              <button
-                onClick={() => setOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all shadow-sm hover:shadow-md"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Create Project
-              </button>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 focus:ring-4 focus:ring-red-200 transition-all shadow-sm hover:shadow-md"
-                title="Logout"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                  />
-                </svg>
-                Logout
-              </button>
-            </div>
-          </div>
+    <div className="space-y-6 animate-in fade-in duration-200">
+      
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-gray-100 pb-5">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 font-inter">Projects</h1>
+          <p className="text-xs text-gray-500 font-inter mt-1">Manage, update, or create projects in the current workspace.</p>
         </div>
+        <button
+          onClick={() => {
+            if (teams.length === 0) {
+              showToast("Please create a Team first before creating a Project", "error");
+              return;
+            }
+            // Auto select first team
+            setCreateTeamId(teams[0].id);
+            setShowCreateModal(true);
+          }}
+          className="px-4 py-2 text-white bg-indigo-600 hover:bg-indigo-700 text-sm font-semibold rounded-lg font-inter flex items-center gap-2 shadow-xs cursor-pointer"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Create Project
+        </button>
+      </div>
 
-        {/* Projects Grid */}
-        {projects.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-200">
-            <svg
-              className="mx-auto h-16 w-16 text-gray-400 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
+      {/* Grid List */}
+      {projects.length === 0 ? (
+        <div className="bg-white rounded-xl shadow-xs p-12 text-center border border-gray-200 flex flex-col items-center">
+          <svg className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <h3 className="text-sm font-bold text-gray-950 mb-1 font-inter">No projects yet</h3>
+          <p className="text-xs text-gray-500 max-w-xs font-inter mb-4">Create your first project to organize tasks and sprints.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {projects.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 flex flex-col justify-between hover:shadow-xs hover:border-indigo-300 transition-all min-h-36 group"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No projects yet
-            </h3>
-            <p className="text-gray-500 mb-6">
-              Get started by creating your first project
-            </p>
-            <button
-              onClick={() => setOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
-              Create Your First Project
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project: Project) => (
-              <div
-                key={project.id}
-                className="group bg-white rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-lg hover:border-blue-300 transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
+              <div>
+                <div className="flex items-start justify-between gap-4">
                   <div
-                    className="p-3 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                    onClick={() => navigate(`/projects/${p.id}`)}
+                    className="flex items-center gap-2 cursor-pointer"
                   >
-                    <svg
-                      className="w-6 h-6 text-blue-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                      />
-                    </svg>
+                    <span className="w-3.5 h-3.5 rounded-full border border-black/5" style={{ backgroundColor: p.color || "#4f46e5" }} />
+                    <h3 className="font-bold text-sm text-gray-900 group-hover:text-indigo-600 transition-colors font-inter">
+                      {p.name}
+                    </h3>
                   </div>
-
-                  {/* Edit & Delete */}
-                  <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition">
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => {
-                        setEditingProject(project);
-                        setEditName(project.name);
+                        setEditingProject(p);
+                        setEditName(p.name);
+                        setEditColor(p.color || "#4f46e5");
                       }}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-gray-400 hover:text-indigo-600 transition-colors"
                     >
                       ✏️
                     </button>
                     <button
-                      onClick={() => setDeleteProject(project)}
-                      className="text-red-600 hover:text-red-800"
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to delete this project?")) {
+                          deleteProjectMutation.mutate(p.id);
+                        }
+                      }}
+                      className="text-gray-400 hover:text-red-600 transition-colors"
                     >
                       🗑️
                     </button>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 font-inter mt-1.5 line-clamp-2">
+                  {p.description || "No description provided."}
+                </p>
+              </div>
 
-                <h3
-                  onClick={() => navigate(`/projects/${project.id}`)}
-                  className="text-lg font-semibold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors cursor-pointer"
+              <div className="flex items-center justify-between border-t border-gray-50 pt-3 mt-4 text-[10px] text-gray-400 font-inter uppercase tracking-wider font-bold">
+                <span>Team: {p.team?.name || "N/A"}</span>
+                <span className="bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full lowercase font-inter">
+                  {p._count?.tasks ?? 0} tasks
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Create Project Modal Form */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-lg font-inter">Create Project</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCreateProject} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Project Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. API Gateway"
+                  value={createName}
+                  onChange={(e) => setCreateName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Description</label>
+                <textarea
+                  placeholder="Describe project outcomes..."
+                  value={createDesc}
+                  onChange={(e) => setCreateDesc(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter focus:ring-2 focus:ring-indigo-500 h-20"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Assign Team</label>
+                <select
+                  value={createTeamId}
+                  onChange={(e) => setCreateTeamId(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
                 >
-                  {project.name}
-                </h3>
-
-                <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <span>{project._count?.tasks || 0} tasks</span>
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {new Date(project.createdAt).toLocaleDateString()}
-                  </div>
+                  {teams.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2 font-inter">Color Tag</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {colors.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCreateColor(c)}
+                      style={{ backgroundColor: c }}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        createColor === c ? "border-gray-900 scale-110 shadow-sm" : "border-transparent hover:scale-105"
+                      }`}
+                    />
+                  ))}
                 </div>
               </div>
-            ))}
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm font-medium rounded-lg font-inter cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg font-inter transition-all cursor-pointer"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Stats */}
-        {projects.length > 0 && (
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-blue-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {projects.length}
-                  </p>
-                  <p className="text-sm text-gray-500">Total Projects</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-green-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {projects.reduce(
-                      (sum: number, p: Project) => sum + (p._count?.tasks || 0),
-                      0
-                    )}
-                  </p>
-                  <p className="text-sm text-gray-500">Total Tasks</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <svg
-                    className="w-6 h-6 text-purple-600"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {
-                      projects.filter(
-                        (p: Project) => (p._count?.tasks || 0) > 0
-                      ).length
-                    }
-                  </p>
-                  <p className="text-sm text-gray-500">Active Projects</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Create Modal */}
-      {/* {open && <CreateProjectModal onClose={() => setOpen(false)} />} */}
-
-      {/* Edit Modal */}
+      {/* Edit Project Modal Form */}
       {editingProject && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Edit Project</h2>
-            <input
-              className="border p-2 rounded w-full mb-4"
-              value={editName}
-              onChange={(e) => setEditName(e.target.value)}
-            />
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setEditingProject(null)}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveProject}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Save
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-lg font-inter">Edit Project</h3>
+              <button onClick={() => setEditingProject(null)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
+            <form onSubmit={handleSaveEdit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-1 font-inter">Project Name</label>
+                <input
+                  type="text"
+                  required
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter focus:ring-2 focus:ring-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-700 mb-2 font-inter">Color Tag</label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {colors.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setEditColor(c)}
+                      style={{ backgroundColor: c }}
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        editColor === c ? "border-gray-900 scale-110 shadow-sm" : "border-transparent hover:scale-105"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingProject(null)}
+                  className="px-4 py-2 border border-gray-300 hover:bg-gray-50 text-sm font-medium rounded-lg font-inter cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg font-inter transition-all cursor-pointer"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
-      {/* Delete Confirm */}
-      {deleteProject && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-md w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4 text-red-600">
-              Delete Project?
-            </h2>
-            <p className="mb-6">
-              This will permanently delete <strong>{deleteProject.name}</strong>{" "}
-              and all tasks.
-            </p>
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteProject(null)}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -6,52 +6,93 @@ import ProtectedRoute from "./auth/ProtectedRoute";
 import Register from "./pages/Register";
 import Teams from "./pages/Teams";
 import TeamDetails from "./pages/TeamDetails";
+import Dashboard from "./pages/Dashboard";
+import Sprints from "./pages/Sprints";
+import Settings from "./pages/Settings";
+import Layout from "./components/Layout";
 
 function App() {
   return (
-      <Routes>
-        {/* Public route */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+    <Routes>
+      {/* Public routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/teams"
-          element={
-            <ProtectedRoute>
+      {/* Protected Layout-wrapped routes */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Settings />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Teams />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teams/:teamId"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:teamId"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <TeamDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/projects"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teams/:teamId/sprints"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Sprints />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Projects />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/projects/:projectId"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/projects/:projectId"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Tasks />
-            </ProtectedRoute>
-          }
-        />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
-        {/* Fallback */}
-        <Route path="*" element={<Login />} />
-      </Routes>
+      {/* Fallback */}
+      <Route path="*" element={<Login />} />
+    </Routes>
   );
 }
 
