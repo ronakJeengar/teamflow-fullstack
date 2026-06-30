@@ -2,7 +2,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getOfflineQueue, saveOfflineQueue } from "./offlineManager.js";
 
 export const api = axios.create({
-  baseURL: "http://localhost:3000/api/v1",
+  baseURL: import.meta.env.DEV ? "/api/v1" : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1`,
   withCredentials: true,
 });
 
