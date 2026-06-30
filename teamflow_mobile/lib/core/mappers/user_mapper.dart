@@ -10,6 +10,7 @@ extension UserModelMapper on UserModel {
       email: email,
       avatar: avatar,
       bio: bio,
+      activeWorkspaceId: activeWorkspaceId,
     );
   }
 }
@@ -23,6 +24,7 @@ extension UserEntityMapper on UserEntity {
       email: email,
       avatar: avatar,
       bio: bio,
+      activeWorkspaceId: activeWorkspaceId,
     );
   }
 }

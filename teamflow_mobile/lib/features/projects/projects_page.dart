@@ -9,11 +9,14 @@ import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
 import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
 import 'package:teamflow_mobile/core/widgets/teamflow_shell.dart';
 import 'package:teamflow_mobile/features/teams/presentation/providers/teams_providers.dart';
+import 'package:teamflow_mobile/features/teams/domain/entities/team_entity.dart';
 import 'package:teamflow_mobile/features/teams/presentation/widget/create_project_sheet.dart';
 import 'package:teamflow_mobile/features/teams/presentation/widget/edit_project_sheet.dart';
 import 'package:teamflow_mobile/features/teams/presentation/widget/delete_project_sheet.dart';
 import 'package:teamflow_mobile/features/auth/presentation/providers/providers.dart';
 import 'package:teamflow_mobile/features/auth/domain/entities/membership_entity.dart';
+
+import '../teams/domain/entities/team_entity.dart';
 
 class ProjectsPage extends HookConsumerWidget {
   const ProjectsPage({super.key});
@@ -311,7 +314,15 @@ class ProjectsPage extends HookConsumerWidget {
                               final p = filteredProjects[i];
                               final team = teamsState.teams.firstWhere(
                                 (t) => t.projects.any((proj) => proj.id == p.id),
-                                orElse: () => teamsState.teams.first,
+                                orElse: () => teamsState.teams.isNotEmpty
+                                    ? teamsState.teams.first
+                                    : TeamEntity(
+                                        id: '',
+                                        name: 'Default Team',
+                                        ownerId: '',
+                                        createdAt: '',
+                                        updatedAt: '',
+                                      ),
                               );
                               final membership = memberships.firstWhere(
                                 (m) => m.team.id == team.id,
@@ -355,7 +366,15 @@ class ProjectsPage extends HookConsumerWidget {
                               final p = filteredProjects[i];
                               final team = teamsState.teams.firstWhere(
                                 (t) => t.projects.any((proj) => proj.id == p.id),
-                                orElse: () => teamsState.teams.first,
+                                orElse: () => teamsState.teams.isNotEmpty
+                                    ? teamsState.teams.first
+                                    : TeamEntity(
+                                        id: '',
+                                        name: 'Default Team',
+                                        ownerId: '',
+                                        createdAt: '',
+                                        updatedAt: '',
+                                      ),
                               );
                               final membership = memberships.firstWhere(
                                 (m) => m.team.id == team.id,

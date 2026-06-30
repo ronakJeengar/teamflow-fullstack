@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$NotificationEntity {
 
- String get id; String get userId; String get senderId; String get type; String get title; String get body; bool get isRead; String get createdAt;
+ String get id; String get userId; String? get senderId; String get type; String get title; String get body; bool get isRead; String get createdAt;
 /// Create a copy of NotificationEntity
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $NotificationEntityCopyWith<$Res>  {
   factory $NotificationEntityCopyWith(NotificationEntity value, $Res Function(NotificationEntity) _then) = _$NotificationEntityCopyWithImpl;
 @useResult
 $Res call({
- String id, String userId, String senderId, String type, String title, String body, bool isRead, String createdAt
+ String id, String userId, String? senderId, String type, String title, String body, bool isRead, String createdAt
 });
 
 
@@ -62,12 +62,12 @@ class _$NotificationEntityCopyWithImpl<$Res>
 
 /// Create a copy of NotificationEntity
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? senderId = null,Object? type = null,Object? title = null,Object? body = null,Object? isRead = null,Object? createdAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? senderId = freezed,Object? type = null,Object? title = null,Object? body = null,Object? isRead = null,Object? createdAt = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,senderId: null == senderId ? _self.senderId : senderId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,senderId: freezed == senderId ? _self.senderId : senderId // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _NotificationEntity() when $default != null:
 return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_that.body,_that.isRead,_that.createdAt);case _:
@@ -178,7 +178,7 @@ return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String userId,  String? senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _NotificationEntity():
 return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_that.body,_that.isRead,_that.createdAt);case _:
@@ -198,7 +198,7 @@ return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String userId,  String? senderId,  String type,  String title,  String body,  bool isRead,  String createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _NotificationEntity() when $default != null:
 return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_that.body,_that.isRead,_that.createdAt);case _:
@@ -213,12 +213,12 @@ return $default(_that.id,_that.userId,_that.senderId,_that.type,_that.title,_tha
 
 
 class _NotificationEntity implements NotificationEntity {
-  const _NotificationEntity({required this.id, required this.userId, required this.senderId, required this.type, required this.title, required this.body, required this.isRead, required this.createdAt});
+  const _NotificationEntity({required this.id, required this.userId, this.senderId, required this.type, required this.title, required this.body, required this.isRead, required this.createdAt});
   
 
 @override final  String id;
 @override final  String userId;
-@override final  String senderId;
+@override final  String? senderId;
 @override final  String type;
 @override final  String title;
 @override final  String body;
@@ -255,7 +255,7 @@ abstract mixin class _$NotificationEntityCopyWith<$Res> implements $Notification
   factory _$NotificationEntityCopyWith(_NotificationEntity value, $Res Function(_NotificationEntity) _then) = __$NotificationEntityCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String userId, String senderId, String type, String title, String body, bool isRead, String createdAt
+ String id, String userId, String? senderId, String type, String title, String body, bool isRead, String createdAt
 });
 
 
@@ -272,12 +272,12 @@ class __$NotificationEntityCopyWithImpl<$Res>
 
 /// Create a copy of NotificationEntity
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? senderId = null,Object? type = null,Object? title = null,Object? body = null,Object? isRead = null,Object? createdAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? userId = null,Object? senderId = freezed,Object? type = null,Object? title = null,Object? body = null,Object? isRead = null,Object? createdAt = null,}) {
   return _then(_NotificationEntity(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,senderId: null == senderId ? _self.senderId : senderId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,senderId: freezed == senderId ? _self.senderId : senderId // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,body: null == body ? _self.body : body // ignore: cast_nullable_to_non_nullable
 as String,isRead: null == isRead ? _self.isRead : isRead // ignore: cast_nullable_to_non_nullable

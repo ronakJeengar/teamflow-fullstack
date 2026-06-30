@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import '../../../auth/data/models/user_model.dart';
 
 part 'comment_model.freezed.dart';
 part 'comment_model.g.dart';
@@ -12,6 +13,10 @@ abstract class CommentModel with _$CommentModel {
     required String userId,
     required String createdAt,
     required String updatedAt,
+    String? editedAt,
+    String? deletedAt,
+    String? parentCommentId,
+    UserModel? user,
   }) = _CommentModel;
 
   factory CommentModel.fromJson(Map<String, dynamic> json) =>

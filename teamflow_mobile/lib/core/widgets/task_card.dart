@@ -70,9 +70,36 @@ class _TaskCardState extends State<TaskCard> {
     }
   }
 
+  Color get _priorityColor {
+    final prio = widget.task.priority?.toUpperCase() ?? 'MEDIUM';
+    switch (prio) {
+      case 'LOW':
+        return AppColors.success;
+      case 'MEDIUM':
+        return AppColors.warning;
+      case 'HIGH':
+        return AppColors.danger;
+      case 'URGENT':
+        return const Color(0xFFA855F7);
+      default:
+        return AppColors.warning;
+    }
+  }
+
   String get _priorityLabel {
-    // Determine priority (since tasks in the app map to high by default or similar)
-    return 'High';
+    final prio = widget.task.priority?.toUpperCase() ?? 'MEDIUM';
+    switch (prio) {
+      case 'LOW':
+        return 'Low';
+      case 'MEDIUM':
+        return 'Medium';
+      case 'HIGH':
+        return 'High';
+      case 'URGENT':
+        return 'Urgent';
+      default:
+        return 'Medium';
+    }
   }
 
   String _formatDate(DateTime dt) {
@@ -266,9 +293,9 @@ class _TaskCardState extends State<TaskCard> {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
+                            decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: AppColors.danger,
+                              color: _priorityColor,
                             ),
                           ),
                           const SizedBox(width: 6),

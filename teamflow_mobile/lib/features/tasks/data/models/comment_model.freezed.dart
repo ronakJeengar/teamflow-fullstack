@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$CommentModel {
 
- String get id; String get content; String get taskId; String get userId; String get createdAt; String get updatedAt;
+ String get id; String get content; String get taskId; String get userId; String get createdAt; String get updatedAt; String? get editedAt; String? get deletedAt; String? get parentCommentId; UserModel? get user;
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $CommentModelCopyWith<CommentModel> get copyWith => _$CommentModelCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.content, content) || other.content == content)&&(identical(other.taskId, taskId) || other.taskId == taskId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.content, content) || other.content == content)&&(identical(other.taskId, taskId) || other.taskId == taskId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.parentCommentId, parentCommentId) || other.parentCommentId == parentCommentId)&&(identical(other.user, user) || other.user == user));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,content,taskId,userId,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,content,taskId,userId,createdAt,updatedAt,editedAt,deletedAt,parentCommentId,user);
 
 @override
 String toString() {
-  return 'CommentModel(id: $id, content: $content, taskId: $taskId, userId: $userId, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'CommentModel(id: $id, content: $content, taskId: $taskId, userId: $userId, createdAt: $createdAt, updatedAt: $updatedAt, editedAt: $editedAt, deletedAt: $deletedAt, parentCommentId: $parentCommentId, user: $user)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $CommentModelCopyWith<$Res>  {
   factory $CommentModelCopyWith(CommentModel value, $Res Function(CommentModel) _then) = _$CommentModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String content, String taskId, String userId, String createdAt, String updatedAt
+ String id, String content, String taskId, String userId, String createdAt, String updatedAt, String? editedAt, String? deletedAt, String? parentCommentId, UserModel? user
 });
 
 
-
+$UserModelCopyWith<$Res>? get user;
 
 }
 /// @nodoc
@@ -65,7 +65,7 @@ class _$CommentModelCopyWithImpl<$Res>
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? content = null,Object? taskId = null,Object? userId = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? content = null,Object? taskId = null,Object? userId = null,Object? createdAt = null,Object? updatedAt = null,Object? editedAt = freezed,Object? deletedAt = freezed,Object? parentCommentId = freezed,Object? user = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
@@ -73,10 +73,26 @@ as String,taskId: null == taskId ? _self.taskId : taskId // ignore: cast_nullabl
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,
+as String,editedAt: freezed == editedAt ? _self.editedAt : editedAt // ignore: cast_nullable_to_non_nullable
+as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as String?,parentCommentId: freezed == parentCommentId ? _self.parentCommentId : parentCommentId // ignore: cast_nullable_to_non_nullable
+as String?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as UserModel?,
   ));
 }
+/// Create a copy of CommentModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserModelCopyWith<$Res>? get user {
+    if (_self.user == null) {
+    return null;
+  }
 
+  return $UserModelCopyWith<$Res>(_self.user!, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}
 }
 
 
@@ -158,10 +174,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt,  String? editedAt,  String? deletedAt,  String? parentCommentId,  UserModel? user)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _CommentModel() when $default != null:
-return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt,_that.editedAt,_that.deletedAt,_that.parentCommentId,_that.user);case _:
   return orElse();
 
 }
@@ -179,10 +195,10 @@ return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt,  String? editedAt,  String? deletedAt,  String? parentCommentId,  UserModel? user)  $default,) {final _that = this;
 switch (_that) {
 case _CommentModel():
-return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt,_that.editedAt,_that.deletedAt,_that.parentCommentId,_that.user);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +215,10 @@ return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String content,  String taskId,  String userId,  String createdAt,  String updatedAt,  String? editedAt,  String? deletedAt,  String? parentCommentId,  UserModel? user)?  $default,) {final _that = this;
 switch (_that) {
 case _CommentModel() when $default != null:
-return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt,_that.updatedAt,_that.editedAt,_that.deletedAt,_that.parentCommentId,_that.user);case _:
   return null;
 
 }
@@ -214,7 +230,7 @@ return $default(_that.id,_that.content,_that.taskId,_that.userId,_that.createdAt
 @JsonSerializable()
 
 class _CommentModel implements CommentModel {
-  const _CommentModel({required this.id, required this.content, required this.taskId, required this.userId, required this.createdAt, required this.updatedAt});
+  const _CommentModel({required this.id, required this.content, required this.taskId, required this.userId, required this.createdAt, required this.updatedAt, this.editedAt, this.deletedAt, this.parentCommentId, this.user});
   factory _CommentModel.fromJson(Map<String, dynamic> json) => _$CommentModelFromJson(json);
 
 @override final  String id;
@@ -223,6 +239,10 @@ class _CommentModel implements CommentModel {
 @override final  String userId;
 @override final  String createdAt;
 @override final  String updatedAt;
+@override final  String? editedAt;
+@override final  String? deletedAt;
+@override final  String? parentCommentId;
+@override final  UserModel? user;
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +257,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.content, content) || other.content == content)&&(identical(other.taskId, taskId) || other.taskId == taskId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CommentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.content, content) || other.content == content)&&(identical(other.taskId, taskId) || other.taskId == taskId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.editedAt, editedAt) || other.editedAt == editedAt)&&(identical(other.deletedAt, deletedAt) || other.deletedAt == deletedAt)&&(identical(other.parentCommentId, parentCommentId) || other.parentCommentId == parentCommentId)&&(identical(other.user, user) || other.user == user));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,content,taskId,userId,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,content,taskId,userId,createdAt,updatedAt,editedAt,deletedAt,parentCommentId,user);
 
 @override
 String toString() {
-  return 'CommentModel(id: $id, content: $content, taskId: $taskId, userId: $userId, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'CommentModel(id: $id, content: $content, taskId: $taskId, userId: $userId, createdAt: $createdAt, updatedAt: $updatedAt, editedAt: $editedAt, deletedAt: $deletedAt, parentCommentId: $parentCommentId, user: $user)';
 }
 
 
@@ -257,11 +277,11 @@ abstract mixin class _$CommentModelCopyWith<$Res> implements $CommentModelCopyWi
   factory _$CommentModelCopyWith(_CommentModel value, $Res Function(_CommentModel) _then) = __$CommentModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String content, String taskId, String userId, String createdAt, String updatedAt
+ String id, String content, String taskId, String userId, String createdAt, String updatedAt, String? editedAt, String? deletedAt, String? parentCommentId, UserModel? user
 });
 
 
-
+@override $UserModelCopyWith<$Res>? get user;
 
 }
 /// @nodoc
@@ -274,7 +294,7 @@ class __$CommentModelCopyWithImpl<$Res>
 
 /// Create a copy of CommentModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? content = null,Object? taskId = null,Object? userId = null,Object? createdAt = null,Object? updatedAt = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? content = null,Object? taskId = null,Object? userId = null,Object? createdAt = null,Object? updatedAt = null,Object? editedAt = freezed,Object? deletedAt = freezed,Object? parentCommentId = freezed,Object? user = freezed,}) {
   return _then(_CommentModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,content: null == content ? _self.content : content // ignore: cast_nullable_to_non_nullable
@@ -282,11 +302,27 @@ as String,taskId: null == taskId ? _self.taskId : taskId // ignore: cast_nullabl
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as String,updatedAt: null == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
-as String,
+as String,editedAt: freezed == editedAt ? _self.editedAt : editedAt // ignore: cast_nullable_to_non_nullable
+as String?,deletedAt: freezed == deletedAt ? _self.deletedAt : deletedAt // ignore: cast_nullable_to_non_nullable
+as String?,parentCommentId: freezed == parentCommentId ? _self.parentCommentId : parentCommentId // ignore: cast_nullable_to_non_nullable
+as String?,user: freezed == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
+as UserModel?,
   ));
 }
 
+/// Create a copy of CommentModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$UserModelCopyWith<$Res>? get user {
+    if (_self.user == null) {
+    return null;
+  }
 
+  return $UserModelCopyWith<$Res>(_self.user!, (value) {
+    return _then(_self.copyWith(user: value));
+  });
+}
 }
 
 // dart format on

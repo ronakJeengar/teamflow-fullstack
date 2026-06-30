@@ -11,8 +11,8 @@ class ActivityUser {
 
   factory ActivityUser.fromJson(Map<String, dynamic> json) {
     return ActivityUser(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: json['id'] as String? ?? '',
+      name: json['name'] as String? ?? 'System',
       avatar: json['avatar'] as String?,
     );
   }
@@ -41,14 +41,16 @@ class ActivityModel {
 
   factory ActivityModel.fromJson(Map<String, dynamic> json) {
     return ActivityModel(
-      id: json['id'] as String,
-      type: json['type'] as String,
-      content: json['content'] as String,
-      userId: json['userId'] as String,
+      id: json['id'] as String? ?? '',
+      type: (json['type'] ?? json['action'] ?? 'TASK') as String,
+      content: (json['content'] ?? json['action'] ?? 'No detail provided') as String,
+      userId: json['userId'] as String? ?? '',
       taskId: json['taskId'] as String?,
       projectId: json['projectId'] as String?,
-      createdAt: json['createdAt'] as String,
-      user: ActivityUser.fromJson(json['user'] as Map<String, dynamic>),
+      createdAt: json['createdAt'] as String? ?? DateTime.now().toIso8601String(),
+      user: json['user'] != null 
+          ? ActivityUser.fromJson(json['user'] as Map<String, dynamic>)
+          : ActivityUser(id: json['userId'] as String? ?? '', name: 'System'),
     );
   }
 }

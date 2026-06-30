@@ -6,6 +6,7 @@ import '../../../../core/error/exceptions.dart';
 abstract class ActivitiesRemoteDataSource {
   Future<List<ActivityModel>> getTaskActivities(String taskId);
   Future<List<ActivityModel>> getProjectActivities(String projectId);
+  Future<List<ActivityModel>> getWorkspaceActivities(String workspaceId);
 }
 
 class ActivitiesRemoteDataSourceImpl implements ActivitiesRemoteDataSource {
@@ -42,6 +43,22 @@ class ActivitiesRemoteDataSourceImpl implements ActivitiesRemoteDataSource {
       return [];
     } catch (e) {
       throw ServerException('Failed to fetch project activities');
+    }
+  }
+
+  @override
+  Future<List<ActivityModel>> getWorkspaceActivities(String workspaceId) async {
+    try {
+      final response = await apiService.getList<ActivityModel>(
+        'activities/workspaces/$workspaceId',
+        fromJson: (json) => ActivityModel.fromJson(json as Map<String, dynamic>),
+      );
+      if (response.status && response.data != null) {
+        return response.data!;
+      }
+      return [];
+    } catch (e) {
+      throw ServerException('Failed to fetch workspace activities');
     }
   }
 }

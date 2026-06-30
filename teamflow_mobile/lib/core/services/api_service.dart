@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:teamflow_mobile/core/constants/api_endpoints.dart';
 import '../models/api_response.dart';
+
+enum SyncStatus { synced, pending, offline, retrying }
 
 class ApiService {
   final Dio _dio;
@@ -8,19 +13,26 @@ class ApiService {
   late final Future<void> _cookieReady;
   String? _cookie;
   bool _isRefreshing = false;
-  final List<({RequestOptions options, ErrorInterceptorHandler handler})> _failedRequestsQueue = [];
+  final List<({RequestOptions options, ErrorInterceptorHandler handler})>
+  _failedRequestsQueue = [];
 
+  final ValueNotifier<SyncStatus> syncStatusNotifier = ValueNotifier<SyncStatus>(SyncStatus.synced);
+  bool _isSyncing = false;
 
-  ApiService({
-    String? baseUrl,
-  }) : _dio = Dio(
-    BaseOptions(
-      baseUrl: baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:3000/api/v1/'),
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 10),
-      responseType: ResponseType.json,
-    ),
-  ) {
+  ApiService({String? baseUrl})
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl:
+              baseUrl ??
+              const String.fromEnvironment(
+                'API_BASE_URL',
+                defaultValue: ApiEndpoints.baseUrl,
+              ),
+          connectTimeout: const Duration(seconds: 60),
+          receiveTimeout: const Duration(seconds: 60),
+          responseType: ResponseType.json,
+        ),
+      ) {
     _cookieReady = _initCookie();
 
     _dio.interceptors.add(
@@ -70,7 +82,10 @@ class ApiService {
             }
 
             if (_isRefreshing) {
-              _failedRequestsQueue.add((options: requestOptions, handler: handler));
+              _failedRequestsQueue.add((
+                options: requestOptions,
+                handler: handler,
+              ));
               return;
             }
 
@@ -91,10 +106,12 @@ class ApiService {
                   if (_cookie != null) {
                     queued.options.headers['cookie'] = _cookie!;
                   }
-                  _dio.fetch(queued.options).then(
-                    (res) => queued.handler.resolve(res),
-                    onError: (err) => queued.handler.next(err),
-                  );
+                  _dio
+                      .fetch(queued.options)
+                      .then(
+                        (res) => queued.handler.resolve(res),
+                        onError: (err) => queued.handler.next(err),
+                      );
                 }
                 _failedRequestsQueue.clear();
 
@@ -140,25 +157,60 @@ class ApiService {
   Future<ApiResponse<T>> _handleRequest<T>({
     required Future<Response> Function() request,
     required T Function(dynamic json) fromJson,
+    required String path,
+    required String method,
+    Map<String, dynamic>? body,
   }) async {
+    final cacheKey = 'cache_${method}_${path}';
     try {
       final response = await request();
-      final body = response.data;
+      final responseBody = response.data;
+
+      // Cache successful GET results
+      if (method == 'GET' && responseBody['data'] != null) {
+        await _storage.write(key: cacheKey, value: jsonEncode(responseBody['data']));
+      }
+
+      // Trigger background sync
+      _triggerSync();
 
       return ApiResponse.success(
-        message: body['message'] ?? 'Success',
-        data: body['data'] != null ? fromJson(body['data']) : null,
+        message: responseBody['message'] ?? 'Success',
+        data: responseBody['data'] != null ? fromJson(responseBody['data']) : null,
         code: response.statusCode,
       );
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
-      final data = e.response?.data;
+      final responseData = e.response?.data;
 
-      if (data is Map<String, dynamic>) {
+      // Handle offline reads
+      if (method == 'GET' && (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout)) {
+        final cached = await _storage.read(key: cacheKey);
+        if (cached != null) {
+          final decoded = jsonDecode(cached);
+          return ApiResponse.success(
+            message: 'Loaded from local cache (offline)',
+            data: fromJson(decoded),
+            code: 200,
+          );
+        }
+      }
+
+      // Handle offline writes (queue mutations)
+      if (method != 'GET' && (e.type == DioExceptionType.connectionError || e.type == DioExceptionType.connectionTimeout)) {
+        await _queueMutation(path, method, body);
+        return ApiResponse.success(
+          message: 'Offline: Mutation queued successfully',
+          data: null,
+          code: 202,
+        );
+      }
+
+      if (responseData is Map<String, dynamic>) {
         return ApiResponse.failure(
-          message: data['message'] ?? 'Request failed',
+          message: responseData['message'] ?? 'Request failed',
           code: statusCode,
-          error: data,
+          error: responseData,
         );
       }
 
@@ -168,11 +220,156 @@ class ApiService {
         error: e,
       );
     } catch (e) {
+      if (method == 'GET') {
+        final cached = await _storage.read(key: cacheKey);
+        if (cached != null) {
+          final decoded = jsonDecode(cached);
+          return ApiResponse.success(
+            message: 'Loaded from local cache (offline)',
+            data: fromJson(decoded),
+            code: 200,
+          );
+        }
+      }
       return ApiResponse.failure(
         message: 'Unexpected error occurred',
         error: e,
       );
     }
+  }
+
+  Future<void> _queueMutation(String path, String method, Map<String, dynamic>? body) async {
+    try {
+      final queueStr = await _storage.read(key: 'offline_mutations_queue') ?? '[]';
+      final List<dynamic> queue = jsonDecode(queueStr);
+      
+      // Prevent duplicates: if there is already an identical mutation in the queue, skip it
+      final isDuplicate = queue.any((item) => 
+        item['path'] == path && 
+        item['method'] == method && 
+        jsonEncode(item['body']) == jsonEncode(body)
+      );
+      if (isDuplicate) return;
+
+      queue.add({
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'path': path,
+        'method': method,
+        'body': body,
+        'timestamp': DateTime.now().toIso8601String(),
+        'retries': 0,
+      });
+      await _storage.write(key: 'offline_mutations_queue', value: jsonEncode(queue));
+      syncStatusNotifier.value = SyncStatus.pending;
+    } catch (e) {
+      // Fail silently
+    }
+  }
+
+  void _triggerSync() {
+    syncOfflineMutations().catchError((err) {
+      // Ignored
+    });
+  }
+
+  Future<void> syncOfflineMutations() async {
+    if (_isSyncing) return;
+    _isSyncing = true;
+
+    try {
+      final queueStr = await _storage.read(key: 'offline_mutations_queue');
+      if (queueStr == null || queueStr == '[]') {
+        syncStatusNotifier.value = SyncStatus.synced;
+        _isSyncing = false;
+        return;
+      }
+
+      final List<dynamic> queue = jsonDecode(queueStr);
+      final remaining = <dynamic>[];
+      bool networkErrorEncountered = false;
+
+      syncStatusNotifier.value = SyncStatus.retrying;
+
+      for (final mutation in queue) {
+        if (networkErrorEncountered) {
+          remaining.add(mutation);
+          continue;
+        }
+
+        final path = mutation['path'] as String;
+        final method = mutation['method'] as String;
+        final body = mutation['body'] as Map<String, dynamic>?;
+        final retries = (mutation['retries'] as int? ?? 0) + 1;
+
+        try {
+          final headers = {
+            'x-sync-timestamp': mutation['timestamp'] ?? DateTime.now().toIso8601String(),
+          };
+
+          if (method == 'POST') {
+            await _dio.post(path, data: body, options: Options(headers: headers));
+          } else if (method == 'PATCH') {
+            await _dio.patch(path, data: body, options: Options(headers: headers));
+          } else if (method == 'PUT') {
+            await _dio.put(path, data: body, options: Options(headers: headers));
+          } else if (method == 'DELETE') {
+            await _dio.delete(path, options: Options(headers: headers));
+          }
+        } catch (e) {
+          if (e is DioException) {
+            final isNetworkError = e.type == DioExceptionType.connectionError ||
+                e.type == DioExceptionType.connectionTimeout ||
+                e.response == null;
+
+            if (isNetworkError) {
+              if (retries < 5) {
+                networkErrorEncountered = true;
+                mutation['retries'] = retries;
+                remaining.add(mutation);
+              } else {
+                // Drop after 5 connection retries to prevent blocking the queue forever
+                debugPrint('[Offline Sync] Dropping mutation after 5 failed retries: $path');
+              }
+            } else {
+              // Client/server validation or conflict error (e.g. 400, 401, 403, 409)
+              // Discard to prevent blocking subsequent writes
+              debugPrint('[Offline Sync] Discarding invalid mutation with status ${e.response?.statusCode}: $path');
+            }
+          } else {
+            debugPrint('[Offline Sync] Discarding corrupt mutation: $path');
+          }
+        }
+      }
+
+      await _storage.write(key: 'offline_mutations_queue', value: jsonEncode(remaining));
+      
+      if (networkErrorEncountered) {
+        syncStatusNotifier.value = SyncStatus.offline;
+      } else {
+        syncStatusNotifier.value = remaining.isEmpty ? SyncStatus.synced : SyncStatus.pending;
+      }
+    } catch (e) {
+      debugPrint('[Offline Sync Error] Failed to process queue: $e');
+      syncStatusNotifier.value = SyncStatus.offline;
+    } finally {
+      _isSyncing = false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getQueuedMutations() async {
+    try {
+      final queueStr = await _storage.read(key: 'offline_mutations_queue');
+      if (queueStr == null) return [];
+      final List<dynamic> decoded = jsonDecode(queueStr);
+      return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<void> clearQueue() async {
+    await _storage.write(key: 'offline_mutations_queue', value: '[]');
+    syncStatusNotifier.value = SyncStatus.synced;
   }
 
   String _dioErrorMessage(DioException e) {
@@ -191,67 +388,82 @@ class ApiService {
   /* ==================== HTTP METHODS ==================== */
 
   Future<ApiResponse<T>> get<T>(
-      String path, {
-        Map<String, dynamic>? queryParameters,
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<T>(
       request: () => _dio.get(path, queryParameters: queryParameters),
       fromJson: fromJson,
+      path: path,
+      method: 'GET',
     );
   }
 
   Future<ApiResponse<T>> post<T>(
-      String path, {
-        Map<String, dynamic>? body,
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    Map<String, dynamic>? body,
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<T>(
       request: () => _dio.post(path, data: body),
       fromJson: fromJson,
+      path: path,
+      method: 'POST',
+      body: body,
     );
   }
 
   Future<ApiResponse<T>> put<T>(
-      String path, {
-        Map<String, dynamic>? body,
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    Map<String, dynamic>? body,
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<T>(
       request: () => _dio.put(path, data: body),
       fromJson: fromJson,
+      path: path,
+      method: 'PUT',
+      body: body,
     );
   }
 
   Future<ApiResponse<T>> patch<T>(
-      String path, {
-        Map<String, dynamic>? body,
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    Map<String, dynamic>? body,
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<T>(
       request: () => _dio.patch(path, data: body),
       fromJson: fromJson,
+      path: path,
+      method: 'PATCH',
+      body: body,
     );
   }
 
   Future<ApiResponse<T>> delete<T>(
-      String path, {
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<T>(
       request: () => _dio.delete(path),
       fromJson: fromJson,
+      path: path,
+      method: 'DELETE',
     );
   }
 
   Future<ApiResponse<List<T>>> getList<T>(
-      String path, {
-        Map<String, dynamic>? queryParameters,
-        required T Function(dynamic json) fromJson,
-      }) {
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    required T Function(dynamic json) fromJson,
+  }) {
     return _handleRequest<List<T>>(
       request: () => _dio.get(path, queryParameters: queryParameters),
       fromJson: (json) => (json as List).map((e) => fromJson(e)).toList(),
+      path: path,
+      method: 'GET',
     );
   }
 }

@@ -147,7 +147,7 @@ class StatBlockRow extends StatelessWidget {
 
     // Mobile/Tablet snap scroll list
     return SizedBox(
-      height: 160,
+      height: 175,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),

@@ -51,3 +51,25 @@ class ProjectActivitiesNotifier extends StateNotifier<AsyncValue<List<ActivityMo
     );
   }
 }
+
+final workspaceActivitiesProvider = StateNotifierProvider.family<WorkspaceActivitiesNotifier, AsyncValue<List<ActivityModel>>, String>((ref, workspaceId) {
+  return WorkspaceActivitiesNotifier(ref.watch(activitiesRepositoryProvider), workspaceId);
+});
+
+class WorkspaceActivitiesNotifier extends StateNotifier<AsyncValue<List<ActivityModel>>> {
+  final ActivitiesRepository repository;
+  final String workspaceId;
+
+  WorkspaceActivitiesNotifier(this.repository, this.workspaceId) : super(const AsyncLoading()) {
+    loadActivities();
+  }
+
+  Future<void> loadActivities() async {
+    state = const AsyncLoading();
+    final result = await repository.getWorkspaceActivities(workspaceId);
+    result.fold(
+      (failure) => state = AsyncError(failure.message, StackTrace.current),
+      (activities) => state = AsyncData(activities),
+    );
+  }
+}

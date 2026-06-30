@@ -7,7 +7,7 @@ abstract class NotificationEntity with _$NotificationEntity {
   const factory NotificationEntity({
     required String id,
     required String userId,
-    required String senderId,
+    String? senderId,
     required String type,
     required String title,
     required String body,

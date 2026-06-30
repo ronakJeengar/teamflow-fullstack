@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,7 +12,9 @@ import '../../features/auth/presentation/providers/providers.dart';
 import '../../features/invitation/presentation/pages/invitation_page.dart';
 import '../../features/projects/projects_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/tasks/domain/entitties/task_entity.dart';
 import '../../features/tasks/presentation/pages/tasks_page.dart';
+import '../../features/tasks/task_detail_page.dart';
 import '../../features/teams/presentation/pages/team_detail_page.dart';
 import '../../features/teams/presentation/pages/teams_page.dart';
 import '../navigation/navigation_helper.dart';
@@ -84,6 +87,25 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           final projectId = state.pathParameters['projectId']!;
           final teamId = state.pathParameters['teamId']!;
           return TasksPage(projectId: projectId, teamId: teamId,);
+        },
+      ),
+
+      GoRoute(
+        path: Routes.taskDetail,
+        name: RouteNames.taskDetail,
+        builder: (_, state) {
+          if (state.extra is Map<String, dynamic>) {
+            final extra = state.extra as Map<String, dynamic>;
+            final task = extra['task'] as TaskEntity;
+            final projectName = extra['projectName'] as String;
+            final teamId = state.pathParameters['teamId']!;
+            return TaskDetailPage(task: task, projectName: projectName, teamId: teamId);
+          }
+          return const Scaffold(
+            body: Center(
+              child: Text('Task details not found'),
+            ),
+          );
         },
       ),
 

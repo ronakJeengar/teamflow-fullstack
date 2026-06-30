@@ -20,6 +20,12 @@ class TasksRepositoryImpl implements TasksRepository {
     String? assigneeId,
     String? status,
     String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     try {
       final task = await remoteDataSource.createTask(
@@ -29,9 +35,15 @@ class TasksRepositoryImpl implements TasksRepository {
         assigneeId: assigneeId,
         status: status,
         priority: priority,
+        sprintId: sprintId,
+        storyPoints: storyPoints,
+        backlogStatus: backlogStatus,
+        isRecurring: isRecurring,
+        recurrence: recurrence,
+        parentId: parentId,
       );
 
-      return Right(task. toEntity());
+      return Right(task.toEntity());
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     }
@@ -60,6 +72,12 @@ class TasksRepositoryImpl implements TasksRepository {
     String? status,
     String? priority,
     String? assigneeId,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     try {
       final task = await remoteDataSource.updateTask(
@@ -69,6 +87,12 @@ class TasksRepositoryImpl implements TasksRepository {
         status: status,
         priority: priority,
         assigneeId: assigneeId,
+        sprintId: sprintId,
+        storyPoints: storyPoints,
+        backlogStatus: backlogStatus,
+        isRecurring: isRecurring,
+        recurrence: recurrence,
+        parentId: parentId,
       );
 
       return Right(task.toEntity());

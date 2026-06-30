@@ -9,6 +9,10 @@ import 'package:teamflow_mobile/features/dashboard/presentation/providers/stats_
 import 'package:teamflow_mobile/features/tasks/presentation/providers/task_providers.dart';
 import 'package:teamflow_mobile/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:teamflow_mobile/features/teams/presentation/providers/teams_providers.dart';
+import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
+import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
+
+import 'package:teamflow_mobile/features/dashboard/presentation/providers/workspace_controller.dart';
 
 class Sidebar extends ConsumerWidget {
   final String activeItem;
@@ -392,15 +396,12 @@ class Sidebar extends ConsumerWidget {
                             : AppColors.primary;
                         return GestureDetector(
                           onTap: () async {
-                            try {
-                              await ref.read(workspacesRepositoryProvider).switchWorkspace(workspace.id);
-                              await ref.read(authStateNotifierProvider.notifier).refreshMemberships();
-                              ref.invalidate(dashboardStatsProvider);
-                              ref.invalidate(myTasksProvider);
-                              ref.invalidate(unreadNotificationsCountProvider);
-                              ref.invalidate(notificationsListProvider);
-                              ref.read(teamsStateNotifierProvider.notifier).loadTeams();
-                            } catch (_) {}
+                            final success = await ref
+                                .read(workspaceControllerProvider.notifier)
+                                .switchWorkspace(workspace.id);
+                            if (success) {
+                              NavigationHelper.instance.goToHome();
+                            }
                           },
                           child: _buildWorkspaceItem(letter, workspace.name, color),
                         );

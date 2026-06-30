@@ -17,6 +17,14 @@ import 'package:teamflow_mobile/features/auth/presentation/providers/providers.d
 import 'package:teamflow_mobile/features/auth/domain/entities/membership_entity.dart';
 import 'package:teamflow_mobile/features/teams/domain/entities/team_member_entity.dart';
 import 'package:teamflow_mobile/features/teams/presentation/providers/team_details_providers.dart';
+import 'package:teamflow_mobile/features/teams/presentation/providers/teams_providers.dart';
+import 'package:teamflow_mobile/features/projects/domain/entitties/project_entity.dart';
+import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
+import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
+import '../../../sprints/presentation/widgets/sprint_list_view.dart';
+import '../../../sprints/presentation/widgets/backlog_view.dart';
+import '../../../sprints/presentation/widgets/sprint_planning_view.dart';
+import '../../../../core/theme/app_theme.dart';
 
 class _ColumnConfig {
   final String title;
@@ -95,6 +103,14 @@ class TasksPage extends HookConsumerWidget {
     final activeTab = useState(0);
     final dragTarget = useState<int?>(null);
 
+    final teamsState = ref.watch(teamsStateNotifierProvider);
+    final allProjects = teamsState.teams.expand((t) => t.projects).toList();
+    final project = allProjects.cast<ProjectEntity?>().firstWhere(
+      (p) => p?.id == projectId,
+      orElse: () => null,
+    );
+    final projectName = project?.name ?? 'Project';
+
     // Direct lookup using the passed teamId — no reverse project search needed
     final membership = memberships.firstWhere(
           (m) => m.team.id == teamId,
@@ -114,60 +130,159 @@ class TasksPage extends HookConsumerWidget {
       state.tasks.where((e) => e.status == TaskStatus.DONE).toList(),
     ];
 
+    final viewMode = useState('tasks');
+
     return Scaffold(
       backgroundColor: AppTokens.bg,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _TopBar(
-            activeTab: activeTab.value,
-            counts: tasksByStatus.map((l) => l.length).toList(),
-            dragTarget: dragTarget.value,
-            isViewer: isViewer,
-            onTabChanged: (i) {
-              activeTab.value = i;
-              HapticFeedback.selectionClick();
-            },
-            onDragOver: (i) => dragTarget.value = i,
-            onDragLeft: () => dragTarget.value = null,
-            onDropped: isViewer ? (_, __) {} : (task, i) {
-              dragTarget.value = null;
-              final newStatus = _columns[i].status;
-              if (task.status == newStatus) return;
+      body: viewMode.value == 'tasks'
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TopBar(
+                  activeTab: activeTab.value,
+                  counts: tasksByStatus.map((l) => l.length).toList(),
+                  dragTarget: dragTarget.value,
+                  isViewer: isViewer,
+                  viewMode: viewMode,
+                  onTabChanged: (i) {
+                    activeTab.value = i;
+                    HapticFeedback.selectionClick();
+                  },
+                  onDragOver: (i) => dragTarget.value = i,
+                  onDragLeft: () => dragTarget.value = null,
+                  onDropped: isViewer ? (_, __) {} : (task, i) {
+                    dragTarget.value = null;
+                    final newStatus = _columns[i].status;
+                    if (task.status == newStatus) return;
 
-              // Verify permission
-              final currentUserId = ref.read(authStateNotifierProvider).user?.id ?? '';
-              final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(userRole);
-              final isAssignee = task.assignedToId == currentUserId;
+                    // Verify permission
+                    final currentUserId = ref.read(authStateNotifierProvider).user?.id ?? '';
+                    final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(userRole);
+                    final isAssignee = task.assignedToId == currentUserId;
 
-              if (!isOwnerOrAdminOrManager && !isAssignee) {
-                showAppSnackBar(context, "You don't have permission to modify this task");
-                return;
-              }
+                    if (!isOwnerOrAdminOrManager && !isAssignee) {
+                      showAppSnackBar(context, "You don't have permission to modify this task");
+                      return;
+                    }
 
-              activeTab.value = i;
-              ref
-                  .read(updateTaskControllerProvider.notifier)
-                  .moveTask(taskId: task.id, newStatus: newStatus);
-            },
-            onLogoutTap: () => showModalBottomSheet(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const LogoutSheet(),
+                    activeTab.value = i;
+                    ref
+                        .read(updateTaskControllerProvider.notifier)
+                        .moveTask(taskId: task.id, newStatus: newStatus);
+                  },
+                  onLogoutTap: () => showModalBottomSheet(
+                    context: context,
+                    backgroundColor: Colors.transparent,
+                    builder: (_) => const LogoutSheet(),
+                  ),
+                ),
+                Expanded(
+                  child: _Body(
+                    config: _columns[activeTab.value],
+                    tasks: tasksByStatus[activeTab.value],
+                    tabKey: activeTab.value,
+                    userRole: userRole,
+                    teamId: teamId,
+                    projectName: projectName,
+                  ),
+                ),
+              ],
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + AppTokens.s16,
+                    left: AppTokens.s20,
+                    right: AppTokens.s20,
+                    bottom: AppTokens.s12,
+                  ),
+                  child: Row(
+                    children: [
+                      AppIconButton(
+                        icon: Icons.arrow_back_ios_new_rounded,
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          viewMode.value == 'sprints'
+                              ? '$projectName Sprints'
+                              : viewMode.value == 'backlog'
+                                  ? '$projectName Backlog'
+                                  : '$projectName Planning',
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textPrimary,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      AppIconButton(
+                        icon: Icons.dashboard_outlined,
+                        color: viewMode.value == 'tasks' ? AppColors.primary : AppColors.muted,
+                        onTap: () {
+                          viewMode.value = 'tasks';
+                          HapticFeedback.selectionClick();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      AppIconButton(
+                        icon: Icons.calendar_today_rounded,
+                        color: viewMode.value == 'sprints' ? AppColors.primary : AppColors.muted,
+                        onTap: () {
+                          viewMode.value = 'sprints';
+                          HapticFeedback.selectionClick();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      AppIconButton(
+                        icon: Icons.all_inbox_rounded,
+                        color: viewMode.value == 'backlog' ? AppColors.primary : AppColors.muted,
+                        onTap: () {
+                          viewMode.value = 'backlog';
+                          HapticFeedback.selectionClick();
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      AppIconButton(
+                        icon: Icons.playlist_add_check_rounded,
+                        color: viewMode.value == 'sprint-planning' ? AppColors.primary : AppColors.muted,
+                        onTap: () {
+                          viewMode.value = 'sprint-planning';
+                          HapticFeedback.selectionClick();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Divider(color: AppColors.border, height: 1),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: viewMode.value == 'sprints'
+                      ? SprintListView(
+                          projectId: projectId,
+                          teamId: teamId,
+                          isViewer: isViewer,
+                        )
+                      : viewMode.value == 'backlog'
+                          ? BacklogView(
+                              projectId: projectId,
+                              teamId: teamId,
+                              isViewer: isViewer,
+                            )
+                          : SprintPlanningView(
+                              projectId: projectId,
+                              teamId: teamId,
+                              isViewer: isViewer,
+                            ),
+                ),
+              ],
             ),
-          ),
-          Expanded(
-            child: _Body(
-              config: _columns[activeTab.value],
-              tasks: tasksByStatus[activeTab.value],
-              tabKey: activeTab.value,
-              userRole: userRole,
-              teamId: teamId,
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: (screenWidth < 768 && !isViewer)
+      floatingActionButton: (screenWidth < 768 && !isViewer && viewMode.value == 'tasks')
           ? _Fab(projectId: projectId, teamId: teamId)
           : null,
     );
@@ -184,6 +299,7 @@ class _TopBar extends StatelessWidget {
   final VoidCallback onLogoutTap;
   final void Function(TaskEntity, int) onDropped;
   final bool isViewer;
+  final ValueNotifier<String> viewMode;
 
   const _TopBar({
     required this.activeTab,
@@ -195,6 +311,7 @@ class _TopBar extends StatelessWidget {
     required this.onDropped,
     required this.onLogoutTap,
     required this.isViewer,
+    required this.viewMode,
   });
 
   @override
@@ -300,9 +417,35 @@ class _TopBar extends StatelessWidget {
                     ],
                   ),
                 ),
-
-                SizedBox(width: AppTokens.s16),
-                AppIconButton(icon: Icons.logout_rounded, onTap: onLogoutTap),
+                const SizedBox(width: 8),
+                AppIconButton(
+                  icon: Icons.calendar_today_rounded,
+                  color: viewMode.value == 'sprints' ? AppColors.primary : AppColors.muted,
+                  onTap: () {
+                    viewMode.value = 'sprints';
+                    HapticFeedback.selectionClick();
+                  },
+                ),
+                const SizedBox(width: 8),
+                AppIconButton(
+                  icon: Icons.all_inbox_rounded,
+                  color: viewMode.value == 'backlog' ? AppColors.primary : AppColors.muted,
+                  onTap: () {
+                    viewMode.value = 'backlog';
+                    HapticFeedback.selectionClick();
+                  },
+                ),
+                const SizedBox(width: 8),
+                AppIconButton(
+                  icon: Icons.playlist_add_check_rounded,
+                  color: viewMode.value == 'sprint-planning' ? AppColors.primary : AppColors.muted,
+                  onTap: () {
+                    viewMode.value = 'sprint-planning';
+                    HapticFeedback.selectionClick();
+                  },
+                ),
+                const SizedBox(width: 8),
+                AppIconButton(icon: Icons.logout_rounded, onTap: onLogoutTap, color: AppColors.muted),
               ],
             ),
           ),
@@ -501,6 +644,7 @@ class _Body extends StatelessWidget {
   final int tabKey;
   final String userRole;
   final String teamId;
+  final String projectName;
 
   const _Body({
     required this.config,
@@ -508,6 +652,7 @@ class _Body extends StatelessWidget {
     required this.tabKey,
     required this.userRole,
     required this.teamId,
+    required this.projectName,
   });
 
   @override
@@ -545,6 +690,7 @@ class _Body extends StatelessWidget {
             accentColor: config.accent,
             userRole: userRole,
             teamId: teamId,
+            projectName: projectName,
           ),
         ),
       ),
@@ -599,6 +745,7 @@ class _DraggableCard extends ConsumerStatefulWidget {
   final Color accentColor;
   final String userRole;
   final String teamId;
+  final String projectName;
 
   const _DraggableCard({
     required this.task,
@@ -606,6 +753,7 @@ class _DraggableCard extends ConsumerStatefulWidget {
     required this.accentColor,
     required this.userRole,
     required this.teamId,
+    required this.projectName,
   });
 
   @override
@@ -689,6 +837,15 @@ class _DraggableCardState extends ConsumerState<_DraggableCard>
         ref
             .read(updateTaskControllerProvider.notifier)
             .moveTask(taskId: widget.task.id, newStatus: newStatus);
+      },
+      onTap: () {
+        NavigationHelper.instance.pushTaskDetail(
+          teamId: widget.teamId,
+          projectId: widget.task.projectId,
+          taskId: widget.task.id,
+          task: widget.task,
+          projectName: widget.projectName,
+        );
       },
     );
 

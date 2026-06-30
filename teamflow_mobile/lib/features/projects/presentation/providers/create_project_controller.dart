@@ -7,6 +7,7 @@ import '../../../../core/di/injection.dart';
 import '../../../teams/domain/usecases/get_team_by_id_usecase.dart';
 import '../../../teams/presentation/providers/teams_providers.dart';
 import '../../../dashboard/presentation/providers/stats_providers.dart';
+import '../../../dashboard/presentation/providers/workspaces_providers.dart';
 import '../../../tasks/presentation/providers/task_providers.dart';
 import '../../../notifications/presentation/providers/notifications_providers.dart';
 import '../../domain/usecases/creaet_project_usecase.dart';
@@ -42,6 +43,7 @@ class CreateProjectController extends StateNotifier<AsyncValue<void>> {
           ref!.invalidate(dashboardStatsProvider);
           ref!.invalidate(unreadNotificationsCountProvider);
           ref!.invalidate(notificationsListProvider);
+          ref!.invalidate(workspacesListProvider);
           ref!.read(teamsStateNotifierProvider.notifier).loadTeams();
           if (sl.isRegistered<GetTeamByIdUseCase>()) {
             ref!.read(teamDetailStateNotifierProvider.notifier).loadTeamDetail(teamId);

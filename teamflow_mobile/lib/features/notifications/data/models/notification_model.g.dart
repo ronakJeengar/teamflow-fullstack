@@ -10,7 +10,7 @@ _NotificationModel _$NotificationModelFromJson(Map<String, dynamic> json) =>
     _NotificationModel(
       id: json['id'] as String,
       userId: json['userId'] as String,
-      senderId: json['senderId'] as String,
+      senderId: json['senderId'] as String?,
       type: json['type'] as String,
       title: json['title'] as String,
       body: json['body'] as String,

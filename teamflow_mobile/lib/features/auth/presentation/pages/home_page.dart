@@ -19,6 +19,9 @@ import 'package:teamflow_mobile/features/tasks/presentation/providers/task_provi
 import 'package:teamflow_mobile/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:teamflow_mobile/features/teams/domain/entities/team_member_entity.dart';
 import 'package:teamflow_mobile/features/tasks/domain/entitties/task_entity.dart';
+import 'package:teamflow_mobile/features/dashboard/presentation/providers/workspaces_providers.dart';
+import 'package:teamflow_mobile/features/dashboard/presentation/widgets/workspace_settings_sheet.dart';
+import 'package:teamflow_mobile/features/dashboard/data/models/workspace_model.dart';
 
 import '../../../projects/domain/entitties/project_entity.dart';
 
@@ -180,6 +183,19 @@ class HomePage extends HookConsumerWidget {
     }
 
     Widget buildMainContent() {
+      final workspacesAsync = ref.watch(workspacesListProvider);
+
+      Widget buildWorkspaceStat(String label, String value) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label, style: GoogleFonts.inter(fontSize: 11, color: AppColors.muted)),
+            const SizedBox(height: 4),
+            Text(value, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+          ],
+        );
+      }
+
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: Column(
@@ -238,6 +254,192 @@ class HomePage extends HookConsumerWidget {
             ),
 
             const SizedBox(height: 20),
+
+            // Workspace Card
+            workspacesAsync.when(
+              data: (workspaces) {
+                if (workspaces.isEmpty) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 20),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No workspaces found. Create one to get started.',
+                        style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13),
+                      ),
+                    ),
+                  );
+                }
+
+                final currentWorkspace = workspaces.firstWhere(
+                  (w) => w.id == authState.user?.activeWorkspaceId,
+                  orElse: () => workspaces.first,
+                );
+                
+                final wColor = currentWorkspace.color != null
+                    ? Color(int.parse(currentWorkspace.color!.replaceAll('#', '0xFF')))
+                    : AppColors.primary;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: wColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              currentWorkspace.name.isNotEmpty ? currentWorkspace.name[0].toUpperCase() : 'W',
+                              style: GoogleFonts.inter(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  currentWorkspace.name,
+                                  style: GoogleFonts.inter(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                                ),
+                                Text(
+                                  'Active Workspace',
+                                  style: GoogleFonts.inter(fontSize: 12, color: AppColors.muted),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.settings_outlined, color: AppColors.textSecondary),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (_) => WorkspaceSettingsSheet(workspace: currentWorkspace),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(color: AppColors.border, height: 1),
+                      const SizedBox(height: 16),
+                      statsAsync.maybeWhen(
+                        data: (stats) {
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              buildWorkspaceStat('Teams', '${stats.team_count ?? 0}'),
+                              buildWorkspaceStat('Projects', '${stats.project_count ?? 0}'),
+                              buildWorkspaceStat('Tasks', '${stats.task_count ?? 0}'),
+                              buildWorkspaceStat('Members', '${stats.member_count ?? 0}'),
+                            ],
+                          );
+                        },
+                        orElse: () => const Center(child: CircularProgressIndicator()),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
+
+            // Active Sprint Card (Sprint Health)
+            statsAsync.maybeWhen(
+              data: (stats) {
+                if (stats.sprintProgress == null) return const SizedBox.shrink();
+                final progress = stats.sprintProgress!;
+                final totalTasks = progress['totalTasks'] ?? 0;
+                final completedTasks = progress['completedTasks'] ?? 0;
+                final completionPercentage = progress['completionPercentage'] ?? 0;
+                final velocity = stats.sprintVelocity ?? 0;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 20),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.bolt, color: AppColors.primary, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Active Sprint Health',
+                                style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                              ),
+                            ],
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'Velocity: $velocity pts',
+                              style: GoogleFonts.inter(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.primary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '$completedTasks / $totalTasks Tasks Done',
+                            style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary),
+                          ),
+                          Text(
+                            '$completionPercentage%',
+                            style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: totalTasks > 0 ? completedTasks / totalTasks : 0,
+                        backgroundColor: AppColors.border,
+                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                        minHeight: 6,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              orElse: () => const SizedBox.shrink(),
+            ),
 
             statsAsync.when(
               data: (statsData) {
@@ -342,7 +544,7 @@ class HomePage extends HookConsumerWidget {
 
                 if (filtered.isEmpty) {
                   return const SizedBox(
-                    height: 190,
+                    height: 220,
                     child: AppEmptyState(
                       icon: Icons.check_circle_outline_rounded,
                       title: 'No tasks found',
@@ -446,7 +648,7 @@ class HomePage extends HookConsumerWidget {
 
             if (allProjects.isEmpty)
               const SizedBox(
-                height: 190,
+                height: 220,
                 child: AppEmptyState(
                   icon: Icons.folder_open_rounded,
                   title: 'No projects yet',

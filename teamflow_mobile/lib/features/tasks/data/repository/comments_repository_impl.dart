@@ -10,12 +10,12 @@ class CommentsRepositoryImpl implements CommentsRepository {
   CommentsRepositoryImpl(this.remoteDataSource);
 
   @override
-  Future<Either<Failure, List<CommentModel>>> getComments(String taskId) async {
+  Future<Either<Failure, List<CommentModel>>> getComments(String taskId, {int page = 1, int limit = 20}) async {
     try {
-      final comments = await remoteDataSource.getComments(taskId);
+      final comments = await remoteDataSource.getComments(taskId, page: page, limit: limit);
       return Right(comments);
     } catch (e) {
-      return Left(ServerFailure('Failed to load comments'));
+      return Left(ServerFailure('Failed to load comments: $e'));
     }
   }
 
@@ -25,7 +25,27 @@ class CommentsRepositoryImpl implements CommentsRepository {
       final comment = await remoteDataSource.createComment(taskId, content);
       return Right(comment);
     } catch (e) {
-      return Left(ServerFailure('Failed to post comment'));
+      return Left(ServerFailure('Failed to post comment: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CommentModel>> updateComment(String commentId, String content) async {
+    try {
+      final comment = await remoteDataSource.updateComment(commentId, content);
+      return Right(comment);
+    } catch (e) {
+      return Left(ServerFailure('Failed to update comment: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteComment(String commentId) async {
+    try {
+      await remoteDataSource.deleteComment(commentId);
+      return const Right(unit);
+    } catch (e) {
+      return Left(ServerFailure('Failed to delete comment: $e'));
     }
   }
 }

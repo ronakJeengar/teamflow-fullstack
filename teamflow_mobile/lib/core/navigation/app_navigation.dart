@@ -2,6 +2,7 @@
 
 import '../router/routes.dart';
 import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
+import 'package:teamflow_mobile/features/tasks/domain/entitties/task_entity.dart';
 
 extension AppNavigation on NavigationHelper {
   // Auth Navigation
@@ -53,6 +54,19 @@ extension AppNavigation on NavigationHelper {
     RouteNames.tasks,
     params: {'projectId': projectId, 'teamId': teamId},
   );
+
+  void pushTaskDetail({
+    required String teamId,
+    required String projectId,
+    required String taskId,
+    required TaskEntity task,
+    required String projectName,
+  }) =>
+      pushNamed(
+        RouteNames.taskDetail,
+        params: {'teamId': teamId, 'projectId': projectId, 'taskId': taskId},
+        extra: {'task': task, 'projectName': projectName},
+      );
 
   void pushSettings() => pushNamed(RouteNames.settings);
 

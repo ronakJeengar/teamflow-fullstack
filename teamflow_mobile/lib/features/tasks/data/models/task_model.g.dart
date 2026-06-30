@@ -21,6 +21,12 @@ _TaskModel _$TaskModelFromJson(Map<String, dynamic> json) => _TaskModel(
       ? null
       : DateTime.parse(json['dueDate'] as String),
   tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList(),
+  sprintId: json['sprintId'] as String?,
+  storyPoints: (json['storyPoints'] as num?)?.toInt(),
+  backlogStatus: json['backlogStatus'] as String?,
+  isRecurring: json['isRecurring'] as bool? ?? false,
+  recurrence: json['recurrence'] as String?,
+  parentId: json['parentId'] as String?,
 );
 
 Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
@@ -37,6 +43,12 @@ Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
       'priority': instance.priority,
       'dueDate': instance.dueDate?.toIso8601String(),
       'tags': instance.tags,
+      'sprintId': instance.sprintId,
+      'storyPoints': instance.storyPoints,
+      'backlogStatus': instance.backlogStatus,
+      'isRecurring': instance.isRecurring,
+      'recurrence': instance.recurrence,
+      'parentId': instance.parentId,
     };
 
 const _$TaskStatusEnumMap = {

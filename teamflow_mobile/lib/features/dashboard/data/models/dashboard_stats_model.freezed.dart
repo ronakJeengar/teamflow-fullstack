@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DashboardStatsModel {
 
- int get tasksDueToday; int get inProgress; int get inReview; int get blocked; int get completedThisWeek; Map<String, List<int>>? get sparklines;
+ int get tasksDueToday; int get inProgress; int get inReview; int get blocked; int get completedThisWeek; Map<String, List<int>>? get sparklines; int? get project_count; int? get member_count; int? get team_count; int? get task_count; Map<String, dynamic>? get sprintProgress; int? get sprintVelocity;
 /// Create a copy of DashboardStatsModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $DashboardStatsModelCopyWith<DashboardStatsModel> get copyWith => _$DashboardSta
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardStatsModel&&(identical(other.tasksDueToday, tasksDueToday) || other.tasksDueToday == tasksDueToday)&&(identical(other.inProgress, inProgress) || other.inProgress == inProgress)&&(identical(other.inReview, inReview) || other.inReview == inReview)&&(identical(other.blocked, blocked) || other.blocked == blocked)&&(identical(other.completedThisWeek, completedThisWeek) || other.completedThisWeek == completedThisWeek)&&const DeepCollectionEquality().equals(other.sparklines, sparklines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DashboardStatsModel&&(identical(other.tasksDueToday, tasksDueToday) || other.tasksDueToday == tasksDueToday)&&(identical(other.inProgress, inProgress) || other.inProgress == inProgress)&&(identical(other.inReview, inReview) || other.inReview == inReview)&&(identical(other.blocked, blocked) || other.blocked == blocked)&&(identical(other.completedThisWeek, completedThisWeek) || other.completedThisWeek == completedThisWeek)&&const DeepCollectionEquality().equals(other.sparklines, sparklines)&&(identical(other.project_count, project_count) || other.project_count == project_count)&&(identical(other.member_count, member_count) || other.member_count == member_count)&&(identical(other.team_count, team_count) || other.team_count == team_count)&&(identical(other.task_count, task_count) || other.task_count == task_count)&&const DeepCollectionEquality().equals(other.sprintProgress, sprintProgress)&&(identical(other.sprintVelocity, sprintVelocity) || other.sprintVelocity == sprintVelocity));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tasksDueToday,inProgress,inReview,blocked,completedThisWeek,const DeepCollectionEquality().hash(sparklines));
+int get hashCode => Object.hash(runtimeType,tasksDueToday,inProgress,inReview,blocked,completedThisWeek,const DeepCollectionEquality().hash(sparklines),project_count,member_count,team_count,task_count,const DeepCollectionEquality().hash(sprintProgress),sprintVelocity);
 
 @override
 String toString() {
-  return 'DashboardStatsModel(tasksDueToday: $tasksDueToday, inProgress: $inProgress, inReview: $inReview, blocked: $blocked, completedThisWeek: $completedThisWeek, sparklines: $sparklines)';
+  return 'DashboardStatsModel(tasksDueToday: $tasksDueToday, inProgress: $inProgress, inReview: $inReview, blocked: $blocked, completedThisWeek: $completedThisWeek, sparklines: $sparklines, project_count: $project_count, member_count: $member_count, team_count: $team_count, task_count: $task_count, sprintProgress: $sprintProgress, sprintVelocity: $sprintVelocity)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $DashboardStatsModelCopyWith<$Res>  {
   factory $DashboardStatsModelCopyWith(DashboardStatsModel value, $Res Function(DashboardStatsModel) _then) = _$DashboardStatsModelCopyWithImpl;
 @useResult
 $Res call({
- int tasksDueToday, int inProgress, int inReview, int blocked, int completedThisWeek, Map<String, List<int>>? sparklines
+ int tasksDueToday, int inProgress, int inReview, int blocked, int completedThisWeek, Map<String, List<int>>? sparklines, int? project_count, int? member_count, int? team_count, int? task_count, Map<String, dynamic>? sprintProgress, int? sprintVelocity
 });
 
 
@@ -65,7 +65,7 @@ class _$DashboardStatsModelCopyWithImpl<$Res>
 
 /// Create a copy of DashboardStatsModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? tasksDueToday = null,Object? inProgress = null,Object? inReview = null,Object? blocked = null,Object? completedThisWeek = null,Object? sparklines = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? tasksDueToday = null,Object? inProgress = null,Object? inReview = null,Object? blocked = null,Object? completedThisWeek = null,Object? sparklines = freezed,Object? project_count = freezed,Object? member_count = freezed,Object? team_count = freezed,Object? task_count = freezed,Object? sprintProgress = freezed,Object? sprintVelocity = freezed,}) {
   return _then(_self.copyWith(
 tasksDueToday: null == tasksDueToday ? _self.tasksDueToday : tasksDueToday // ignore: cast_nullable_to_non_nullable
 as int,inProgress: null == inProgress ? _self.inProgress : inProgress // ignore: cast_nullable_to_non_nullable
@@ -73,7 +73,13 @@ as int,inReview: null == inReview ? _self.inReview : inReview // ignore: cast_nu
 as int,blocked: null == blocked ? _self.blocked : blocked // ignore: cast_nullable_to_non_nullable
 as int,completedThisWeek: null == completedThisWeek ? _self.completedThisWeek : completedThisWeek // ignore: cast_nullable_to_non_nullable
 as int,sparklines: freezed == sparklines ? _self.sparklines : sparklines // ignore: cast_nullable_to_non_nullable
-as Map<String, List<int>>?,
+as Map<String, List<int>>?,project_count: freezed == project_count ? _self.project_count : project_count // ignore: cast_nullable_to_non_nullable
+as int?,member_count: freezed == member_count ? _self.member_count : member_count // ignore: cast_nullable_to_non_nullable
+as int?,team_count: freezed == team_count ? _self.team_count : team_count // ignore: cast_nullable_to_non_nullable
+as int?,task_count: freezed == task_count ? _self.task_count : task_count // ignore: cast_nullable_to_non_nullable
+as int?,sprintProgress: freezed == sprintProgress ? _self.sprintProgress : sprintProgress // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,sprintVelocity: freezed == sprintVelocity ? _self.sprintVelocity : sprintVelocity // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 
@@ -158,10 +164,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines,  int? project_count,  int? member_count,  int? team_count,  int? task_count,  Map<String, dynamic>? sprintProgress,  int? sprintVelocity)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DashboardStatsModel() when $default != null:
-return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines);case _:
+return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines,_that.project_count,_that.member_count,_that.team_count,_that.task_count,_that.sprintProgress,_that.sprintVelocity);case _:
   return orElse();
 
 }
@@ -179,10 +185,10 @@ return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocke
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines,  int? project_count,  int? member_count,  int? team_count,  int? task_count,  Map<String, dynamic>? sprintProgress,  int? sprintVelocity)  $default,) {final _that = this;
 switch (_that) {
 case _DashboardStatsModel():
-return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines);case _:
+return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines,_that.project_count,_that.member_count,_that.team_count,_that.task_count,_that.sprintProgress,_that.sprintVelocity);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +205,10 @@ return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocke
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int tasksDueToday,  int inProgress,  int inReview,  int blocked,  int completedThisWeek,  Map<String, List<int>>? sparklines,  int? project_count,  int? member_count,  int? team_count,  int? task_count,  Map<String, dynamic>? sprintProgress,  int? sprintVelocity)?  $default,) {final _that = this;
 switch (_that) {
 case _DashboardStatsModel() when $default != null:
-return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines);case _:
+return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocked,_that.completedThisWeek,_that.sparklines,_that.project_count,_that.member_count,_that.team_count,_that.task_count,_that.sprintProgress,_that.sprintVelocity);case _:
   return null;
 
 }
@@ -214,7 +220,7 @@ return $default(_that.tasksDueToday,_that.inProgress,_that.inReview,_that.blocke
 @JsonSerializable()
 
 class _DashboardStatsModel implements DashboardStatsModel {
-  const _DashboardStatsModel({required this.tasksDueToday, required this.inProgress, required this.inReview, required this.blocked, required this.completedThisWeek, final  Map<String, List<int>>? sparklines}): _sparklines = sparklines;
+  const _DashboardStatsModel({required this.tasksDueToday, required this.inProgress, required this.inReview, required this.blocked, required this.completedThisWeek, final  Map<String, List<int>>? sparklines, this.project_count, this.member_count, this.team_count, this.task_count, final  Map<String, dynamic>? sprintProgress, this.sprintVelocity}): _sparklines = sparklines,_sprintProgress = sprintProgress;
   factory _DashboardStatsModel.fromJson(Map<String, dynamic> json) => _$DashboardStatsModelFromJson(json);
 
 @override final  int tasksDueToday;
@@ -231,6 +237,20 @@ class _DashboardStatsModel implements DashboardStatsModel {
   return EqualUnmodifiableMapView(value);
 }
 
+@override final  int? project_count;
+@override final  int? member_count;
+@override final  int? team_count;
+@override final  int? task_count;
+ final  Map<String, dynamic>? _sprintProgress;
+@override Map<String, dynamic>? get sprintProgress {
+  final value = _sprintProgress;
+  if (value == null) return null;
+  if (_sprintProgress is EqualUnmodifiableMapView) return _sprintProgress;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableMapView(value);
+}
+
+@override final  int? sprintVelocity;
 
 /// Create a copy of DashboardStatsModel
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +265,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardStatsModel&&(identical(other.tasksDueToday, tasksDueToday) || other.tasksDueToday == tasksDueToday)&&(identical(other.inProgress, inProgress) || other.inProgress == inProgress)&&(identical(other.inReview, inReview) || other.inReview == inReview)&&(identical(other.blocked, blocked) || other.blocked == blocked)&&(identical(other.completedThisWeek, completedThisWeek) || other.completedThisWeek == completedThisWeek)&&const DeepCollectionEquality().equals(other._sparklines, _sparklines));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DashboardStatsModel&&(identical(other.tasksDueToday, tasksDueToday) || other.tasksDueToday == tasksDueToday)&&(identical(other.inProgress, inProgress) || other.inProgress == inProgress)&&(identical(other.inReview, inReview) || other.inReview == inReview)&&(identical(other.blocked, blocked) || other.blocked == blocked)&&(identical(other.completedThisWeek, completedThisWeek) || other.completedThisWeek == completedThisWeek)&&const DeepCollectionEquality().equals(other._sparklines, _sparklines)&&(identical(other.project_count, project_count) || other.project_count == project_count)&&(identical(other.member_count, member_count) || other.member_count == member_count)&&(identical(other.team_count, team_count) || other.team_count == team_count)&&(identical(other.task_count, task_count) || other.task_count == task_count)&&const DeepCollectionEquality().equals(other._sprintProgress, _sprintProgress)&&(identical(other.sprintVelocity, sprintVelocity) || other.sprintVelocity == sprintVelocity));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,tasksDueToday,inProgress,inReview,blocked,completedThisWeek,const DeepCollectionEquality().hash(_sparklines));
+int get hashCode => Object.hash(runtimeType,tasksDueToday,inProgress,inReview,blocked,completedThisWeek,const DeepCollectionEquality().hash(_sparklines),project_count,member_count,team_count,task_count,const DeepCollectionEquality().hash(_sprintProgress),sprintVelocity);
 
 @override
 String toString() {
-  return 'DashboardStatsModel(tasksDueToday: $tasksDueToday, inProgress: $inProgress, inReview: $inReview, blocked: $blocked, completedThisWeek: $completedThisWeek, sparklines: $sparklines)';
+  return 'DashboardStatsModel(tasksDueToday: $tasksDueToday, inProgress: $inProgress, inReview: $inReview, blocked: $blocked, completedThisWeek: $completedThisWeek, sparklines: $sparklines, project_count: $project_count, member_count: $member_count, team_count: $team_count, task_count: $task_count, sprintProgress: $sprintProgress, sprintVelocity: $sprintVelocity)';
 }
 
 
@@ -265,7 +285,7 @@ abstract mixin class _$DashboardStatsModelCopyWith<$Res> implements $DashboardSt
   factory _$DashboardStatsModelCopyWith(_DashboardStatsModel value, $Res Function(_DashboardStatsModel) _then) = __$DashboardStatsModelCopyWithImpl;
 @override @useResult
 $Res call({
- int tasksDueToday, int inProgress, int inReview, int blocked, int completedThisWeek, Map<String, List<int>>? sparklines
+ int tasksDueToday, int inProgress, int inReview, int blocked, int completedThisWeek, Map<String, List<int>>? sparklines, int? project_count, int? member_count, int? team_count, int? task_count, Map<String, dynamic>? sprintProgress, int? sprintVelocity
 });
 
 
@@ -282,7 +302,7 @@ class __$DashboardStatsModelCopyWithImpl<$Res>
 
 /// Create a copy of DashboardStatsModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? tasksDueToday = null,Object? inProgress = null,Object? inReview = null,Object? blocked = null,Object? completedThisWeek = null,Object? sparklines = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? tasksDueToday = null,Object? inProgress = null,Object? inReview = null,Object? blocked = null,Object? completedThisWeek = null,Object? sparklines = freezed,Object? project_count = freezed,Object? member_count = freezed,Object? team_count = freezed,Object? task_count = freezed,Object? sprintProgress = freezed,Object? sprintVelocity = freezed,}) {
   return _then(_DashboardStatsModel(
 tasksDueToday: null == tasksDueToday ? _self.tasksDueToday : tasksDueToday // ignore: cast_nullable_to_non_nullable
 as int,inProgress: null == inProgress ? _self.inProgress : inProgress // ignore: cast_nullable_to_non_nullable
@@ -290,7 +310,13 @@ as int,inReview: null == inReview ? _self.inReview : inReview // ignore: cast_nu
 as int,blocked: null == blocked ? _self.blocked : blocked // ignore: cast_nullable_to_non_nullable
 as int,completedThisWeek: null == completedThisWeek ? _self.completedThisWeek : completedThisWeek // ignore: cast_nullable_to_non_nullable
 as int,sparklines: freezed == sparklines ? _self._sparklines : sparklines // ignore: cast_nullable_to_non_nullable
-as Map<String, List<int>>?,
+as Map<String, List<int>>?,project_count: freezed == project_count ? _self.project_count : project_count // ignore: cast_nullable_to_non_nullable
+as int?,member_count: freezed == member_count ? _self.member_count : member_count // ignore: cast_nullable_to_non_nullable
+as int?,team_count: freezed == team_count ? _self.team_count : team_count // ignore: cast_nullable_to_non_nullable
+as int?,task_count: freezed == task_count ? _self.task_count : task_count // ignore: cast_nullable_to_non_nullable
+as int?,sprintProgress: freezed == sprintProgress ? _self._sprintProgress : sprintProgress // ignore: cast_nullable_to_non_nullable
+as Map<String, dynamic>?,sprintVelocity: freezed == sprintVelocity ? _self.sprintVelocity : sprintVelocity // ignore: cast_nullable_to_non_nullable
+as int?,
   ));
 }
 

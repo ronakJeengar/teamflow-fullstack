@@ -1,5 +1,6 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:teamflow_mobile/core/constants/api_endpoints.dart';
 
 import '../../features/auth/data/datasources/auth_local_datasource.dart';
 import '../../features/auth/data/datasources/auth_remote_datasource.dart';
@@ -36,6 +37,8 @@ import '../../features/projects/domain/usecases/delete_project_usecase.dart';
 import '../../features/projects/domain/usecases/get_projects_usecase.dart';
 import '../../features/projects/domain/usecases/update_project_usecase.dart';
 
+import '../../features/search/data/datasources/search_remote_datasource.dart';
+import '../../features/search/data/repository/search_repository_impl.dart';
 import '../../features/tasks/data/datasources/tasks_remote_datasource.dart';
 import '../../features/tasks/data/repository/tasks_repository_impl.dart';
 import '../../features/tasks/domain/repository/tasks_repository.dart';
@@ -84,16 +87,24 @@ import '../../features/tasks/domain/repository/comments_repository.dart';
 import '../../features/tasks/data/datasources/activities_remote_datasource.dart';
 import '../../features/tasks/data/repository/activities_repository_impl.dart';
 import '../../features/tasks/domain/repository/activities_repository.dart';
-import '../../features/search/data/datasources/search_remote_datasource.dart';
-import '../../features/search/data/repository/search_repository_impl.dart';
 import '../../features/search/domain/repository/search_repository.dart';
+import '../../features/sprints/data/datasources/sprints_remote_datasource.dart';
+import '../../features/sprints/data/repositories/sprints_repository_impl.dart';
+import '../../features/sprints/domain/repositories/sprints_repository.dart';
 
 final sl = GetIt.instance;
 
 Future<void> setupDI({String? baseUrl}) async {
-  final effectiveBaseUrl = baseUrl ?? const String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:3000/api/v1/');
+  final effectiveBaseUrl =
+      baseUrl ??
+      const String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: ApiEndpoints.baseUrl,
+      );
 
-  sl.registerLazySingleton<ApiService>(() => ApiService(baseUrl: effectiveBaseUrl));
+  sl.registerLazySingleton<ApiService>(
+    () => ApiService(baseUrl: effectiveBaseUrl),
+  );
 
   sl.registerLazySingleton<FlutterSecureStorage>(
     () => const FlutterSecureStorage(
@@ -328,8 +339,8 @@ Future<void> setupDI({String? baseUrl}) async {
     () => AcceptInvitationController(
       acceptInvitationUseCase: sl<AcceptInvitationUseCase>(),
       invitationsStateNotifier: sl<InvitationsStateNotifier>(),
-      teamsStateNotifier: sl<TeamsStateNotifier>(),
-      authStateNotifier: sl<AuthStateNotifier>(),
+      read: <T>(_) => throw UnimplementedError(),
+      invalidate: (_) {},
     ),
   );
 
@@ -358,9 +369,7 @@ Future<void> setupDI({String? baseUrl}) async {
     () => StatsRemoteDataSourceImpl(sl()),
   );
 
-  sl.registerLazySingleton<StatsRepository>(
-    () => StatsRepositoryImpl(sl()),
-  );
+  sl.registerLazySingleton<StatsRepository>(() => StatsRepositoryImpl(sl()));
 
   // =========================================================
   // WORKSPACES FEATURE
@@ -402,7 +411,16 @@ Future<void> setupDI({String? baseUrl}) async {
     () => SearchRemoteDataSourceImpl(sl()),
   );
 
-  sl.registerLazySingleton<SearchRepository>(
-    () => SearchRepositoryImpl(sl()),
+  sl.registerLazySingleton<SearchRepository>(() => SearchRepositoryImpl(sl()));
+
+  // =========================================================
+  // SPRINTS FEATURE
+  // =========================================================
+  sl.registerLazySingleton<SprintsRemoteDataSource>(
+    () => SprintsRemoteDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<SprintsRepository>(
+    () => SprintsRepositoryImpl(sl()),
   );
 }

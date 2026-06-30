@@ -1,6 +1,9 @@
 class ApiEndpoints {
   ApiEndpoints._();
 
+  static const String baseUrl = 'http://10.0.2.2:3000/api/v1/';
+  // static const String baseUrl = 'https://teamflow-fullstack.onrender.com/api/v1/';
+
   /// ================= AUTH =================
   static const String login = 'auth/login';
   static const String logout = 'auth/logout';
@@ -92,6 +95,8 @@ class ApiEndpoints {
   static String createComment(String taskId) => 'tasks/$taskId/comments';
   static String updateComment(String taskId, String commentId) => 'tasks/$taskId/comments/$commentId';
   static String deleteComment(String taskId, String commentId) => 'tasks/$taskId/comments/$commentId';
+  static String editComment(String commentId) => 'comments/$commentId';
+  static String removeComment(String commentId) => 'comments/$commentId';
 
   /// ================= SEARCH =================
   static const String search = 'search';

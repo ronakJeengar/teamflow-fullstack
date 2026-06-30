@@ -29,6 +29,13 @@ class CreateTaskController extends StateNotifier<AsyncValue<void>> {
     required String projectId,
     required String title,
     String? assigneeId,
+    String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     state = const AsyncLoading();
 
@@ -37,6 +44,13 @@ class CreateTaskController extends StateNotifier<AsyncValue<void>> {
         projectId: projectId,
         title: title,
         assigneeId: assigneeId,
+        priority: priority,
+        sprintId: sprintId,
+        storyPoints: storyPoints,
+        backlogStatus: backlogStatus,
+        isRecurring: isRecurring,
+        recurrence: recurrence,
+        parentId: parentId,
       ),
     );
 

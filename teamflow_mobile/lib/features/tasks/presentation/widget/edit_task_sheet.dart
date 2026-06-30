@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:teamflow_mobile/features/tasks/presentation/providers/task_providers.dart';
 import 'package:teamflow_mobile/features/teams/presentation/providers/team_details_providers.dart';
+import 'package:teamflow_mobile/features/sprints/presentation/providers/sprints_providers.dart';
+import 'package:teamflow_mobile/features/sprints/data/models/sprint_model.dart';
 
 import '../../../../core/ui/app_ui.dart';
 import '../../domain/entitties/task_entity.dart';
@@ -24,6 +27,13 @@ class EditTaskSheet extends HookConsumerWidget {
     final titleCtrl = useTextEditingController(text: task.title);
     final titleError = useState<String?>(null);
     final selectedAssigneeId = useState<String?>(task.assignedToId);
+    final selectedPriority = useState<String>(task.priority ?? 'MEDIUM');
+    final selectedSprintId = useState<String?>(task.sprintId);
+    final selectedStoryPoints = useState<int?>(task.storyPoints);
+    final isRecurring = useState<bool>(task.isRecurring);
+    final selectedRecurrence = useState<String>(task.recurrence ?? 'DAILY');
+
+    final sprintsAsync = ref.watch(sprintsListProvider(projectId));
 
     final teamDetailState = ref.watch(teamDetailStateNotifierProvider);
 
@@ -54,6 +64,11 @@ class EditTaskSheet extends HookConsumerWidget {
             title: title,
             projectId: projectId,
             assigneeId: selectedAssigneeId.value,
+            priority: selectedPriority.value,
+            sprintId: selectedSprintId.value,
+            storyPoints: selectedStoryPoints.value,
+            isRecurring: isRecurring.value,
+            recurrence: isRecurring.value ? selectedRecurrence.value : null,
           );
 
       if (ref.read(updateTaskControllerProvider) is! AsyncError) {
@@ -122,6 +137,191 @@ class EditTaskSheet extends HookConsumerWidget {
               selectedAssigneeId.value = val;
             },
           ),
+
+          const SizedBox(height: 16),
+
+          const AppSheetLabel('Priority'),
+
+          DropdownButtonFormField<String>(
+            dropdownColor: AppColors.surface,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+            value: selectedPriority.value,
+            items: const [
+              DropdownMenuItem<String>(
+                value: 'LOW',
+                child: Text('Low', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'MEDIUM',
+                child: Text('Medium', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'HIGH',
+                child: Text('High', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              DropdownMenuItem<String>(
+                value: 'URGENT',
+                child: Text('Urgent', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+            ],
+            onChanged: (val) {
+              if (val != null) {
+                selectedPriority.value = val;
+              }
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          const AppSheetLabel('Sprint (Optional)'),
+
+          sprintsAsync.when(
+            data: (sprints) {
+              final activeAndPlanned = sprints
+                  .where((s) => s.status == SprintStatus.PLANNED || s.status == SprintStatus.ACTIVE)
+                  .toList();
+              
+              return DropdownButtonFormField<String?>(
+                dropdownColor: AppColors.surface,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: AppColors.border),
+                  ),
+                ),
+                value: selectedSprintId.value,
+                hint: const Text('No Sprint', style: TextStyle(color: AppColors.textSecondary)),
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('No Sprint', style: TextStyle(color: AppColors.textPrimary)),
+                  ),
+                  ...activeAndPlanned.map((s) {
+                    return DropdownMenuItem<String?>(
+                      value: s.id,
+                      child: Text(s.name, style: const TextStyle(color: AppColors.textPrimary)),
+                    );
+                  }),
+                ],
+                onChanged: (val) {
+                  selectedSprintId.value = val;
+                },
+              );
+            },
+            loading: () => const Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+            error: (err, stack) => const Text('Error loading sprints', style: TextStyle(color: AppColors.danger)),
+          ),
+
+          const SizedBox(height: 16),
+
+          const AppSheetLabel('Story Points'),
+
+          DropdownButtonFormField<int?>(
+            dropdownColor: AppColors.surface,
+            decoration: InputDecoration(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+            value: selectedStoryPoints.value,
+            hint: const Text('None', style: TextStyle(color: AppColors.textSecondary)),
+            items: [
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text('None', style: TextStyle(color: AppColors.textPrimary)),
+              ),
+              ...[1, 2, 3, 5, 8, 13, 21].map((pts) {
+                return DropdownMenuItem<int?>(
+                  value: pts,
+                  child: Text('$pts Points', style: const TextStyle(color: AppColors.textPrimary)),
+                );
+              }),
+            ],
+            onChanged: (val) {
+              selectedStoryPoints.value = val;
+            },
+          ),
+
+          const SizedBox(height: 16),
+
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Is Recurring Task',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              Switch(
+                value: isRecurring.value,
+                onChanged: (val) => isRecurring.value = val,
+                activeColor: AppColors.primary,
+              ),
+            ],
+          ),
+
+          if (isRecurring.value) ...[
+            const SizedBox(height: 8),
+            const AppSheetLabel('Recurrence Pattern'),
+            DropdownButtonFormField<String>(
+              dropdownColor: AppColors.surface,
+              decoration: InputDecoration(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+              ),
+              value: selectedRecurrence.value,
+              items: const [
+                DropdownMenuItem<String>(
+                  value: 'DAILY',
+                  child: Text('Daily', style: TextStyle(color: AppColors.textPrimary)),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'WEEKLY',
+                  child: Text('Weekly', style: TextStyle(color: AppColors.textPrimary)),
+                ),
+                DropdownMenuItem<String>(
+                  value: 'MONTHLY',
+                  child: Text('Monthly', style: TextStyle(color: AppColors.textPrimary)),
+                ),
+              ],
+              onChanged: (val) {
+                if (val != null) {
+                  selectedRecurrence.value = val;
+                }
+              },
+            ),
+          ],
 
           const SizedBox(height: 24),
 

@@ -23,6 +23,12 @@ abstract class TaskModel with _$TaskModel {
     String? priority,
     DateTime? dueDate,
     List<String>? tags,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    @Default(false) bool isRecurring,
+    String? recurrence,
+    String? parentId,
   }) = _TaskModel;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) =>
@@ -44,6 +50,12 @@ extension TaskModelMapper on TaskModel {
       priority: priority,
       dueDate: dueDate,
       tags: tags,
+      sprintId: sprintId,
+      storyPoints: storyPoints,
+      backlogStatus: backlogStatus,
+      isRecurring: isRecurring,
+      recurrence: recurrence,
+      parentId: parentId,
     );
   }
 }
@@ -63,6 +75,12 @@ extension TaskEntityMapper on TaskEntity {
       priority: priority,
       dueDate: dueDate,
       tags: tags,
+      sprintId: sprintId,
+      storyPoints: storyPoints,
+      backlogStatus: backlogStatus,
+      isRecurring: isRecurring,
+      recurrence: recurrence,
+      parentId: parentId,
     );
   }
 }

@@ -12,6 +12,12 @@ abstract class TasksRemoteDataSource {
     String? assigneeId,
     String? status,
     String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   });
 
   Future<List<TaskModel>> getTasks(String projectId);
@@ -25,6 +31,12 @@ abstract class TasksRemoteDataSource {
     String? status,
     String? priority,
     String? assigneeId,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   });
 
   Future<void> deleteTask(String taskId);
@@ -43,6 +55,12 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
     String? assigneeId,
     String? status,
     String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     try {
       final body = <String, dynamic>{
@@ -53,6 +71,12 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
       if (assigneeId != null) body['assignedToId'] = assigneeId;
       if (status != null) body['status'] = status;
       if (priority != null) body['priority'] = priority;
+      if (sprintId != null) body['sprintId'] = sprintId;
+      if (storyPoints != null) body['storyPoints'] = storyPoints;
+      if (backlogStatus != null) body['backlogStatus'] = backlogStatus;
+      if (isRecurring != null) body['isRecurring'] = isRecurring;
+      if (recurrence != null) body['recurrence'] = recurrence;
+      if (parentId != null) body['parentId'] = parentId;
 
       final response = await apiService.post<TaskModel>(
         ApiEndpoints.createTask,
@@ -101,6 +125,12 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
     String? status,
     String? priority,
     String? assigneeId,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     try {
       final body = <String, dynamic>{};
@@ -109,6 +139,12 @@ class TasksRemoteDataSourceImpl implements TasksRemoteDataSource {
       if (status != null) body['status'] = status;
       if (priority != null) body['priority'] = priority;
       if (assigneeId != null) body['assignedToId'] = assigneeId;
+      if (sprintId != null) body['sprintId'] = sprintId;
+      if (storyPoints != null) body['storyPoints'] = storyPoints;
+      if (backlogStatus != null) body['backlogStatus'] = backlogStatus;
+      if (isRecurring != null) body['isRecurring'] = isRecurring;
+      if (recurrence != null) body['recurrence'] = recurrence;
+      if (parentId != null) body['parentId'] = parentId;
 
       final response = await apiService.patch<TaskModel>(
         ApiEndpoints.updateTask(taskId),

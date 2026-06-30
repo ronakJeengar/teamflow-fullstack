@@ -12,6 +12,12 @@ abstract class TasksRepository {
     String? assigneeId,
     String? status,
     String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   });
 
   /// Get Tasks
@@ -28,6 +34,12 @@ abstract class TasksRepository {
     String? status,
     String? priority,
     String? assigneeId,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   });
 
   /// Delete Task

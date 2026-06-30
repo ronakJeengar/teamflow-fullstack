@@ -12,5 +12,6 @@ abstract class UserEntity with _$UserEntity {
     required String email,
     String? avatar,
     String? bio,
+    String? activeWorkspaceId,
   }) = _UserEntity;
 }

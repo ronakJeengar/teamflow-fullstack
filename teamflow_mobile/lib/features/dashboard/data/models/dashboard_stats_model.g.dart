@@ -19,6 +19,12 @@ _DashboardStatsModel _$DashboardStatsModelFromJson(Map<String, dynamic> json) =>
           (e as List<dynamic>).map((e) => (e as num).toInt()).toList(),
         ),
       ),
+      project_count: (json['project_count'] as num?)?.toInt(),
+      member_count: (json['member_count'] as num?)?.toInt(),
+      team_count: (json['team_count'] as num?)?.toInt(),
+      task_count: (json['task_count'] as num?)?.toInt(),
+      sprintProgress: json['sprintProgress'] as Map<String, dynamic>?,
+      sprintVelocity: (json['sprintVelocity'] as num?)?.toInt(),
     );
 
 Map<String, dynamic> _$DashboardStatsModelToJson(
@@ -30,4 +36,10 @@ Map<String, dynamic> _$DashboardStatsModelToJson(
   'blocked': instance.blocked,
   'completedThisWeek': instance.completedThisWeek,
   'sparklines': instance.sparklines,
+  'project_count': instance.project_count,
+  'member_count': instance.member_count,
+  'team_count': instance.team_count,
+  'task_count': instance.task_count,
+  'sprintProgress': instance.sprintProgress,
+  'sprintVelocity': instance.sprintVelocity,
 };

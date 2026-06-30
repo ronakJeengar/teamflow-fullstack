@@ -31,6 +31,13 @@ class UpdateTaskController extends StateNotifier<AsyncValue<void>> {
     required String taskId,
     String? title,
     String? assigneeId,
+    String? priority,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    bool? isRecurring,
+    String? recurrence,
+    String? parentId,
   }) async {
     state = const AsyncLoading();
 
@@ -39,6 +46,13 @@ class UpdateTaskController extends StateNotifier<AsyncValue<void>> {
         taskId: taskId,
         title: title,
         assigneeId: assigneeId,
+        priority: priority,
+        sprintId: sprintId,
+        storyPoints: storyPoints,
+        backlogStatus: backlogStatus,
+        isRecurring: isRecurring,
+        recurrence: recurrence,
+        parentId: parentId,
       ),
     );
 

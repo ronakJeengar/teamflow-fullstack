@@ -8,7 +8,7 @@ abstract class NotificationModel with _$NotificationModel {
   const factory NotificationModel({
     required String id,
     required String userId,
-    required String senderId,
+    String? senderId,
     required String type,
     required String title,
     required String body,

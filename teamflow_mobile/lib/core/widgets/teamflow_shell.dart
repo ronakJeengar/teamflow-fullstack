@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:teamflow_mobile/core/theme/app_theme.dart';
 import 'package:teamflow_mobile/core/ui/shared_widgets.dart';
 import 'package:teamflow_mobile/core/widgets/sidebar.dart';
 import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
 import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
+import 'package:teamflow_mobile/core/di/injection.dart';
+import 'package:teamflow_mobile/core/services/api_service.dart';
 import '../../features/search/presentation/widgets/search_dialog.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,6 +17,11 @@ import '../../features/dashboard/presentation/providers/stats_providers.dart';
 import '../../features/teams/presentation/providers/teams_providers.dart';
 import '../../features/auth/presentation/providers/providers.dart';
 import '../../features/tasks/presentation/providers/task_providers.dart';
+import '../../features/dashboard/presentation/widgets/create_workspace_sheet.dart';
+import '../../features/dashboard/presentation/widgets/workspace_settings_sheet.dart';
+import '../../features/dashboard/data/models/workspace_model.dart';
+
+import '../../features/dashboard/presentation/providers/workspace_controller.dart';
 
 class TeamFlowShell extends ConsumerStatefulWidget {
   final Widget child;
@@ -86,6 +94,11 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
     final width = MediaQuery.of(context).size.width;
     final isDesktop = width > 800;
 
+    final isApiRegistered = GetIt.instance.isRegistered<ApiService>();
+    final syncNotifier = isApiRegistered
+        ? sl<ApiService>().syncStatusNotifier
+        : ValueNotifier<SyncStatus>(SyncStatus.synced);
+
     if (isDesktop) {
       return Scaffold(
         backgroundColor: AppColors.background,
@@ -156,6 +169,52 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  GestureDetector(
+                    onTap: () => _showSyncStatusDialog(context),
+                    child: ValueListenableBuilder<SyncStatus>(
+                      valueListenable: syncNotifier,
+                      builder: (context, status, _) {
+                        IconData icon;
+                        Color color;
+                        String tooltip;
+
+                        switch (status) {
+                          case SyncStatus.synced:
+                            icon = Icons.cloud_done_rounded;
+                            color = AppColors.success;
+                            tooltip = 'Synced';
+                            break;
+                          case SyncStatus.pending:
+                            icon = Icons.cloud_queue_rounded;
+                            color = AppColors.warning;
+                            tooltip = 'Pending sync';
+                            break;
+                          case SyncStatus.retrying:
+                            return const Padding(
+                              padding: EdgeInsets.only(right: 14.0),
+                              child: SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.primary),
+                              ),
+                            );
+                          case SyncStatus.offline:
+                            icon = Icons.cloud_off_rounded;
+                            color = AppColors.danger;
+                            tooltip = 'Offline';
+                            break;
+                        }
+
+                        return Tooltip(
+                          message: tooltip,
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 14.0),
+                            child: Icon(icon, size: 20, color: color),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                   ref.watch(unreadNotificationsCountProvider) > 0
                       ? Badge(
                           label: Text('${ref.watch(unreadNotificationsCountProvider)}'),
@@ -279,6 +338,100 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
     );
   }
 
+  void _showSyncStatusDialog(BuildContext context) async {
+    final apiService = sl<ApiService>();
+    final queued = await apiService.getQueuedMutations();
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          title: Text(
+            'Sync Engine & Offline status',
+            style: GoogleFonts.inter(fontWeight: FontWeight.bold, fontSize: 16, color: AppColors.textPrimary),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Status: ${apiService.syncStatusNotifier.value.name.toUpperCase()}',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: apiService.syncStatusNotifier.value == SyncStatus.synced
+                      ? AppColors.success
+                      : apiService.syncStatusNotifier.value == SyncStatus.pending
+                          ? AppColors.warning
+                          : AppColors.danger,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Queued offline changes: ${queued.length}',
+                style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary),
+              ),
+              if (queued.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 120),
+                  width: double.maxFinite,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: queued.length,
+                    itemBuilder: (context, idx) {
+                      final item = queued[idx];
+                      return ListTile(
+                        dense: true,
+                        title: Text(
+                          '${item['method']} ${item['path']}',
+                          style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                        ),
+                        subtitle: Text(
+                          'Time: ${item['timestamp']}',
+                          style: GoogleFonts.inter(fontSize: 9, color: AppColors.muted),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            if (queued.isNotEmpty)
+              TextButton(
+                onPressed: () async {
+                  await apiService.clearQueue();
+                  Navigator.of(context).pop();
+                  showAppSnackBar(context, 'Sync queue cleared.');
+                },
+                child: Text('Clear Queue', style: GoogleFonts.inter(color: AppColors.danger, fontSize: 13)),
+              ),
+            TextButton(
+              onPressed: () {
+                apiService.syncOfflineMutations();
+                Navigator.of(context).pop();
+              },
+              child: Text('Sync Now', style: GoogleFonts.inter(color: AppColors.primary, fontSize: 13)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close', style: GoogleFonts.inter(color: AppColors.textSecondary, fontSize: 13)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showSearchDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -334,8 +487,30 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
                             final color = workspace.color != null
                                 ? Color(int.parse(workspace.color!.replaceAll('#', '0xFF')))
                                 : AppColors.primary;
-                            return _buildWorkspaceTile(context, ref, workspace.name, letter, color, workspace.id);
+                            return _buildWorkspaceTile(context, ref, workspace, letter, color);
                           }),
+                        const SizedBox(height: 12),
+                        const Divider(color: AppColors.border),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.pop(context); // Close switcher
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => const CreateWorkspaceSheet(),
+                            );
+                          },
+                          icon: const Icon(Icons.add_circle_outline_rounded, size: 18, color: AppColors.primary),
+                          label: Text(
+                            'Create Workspace',
+                            style: GoogleFonts.inter(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -359,53 +534,63 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
   Widget _buildWorkspaceTile(
     BuildContext context,
     WidgetRef ref,
-    String name,
+    WorkspaceModel workspace,
     String letter,
     Color color,
-    String workspaceId,
   ) {
-    return ListTile(
-      leading: Container(
-        width: 24,
-        height: 24,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          letter,
-          style: GoogleFonts.inter(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
+    return Row(
+      children: [
+        Expanded(
+          child: ListTile(
+            leading: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                letter,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            title: Text(
+              workspace.name,
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
+            ),
+             onTap: () async {
+               final navigator = Navigator.of(context);
+               navigator.pop();
+               final success = await ref
+                   .read(workspaceControllerProvider.notifier)
+                   .switchWorkspace(workspace.id);
+               if (success && context.mounted) {
+                 showAppSnackBar(context, 'Switched to ${workspace.name}');
+                 NavigationHelper.instance.goToHome();
+               } else if (context.mounted) {
+                 showAppSnackBar(context, 'Failed to switch workspace');
+               }
+             },
           ),
         ),
-      ),
-      title: Text(
-        name,
-        style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
-      ),
-      onTap: () async {
-        final navigator = Navigator.of(context);
-        navigator.pop();
-        try {
-          await ref.read(workspacesRepositoryProvider).switchWorkspace(workspaceId);
-          if (context.mounted) {
-            showAppSnackBar(context, 'Switched to $name');
-          }
-          await ref.read(authStateNotifierProvider.notifier).refreshMemberships();
-          ref.invalidate(dashboardStatsProvider);
-          ref.invalidate(myTasksProvider);
-          ref.invalidate(unreadNotificationsCountProvider);
-          ref.invalidate(notificationsListProvider);
-          ref.read(teamsStateNotifierProvider.notifier).loadTeams();
-        } catch (e) {
-          if (context.mounted) {
-            showAppSnackBar(context, 'Failed to switch workspace');
-          }
-        }
-      },
+        IconButton(
+          icon: const Icon(Icons.settings_outlined, size: 18, color: AppColors.textSecondary),
+          onPressed: () {
+            Navigator.pop(context); // Close switcher
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              backgroundColor: Colors.transparent,
+              builder: (_) => WorkspaceSettingsSheet(workspace: workspace),
+            );
+          },
+        ),
+      ],
     );
   }
 }

@@ -33,4 +33,16 @@ class ActivitiesRepositoryImpl implements ActivitiesRepository {
       return Left(ServerFailure('An unexpected error occurred'));
     }
   }
+
+  @override
+  Future<Either<Failure, List<ActivityModel>>> getWorkspaceActivities(String workspaceId) async {
+    try {
+      final activities = await remoteDataSource.getWorkspaceActivities(workspaceId);
+      return Right(activities);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('An unexpected error occurred'));
+    }
+  }
 }

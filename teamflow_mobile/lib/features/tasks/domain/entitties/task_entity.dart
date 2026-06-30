@@ -19,5 +19,11 @@ abstract class TaskEntity with _$TaskEntity {
     String? priority,
     DateTime? dueDate,
     List<String>? tags,
+    String? sprintId,
+    int? storyPoints,
+    String? backlogStatus,
+    @Default(false) bool isRecurring,
+    String? recurrence,
+    String? parentId,
   }) = _TaskEntity;
 }

@@ -52,10 +52,11 @@ final acceptInvitationControllerProvider =
         invitationsStateNotifier: ref.read(
           invitationsStateNotifierProvider.notifier,
         ),
-        teamsStateNotifier: ref.read(teamsStateNotifierProvider.notifier),
-        authStateNotifier: ref.read(authStateNotifierProvider.notifier),
+        read: ref.read,
+        invalidate: ref.invalidate,
       ),
     );
+
 // ── Cancel Invitation ──────────────────────────────────
 
 final cancelInvitationControllerProvider =

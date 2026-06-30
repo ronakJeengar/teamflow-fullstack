@@ -2,6 +2,8 @@ import 'package:hooks_riverpod/legacy.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/failure_mapper.dart';
 import '../../../dashboard/presentation/providers/stats_providers.dart';
+import '../../../dashboard/presentation/providers/workspaces_providers.dart';
+import '../../../auth/presentation/providers/providers.dart';
 import '../../../tasks/presentation/providers/task_providers.dart';
 import '../../../notifications/presentation/providers/notifications_providers.dart';
 import 'teams_providers.dart';
@@ -43,6 +45,11 @@ class RemoveMemberController extends StateNotifier<AsyncValue<void>> {
           ref!.invalidate(dashboardStatsProvider);
           ref!.invalidate(unreadNotificationsCountProvider);
           ref!.invalidate(notificationsListProvider);
+          ref!.invalidate(workspacesListProvider);
+          final activeWorkspaceId = ref!.read(authStateNotifierProvider).user?.activeWorkspaceId;
+          if (activeWorkspaceId != null) {
+            ref!.invalidate(workspaceMembersProvider(activeWorkspaceId));
+          }
           ref!.read(teamsStateNotifierProvider.notifier).loadTeams();
           if (sl.isRegistered<GetTeamByIdUseCase>()) {
             ref!.read(teamDetailStateNotifierProvider.notifier).loadTeamDetail(teamId);
