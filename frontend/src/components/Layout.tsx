@@ -24,6 +24,7 @@ export default function Layout({ children }: LayoutProps) {
   const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [syncQueueOpen, setSyncQueueOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Modals state
   const [createWsOpen, setCreateWsOpen] = useState(false);
@@ -140,7 +141,7 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* LEFT SIDEBAR */}
-      <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col z-20">
+      <aside className="hidden md:flex w-64 bg-slate-900 border-r border-slate-800 flex-col z-20 shrink-0">
         <div className="h-16 px-6 flex items-center border-b border-slate-800">
           <Link to="/" className="text-xl font-bold text-white tracking-wide font-inter">
             TeamFlow <span className="text-xs bg-indigo-600 text-indigo-100 font-semibold px-2 py-0.5 rounded-full font-inter">RC1</span>
@@ -170,7 +171,16 @@ export default function Layout({ children }: LayoutProps) {
       {/* CONTENT SHELL AREA */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* TOP BAR HEADER */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 z-10">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="md:hidden block text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
           
           {/* Workspace Switcher */}
           <div ref={wsRef} className="relative">
@@ -259,6 +269,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
             )}
           </div>
+        </div>
 
           {/* Right Header Panel */}
           <div className="flex items-center gap-4">
@@ -408,10 +419,57 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* PAGE SCREEN CONTENT */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           {children}
         </main>
       </div>
+
+      {/* MOBILE DRAWER */}
+      {mobileMenuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
+          />
+          {/* Sidebar Drawer Panel */}
+          <aside className="relative w-64 bg-slate-900 flex flex-col z-50 animate-in slide-in-from-left duration-200">
+            <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800">
+              <span className="text-xl font-bold text-white tracking-wide font-inter">
+                TeamFlow
+              </span>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav className="flex-1 px-4 py-6 space-y-1">
+              {navLinks.map((link) => {
+                const isSel = location.pathname === link.path;
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all font-inter ${
+                      isSel
+                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10"
+                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    }`}
+                  >
+                    {link.icon}
+                    {link.name}
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      )}
 
       {/* Modals Mounting */}
       <CreateWorkspaceModal isOpen={createWsOpen} onClose={() => setCreateWsOpen(false)} />

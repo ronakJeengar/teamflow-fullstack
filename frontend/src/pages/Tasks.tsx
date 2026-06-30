@@ -313,7 +313,7 @@ export default function Tasks() {
       {/* BOARD VIEW */}
       {viewMode === "board" && (
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start min-h-[500px]">
+          <div className="flex md:grid overflow-x-auto md:overflow-x-visible md:grid-cols-5 gap-4 items-start min-h-[500px] pb-4">
             {([
               { id: "TODO", title: "📝 To Do", color: "bg-slate-50 border-slate-100" },
               { id: "IN_PROGRESS", title: "🚧 In Progress", color: "bg-blue-50/50 border-blue-100" },
@@ -321,7 +321,7 @@ export default function Tasks() {
               { id: "BLOCKED", title: "🚫 Blocked", color: "bg-rose-50/50 border-rose-100" },
               { id: "DONE", title: "✅ Done", color: "bg-emerald-50/50 border-emerald-100" },
             ] as const).map((col) => (
-              <div key={col.id} className={`${col.color} border rounded-xl p-4 flex flex-col h-[550px]`}>
+              <div key={col.id} className={`${col.color} border rounded-xl p-4 flex flex-col h-[550px] w-[280px] shrink-0 md:w-auto`}>
                 <div className="flex items-center justify-between mb-4 border-b border-black/5 pb-2 shrink-0">
                   <h3 className="font-bold text-gray-900 text-xs tracking-wider uppercase font-inter">{col.title}</h3>
                   <span className="text-[10px] bg-white border border-black/5 text-gray-500 font-bold px-2 py-0.5 rounded-full font-inter">
