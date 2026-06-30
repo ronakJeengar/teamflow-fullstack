@@ -24,7 +24,6 @@ export default function Layout({ children }: LayoutProps) {
   const [wsDropdownOpen, setWsDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [syncQueueOpen, setSyncQueueOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Modals state
   const [createWsOpen, setCreateWsOpen] = useState(false);
@@ -173,14 +172,6 @@ export default function Layout({ children }: LayoutProps) {
         {/* TOP BAR HEADER */}
         <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-8 z-10">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setMobileMenuOpen(true)}
-              className="md:hidden block text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
-            >
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
           
           {/* Workspace Switcher */}
           <div ref={wsRef} className="relative">
@@ -419,57 +410,31 @@ export default function Layout({ children }: LayoutProps) {
         </header>
 
         {/* PAGE SCREEN CONTENT */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 pb-20 md:pb-8 md:p-8">
           {children}
         </main>
       </div>
 
-      {/* MOBILE DRAWER */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div
-            onClick={() => setMobileMenuOpen(false)}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
-          />
-          {/* Sidebar Drawer Panel */}
-          <aside className="relative w-64 bg-slate-900 flex flex-col z-50 animate-in slide-in-from-left duration-200">
-            <div className="h-16 px-6 flex items-center justify-between border-b border-slate-800">
-              <span className="text-xl font-bold text-white tracking-wide font-inter">
-                TeamFlow
-              </span>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <nav className="flex-1 px-4 py-6 space-y-1">
-              {navLinks.map((link) => {
-                const isSel = location.pathname === link.path;
-                return (
-                  <Link
-                    key={link.name}
-                    to={link.path}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold transition-all font-inter ${
-                      isSel
-                        ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/10"
-                        : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                    }`}
-                  >
-                    {link.icon}
-                    {link.name}
-                  </Link>
-                );
-              })}
-            </nav>
-          </aside>
-        </div>
-      )}
+      {/* BOTTOM NAVIGATION BAR FOR MOBILE (md:hidden) */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-250 z-50 flex items-center justify-around shadow-lg">
+        {navLinks.map((link) => {
+          const isSel = location.pathname === link.path;
+          return (
+            <Link
+              key={link.name}
+              to={link.path}
+              className={`flex flex-col items-center justify-center w-16 h-full transition-all ${
+                isSel ? "text-indigo-600 font-bold" : "text-gray-400 hover:text-gray-250"
+              }`}
+            >
+              <div className="shrink-0 scale-95">{link.icon}</div>
+              <span className="text-[9px] mt-0.5 font-bold font-inter tracking-wide">{link.name.split(" ")[0]}</span>
+            </Link>
+          );
+        })}
+      </div>
+
+
 
       {/* Modals Mounting */}
       <CreateWorkspaceModal isOpen={createWsOpen} onClose={() => setCreateWsOpen(false)} />
