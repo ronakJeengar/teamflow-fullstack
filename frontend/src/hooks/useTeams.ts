@@ -6,11 +6,9 @@ export const useTeams = (workspaceId?: string | null) =>
   useQuery<Team[]>({
     queryKey: ["teams", workspaceId],
     queryFn: async () => {
-      if (!workspaceId) return [];
-      const res = await api.get("/teams", {
-        params: { workspaceId },
-      });
-      return res.data.data;
+      const res = await api.get("/teams");
+      const allTeams = res.data?.data ?? [];
+      if (!workspaceId) return allTeams;
+      return allTeams.filter((t: any) => !t.workspaceId || t.workspaceId === workspaceId);
     },
-    enabled: !!workspaceId,
   });

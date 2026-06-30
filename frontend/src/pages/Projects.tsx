@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api/client";
 import { useWorkspace } from "../context/WorkspaceContext";
 import { useToast } from "../context/useToast";
 import { useProjects } from "../hooks/useProjects";
+import { useTeams } from "../hooks/useTeams";
 import type { Project } from "../types/Project";
-import type { Team } from "../types/Team";
 
 export default function Projects() {
   const { activeWorkspaceId } = useWorkspace();
@@ -28,17 +28,7 @@ export default function Projects() {
   const { data: projects = [], isLoading } = useProjects(activeWorkspaceId);
 
   // 2. Fetch Teams for project creation targets
-  const { data: teams = [] } = useQuery<Team[]>({
-    queryKey: ["teams", activeWorkspaceId],
-    queryFn: async () => {
-      if (!activeWorkspaceId) return [];
-      const res = await api.get("/teams", {
-        params: { workspaceId: activeWorkspaceId },
-      });
-      return res.data?.data ?? [];
-    },
-    enabled: !!activeWorkspaceId,
-  });
+  const { data: teams = [] } = useTeams(activeWorkspaceId);
 
   // Create Project Mutation
   const createProjectMutation = useMutation({

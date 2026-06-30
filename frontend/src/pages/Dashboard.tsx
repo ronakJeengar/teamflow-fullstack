@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useWorkspace } from "../context/WorkspaceContext";
+import { useProjects } from "../hooks/useProjects";
 import type { Task } from "../types/Task";
-import type { Project } from "../types/Project";
 import type { Activity } from "../types/Activity";
 
 export default function Dashboard() {
@@ -41,17 +41,7 @@ export default function Dashboard() {
   });
 
   // 3. Fetch recent projects
-  const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
-    queryKey: ["projects", activeWorkspaceId],
-    queryFn: async () => {
-      if (!activeWorkspaceId) return [];
-      const res = await api.get("/projects", {
-        params: { workspaceId: activeWorkspaceId },
-      });
-      return res.data?.data ?? [];
-    },
-    enabled: !!activeWorkspaceId,
-  });
+  const { data: projects = [], isLoading: projectsLoading } = useProjects(activeWorkspaceId);
 
   // 4. Fetch activity feed
   const { data: activities = [], isLoading: activitiesLoading } = useQuery<Activity[]>({

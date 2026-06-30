@@ -6,11 +6,11 @@ export const useProjects = (workspaceId?: string | null) =>
   useQuery<Project[]>({
     queryKey: ["projects", workspaceId],
     queryFn: async () => {
-      if (!workspaceId) return [];
-      const res = await api.get("/projects", {
-        params: { workspaceId },
-      });
-      return res.data.data;
+      const res = await api.get("/projects");
+      const allProjects = res.data?.data ?? [];
+      if (!workspaceId) return allProjects;
+      return allProjects.filter(
+        (p: any) => !p.team?.workspaceId || p.team?.workspaceId === workspaceId
+      );
     },
-    enabled: !!workspaceId,
   });
