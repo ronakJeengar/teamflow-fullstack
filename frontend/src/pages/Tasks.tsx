@@ -357,10 +357,10 @@ export default function Tasks() {
                               <div className="flex items-center justify-between text-[10px] text-gray-500 font-inter pt-1.5 border-t border-gray-50">
                                 <div className="flex items-center gap-1.5">
                                   <div className="w-5 h-5 rounded-full bg-slate-900 border border-slate-800 text-white font-bold flex items-center justify-center text-[9px] font-inter">
-                                    {task.assignedTo?.name?.charAt(0).toUpperCase() || "U"}
+                                    {task.assignedTo?.name?.charAt(0).toUpperCase() || "A"}
                                   </div>
                                   <span className="text-[9px] font-bold text-gray-400 font-inter truncate w-16">
-                                    {task.assignedTo?.name || "Unassigned"}
+                                    {task.assignedTo?.name || "Assign task"}
                                   </span>
                                 </div>
                                 <span className="text-[9px] bg-slate-100 text-slate-500 font-bold px-1 rounded-sm font-inter">
@@ -422,7 +422,7 @@ export default function Tasks() {
                       </span>
                     </td>
                     <td className="p-4 font-mono font-bold text-gray-700 font-inter">{t.storyPoints || 0} SP</td>
-                    <td className="p-4 font-inter text-gray-600">{t.assignedTo?.name || "Unassigned"}</td>
+                    <td className="p-4 font-inter text-gray-600">{t.assignedTo?.name || "Assign task"}</td>
                     <td className="p-4 text-right">
                       <button
                         onClick={() => {
@@ -602,7 +602,7 @@ export default function Tasks() {
                     onChange={(e) => setCreateAssigneeId(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
                   >
-                    <option value="">Unassigned</option>
+                    <option value="">Assign task</option>
                     {members.map((m) => (
                       <option key={m.id} value={m.user?.id || ""}>{m.user?.name || "Unknown User"}</option>
                     ))}

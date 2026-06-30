@@ -281,7 +281,7 @@ export default function EditTaskModal({ task, projectId, teamId, onClose }: Edit
                 onChange={(e) => setAssigneeId(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-inter bg-white focus:outline-hidden"
               >
-                <option value="">Unassigned</option>
+                <option value="">Assign task</option>
                 {members.map((m) => (
                   <option key={m.id} value={m.user?.id || ""}>{m.user?.name || "Unknown User"}</option>
                 ))}

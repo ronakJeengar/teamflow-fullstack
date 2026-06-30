@@ -16,7 +16,7 @@ interface WorkspaceContextType {
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(undefined);
 
 export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, refreshUserSession } = useAuth();
   const queryClient = useQueryClient();
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(
     user?.activeWorkspaceId || localStorage.getItem("active_workspace_id")
@@ -48,6 +48,9 @@ export const WorkspaceProvider = ({ children }: { children: ReactNode }) => {
       await api.post(`/workspaces/${id}/switch`);
       setActiveWorkspaceId(id);
       localStorage.setItem("active_workspace_id", id);
+      
+      // Refresh user session in auth provider
+      await refreshUserSession();
       
       // Invalidate all query caches to prevent stale cross-workspace leakage
       queryClient.invalidateQueries();

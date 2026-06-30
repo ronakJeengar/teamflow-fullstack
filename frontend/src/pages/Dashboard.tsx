@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -9,6 +10,7 @@ import type { Activity } from "../types/Activity";
 export default function Dashboard() {
   const { activeWorkspaceId, activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<"Assigned" | "In Progress" | "Upcoming" | "Overdue" | "Completed">("Assigned");
 
   // 1. Fetch dashboard metrics & sprint stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -90,6 +92,50 @@ export default function Dashboard() {
     BLOCKED: "bg-rose-50 text-rose-700",
     DONE: "bg-emerald-50 text-emerald-700",
   };
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+  const getFilteredTasks = () => {
+    return myTasks.filter((t) => {
+      if (activeTab === "Assigned") return true;
+      if (activeTab === "In Progress") return t.status === "IN_PROGRESS";
+      if (activeTab === "Upcoming") {
+        if (t.status === "DONE") return false;
+        if (!t.dueDate) return false;
+        return new Date(t.dueDate) > todayEnd;
+      }
+      if (activeTab === "Overdue") {
+        if (t.status === "DONE") return false;
+        if (!t.dueDate) return false;
+        return new Date(t.dueDate) < todayStart;
+      }
+      if (activeTab === "Completed") return t.status === "DONE";
+      return true;
+    });
+  };
+
+  const getCount = (tab: "Assigned" | "In Progress" | "Upcoming" | "Overdue" | "Completed") => {
+    return myTasks.filter((t) => {
+      if (tab === "Assigned") return true;
+      if (tab === "In Progress") return t.status === "IN_PROGRESS";
+      if (tab === "Upcoming") {
+        if (t.status === "DONE") return false;
+        if (!t.dueDate) return false;
+        return new Date(t.dueDate) > todayEnd;
+      }
+      if (tab === "Overdue") {
+        if (t.status === "DONE") return false;
+        if (!t.dueDate) return false;
+        return new Date(t.dueDate) < todayStart;
+      }
+      if (tab === "Completed") return t.status === "DONE";
+      return true;
+    }).length;
+  };
+
+  const filteredTasks = getFilteredTasks();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -240,22 +286,42 @@ export default function Dashboard() {
         <div className="space-y-8">
           
           {/* My Work Widget */}
-          <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-6 flex flex-col max-h-[360px]">
-            <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3 shrink-0">
+          <div className="bg-white rounded-xl shadow-xs border border-gray-200 p-6 flex flex-col max-h-[450px]">
+            <div className="flex items-center justify-between mb-2 shrink-0">
               <h3 className="font-bold text-gray-900 text-sm tracking-wide font-inter">My Work</h3>
               <span className="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full font-inter">
-                {myTasks.length} Assigned
+                {filteredTasks.length} {activeTab}
               </span>
             </div>
+
+            {/* Scrollable Tabs */}
+            <div className="flex border-b border-gray-150 mb-3 overflow-x-auto text-[10px] font-bold text-gray-500 uppercase tracking-wide shrink-0">
+              {(["Assigned", "In Progress", "Upcoming", "Overdue", "Completed"] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-3 py-1.5 border-b-2 -mb-px transition-colors cursor-pointer shrink-0 font-inter ${
+                    activeTab === tab
+                      ? "border-indigo-600 text-indigo-600 font-bold"
+                      : "border-transparent hover:text-gray-900"
+                  }`}
+                >
+                  {tab} ({getCount(tab)})
+                </button>
+              ))}
+            </div>
+
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {tasksLoading ? (
                 <div className="py-4 text-center text-xs text-gray-500 font-inter">Loading tasks...</div>
-              ) : myTasks.length === 0 ? (
+              ) : filteredTasks.length === 0 ? (
                 <div className="py-6 text-center text-xs text-gray-400 font-semibold font-inter">
-                  No tasks assigned to you.
+                  {activeTab === "Assigned" && "No assigned tasks. You don't have any tasks assigned in this workspace."}
+                  {activeTab === "Completed" && "No completed tasks. Completed tasks will show up here."}
+                  {activeTab !== "Assigned" && activeTab !== "Completed" && `No ${activeTab.toLowerCase()} tasks. You are all caught up on your ${activeTab.toLowerCase()} tasks!`}
                 </div>
               ) : (
-                myTasks.map((t) => (
+                filteredTasks.map((t) => (
                   <div
                     key={t.id}
                     onClick={() => navigate(`/projects/${t.projectId}`)}
