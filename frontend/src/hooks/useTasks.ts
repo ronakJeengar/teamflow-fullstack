@@ -5,9 +5,8 @@ export const useTasks = (projectId: string) =>
   useQuery({
     queryKey: ["tasks", projectId],
     queryFn: async () => {
-      const res = await api.get(`/tasks/${projectId}`);
-      console.log("Raw API response:", res.data);
-      return res.data.data.items;
+      const res = await api.get(`/tasks/project/${projectId}`);
+      return res.data?.data ?? [];
     },
     enabled: !!projectId,
   });

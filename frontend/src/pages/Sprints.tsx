@@ -66,7 +66,7 @@ export default function Sprints() {
       for (const p of projects) {
         try {
           const taskRes = await api.get(`/tasks/project/${p.id}`);
-          const items = taskRes.data?.data?.items ?? [];
+          const items = taskRes.data?.data ?? [];
           allTasks.push(...items);
         } catch (e) {
           console.warn("Failed to load tasks for project:", p.id, e);

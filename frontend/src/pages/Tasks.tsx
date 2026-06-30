@@ -59,7 +59,7 @@ export default function Tasks() {
     queryKey: ["tasks", projectId],
     queryFn: async () => {
       const res = await api.get(`/tasks/project/${projectId}`);
-      return res.data?.data?.items ?? [];
+      return res.data?.data ?? [];
     },
     enabled: !!projectId,
   });
