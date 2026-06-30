@@ -30,6 +30,14 @@ export default function Projects() {
   // 2. Fetch Teams for project creation targets
   const { data: teams = [] } = useTeams(activeWorkspaceId);
 
+  const [selectedTeamTab, setSelectedTeamTab] = useState<string>("");
+
+  const activeTabName = selectedTeamTab || (teams.length > 0 ? teams[0].name : "");
+
+  const filteredProjects = activeTabName
+    ? projects.filter((p) => p.team?.name?.toLowerCase() === activeTabName.toLowerCase())
+    : projects;
+
   // Create Project Mutation
   const createProjectMutation = useMutation({
     mutationFn: async () => {
@@ -140,18 +148,41 @@ export default function Projects() {
         </button>
       </div>
 
+      {/* Scrollable Team Tabs */}
+      {teams.length > 0 && (
+        <div className="flex border-b border-gray-150 overflow-x-auto text-[10px] font-bold text-gray-500 uppercase tracking-wide shrink-0">
+          {teams.map((t) => {
+            const isSel = activeTabName.toLowerCase() === t.name.toLowerCase();
+            const count = projects.filter((p) => p.teamId === t.id).length;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTeamTab(t.name)}
+                className={`px-3 py-1.5 border-b-2 -mb-px transition-colors cursor-pointer shrink-0 font-inter ${
+                  isSel
+                    ? "border-indigo-600 text-indigo-600 font-bold"
+                    : "border-transparent hover:text-gray-900"
+                }`}
+              >
+                {t.name} ({count})
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* Grid List */}
-      {projects.length === 0 ? (
+      {filteredProjects.length === 0 ? (
         <div className="bg-white rounded-xl shadow-xs p-12 text-center border border-gray-200 flex flex-col items-center">
           <svg className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h3 className="text-sm font-bold text-gray-950 mb-1 font-inter">No projects yet</h3>
-          <p className="text-xs text-gray-500 max-w-xs font-inter mb-4">Create your first project to organize tasks and sprints.</p>
+          <h3 className="text-sm font-bold text-gray-950 mb-1 font-inter">No projects found</h3>
+          <p className="text-xs text-gray-500 max-w-xs font-inter mb-4">No projects have been created under this team tab yet.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((p) => (
+          {filteredProjects.map((p) => (
             <div
               key={p.id}
               className="bg-white rounded-xl shadow-xs border border-gray-200 p-5 flex flex-col justify-between hover:shadow-xs hover:border-indigo-300 transition-all min-h-36 group"
