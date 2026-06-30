@@ -13,11 +13,23 @@ export default defineConfig({
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
+        configure: (proxy, _options) => {
+          proxy.on("proxyRes", (proxyRes) => {
+            proxyRes.headers["access-control-allow-origin"] = "http://localhost:5173";
+            proxyRes.headers["access-control-allow-credentials"] = "true";
+          });
+        },
       },
       "/socket.io": {
         target: "http://localhost:3000",
         ws: true,
         changeOrigin: true,
+        configure: (proxy, _options) => {
+          proxy.on("proxyRes", (proxyRes) => {
+            proxyRes.headers["access-control-allow-origin"] = "http://localhost:5173";
+            proxyRes.headers["access-control-allow-credentials"] = "true";
+          });
+        },
       },
     },
   },

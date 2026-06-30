@@ -1,8 +1,10 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { getOfflineQueue, saveOfflineQueue } from "./offlineManager.js";
 
+const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
 export const api = axios.create({
-  baseURL: import.meta.env.DEV ? "/api/v1" : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1`,
+  baseURL: isLocal ? "/api/v1" : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/v1`,
   withCredentials: true,
 });
 
