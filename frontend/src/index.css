@@ -1,1 +1,88 @@
 @import "tailwindcss";
+
+@theme {
+  --color-gray-50: #0f1115;
+  --color-gray-100: #0f1115;
+  --color-gray-200: #1f2430;
+  --color-white: #161a21;
+  --color-indigo-50: rgba(124, 92, 255, 0.1);
+  --color-indigo-100: rgba(124, 92, 255, 0.2);
+  --color-indigo-200: rgba(124, 92, 255, 0.3);
+  --color-indigo-500: #7c5cff;
+  --color-indigo-600: #7c5cff;
+  --color-indigo-700: #6944ff;
+  --color-indigo-800: #5731ff;
+  --color-slate-900: #161a21;
+  --color-slate-800: #1f2430;
+  --color-slate-700: #1f2430;
+  --color-slate-50: #161a21;
+  --color-slate-100: #1f2430;
+  --color-slate-200: #1f2430;
+  --color-gray-900: #e6ebeb;
+  --color-gray-950: #e6ebeb;
+  --color-gray-800: #e6ebeb;
+  --color-gray-700: #e6ebeb;
+  --color-gray-600: #8893a6;
+  --color-gray-500: #8893a6;
+  --color-gray-400: #687280;
+  --color-gray-300: #687280;
+  
+  --color-background: #0f1115;
+  --color-surface: #161a21;
+  --color-border: #1f2430;
+  --color-text-primary: #e6ebeb;
+  --color-text-secondary: #8893a6;
+  --color-muted: #687280;
+  --color-primary: #7c5cff;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}
+
+/* Global Dark Theme Overrides */
+html, body {
+  background-color: #0f1115 !important;
+  color: #e6ebeb !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Form Controls styling alignment */
+input, select, textarea {
+  background-color: #161a21 !important;
+  color: #e6ebeb !important;
+  border-color: #1f2430 !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #7c5cff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 1px #7c5cff !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #687280 !important;
+}
+
+/* Dialog & Modals overlay */
+dialog, .modal-backdrop {
+  background-color: rgba(15, 17, 21, 0.8) !important;
+  backdrop-filter: blur(4px);
+}
+
+/* Custom Scrollbar for sleek dark look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f1115;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2430;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7c5cff;
+}
