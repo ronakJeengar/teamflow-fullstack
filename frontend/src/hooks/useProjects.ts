@@ -1,16 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
-import { api } from "../api/client";
-import type { Project } from "../types/Project";
+import { useTeams } from "./useTeams";
 
-export const useProjects = (workspaceId?: string | null) =>
-  useQuery<Project[]>({
-    queryKey: ["projects", workspaceId],
-    queryFn: async () => {
-      const res = await api.get("/projects");
-      const allProjects = res.data?.data ?? [];
-      if (!workspaceId) return allProjects;
-      return allProjects.filter(
-        (p: any) => !p.team?.workspaceId || p.team?.workspaceId === workspaceId
-      );
-    },
+export const useProjects = (workspaceId?: string | null) => {
+  const { data: teams = [], isLoading } = useTeams(workspaceId);
+
+  // Derive projects by flattening the projects array from all loaded teams (matching Flutter)
+  const projects = teams.flatMap((t: any) => {
+    return (t.projects || []).map((p: any) => ({
+      ...p,
+      team: {
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        workspaceId: t.workspaceId,
+      },
+    }));
   });
+
+  return {
+    data: projects,
+    isLoading,
+  };
+};
