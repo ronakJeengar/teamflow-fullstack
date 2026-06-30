@@ -29,10 +29,43 @@ abstract class TaskModel with _$TaskModel {
     @Default(false) bool isRecurring,
     String? recurrence,
     String? parentId,
+    TaskAssigneeModel? assignedTo,
   }) = _TaskModel;
 
   factory TaskModel.fromJson(Map<String, dynamic> json) =>
       _$TaskModelFromJson(json);
+}
+
+@freezed
+abstract class TaskAssigneeModel with _$TaskAssigneeModel {
+  const factory TaskAssigneeModel({
+    required String id,
+    required String name,
+    String? avatar,
+  }) = _TaskAssigneeModel;
+
+  factory TaskAssigneeModel.fromJson(Map<String, dynamic> json) =>
+      _$TaskAssigneeModelFromJson(json);
+}
+
+extension TaskAssigneeModelMapper on TaskAssigneeModel {
+  TaskAssigneeEntity toEntity() {
+    return TaskAssigneeEntity(
+      id: id,
+      name: name,
+      avatar: avatar,
+    );
+  }
+}
+
+extension TaskAssigneeEntityMapper on TaskAssigneeEntity {
+  TaskAssigneeModel toModel() {
+    return TaskAssigneeModel(
+      id: id,
+      name: name,
+      avatar: avatar,
+    );
+  }
 }
 
 extension TaskModelMapper on TaskModel {
@@ -56,6 +89,7 @@ extension TaskModelMapper on TaskModel {
       isRecurring: isRecurring,
       recurrence: recurrence,
       parentId: parentId,
+      assignedTo: assignedTo?.toEntity(),
     );
   }
 }
@@ -81,6 +115,7 @@ extension TaskEntityMapper on TaskEntity {
       isRecurring: isRecurring,
       recurrence: recurrence,
       parentId: parentId,
+      assignedTo: assignedTo?.toModel(),
     );
   }
 }

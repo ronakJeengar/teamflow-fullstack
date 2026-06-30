@@ -95,9 +95,10 @@ class TasksPage extends HookConsumerWidget {
     useEffect(() {
       Future.microtask(() {
         ref.read(taskStateNotifierProvider.notifier).loadTasks(projectId);
+        ref.read(teamDetailStateNotifierProvider.notifier).loadTeamDetail(teamId);
       });
       return null;
-    }, [projectId]);
+    }, [projectId, teamId]);
 
     final state = ref.watch(taskStateNotifierProvider);
     final activeTab = useState(0);

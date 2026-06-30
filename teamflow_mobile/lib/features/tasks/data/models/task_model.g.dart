@@ -27,6 +27,9 @@ _TaskModel _$TaskModelFromJson(Map<String, dynamic> json) => _TaskModel(
   isRecurring: json['isRecurring'] as bool? ?? false,
   recurrence: json['recurrence'] as String?,
   parentId: json['parentId'] as String?,
+  assignedTo: json['assignedTo'] == null
+      ? null
+      : TaskAssigneeModel.fromJson(json['assignedTo'] as Map<String, dynamic>),
 );
 
 Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
@@ -49,6 +52,7 @@ Map<String, dynamic> _$TaskModelToJson(_TaskModel instance) =>
       'isRecurring': instance.isRecurring,
       'recurrence': instance.recurrence,
       'parentId': instance.parentId,
+      'assignedTo': instance.assignedTo,
     };
 
 const _$TaskStatusEnumMap = {
@@ -58,3 +62,17 @@ const _$TaskStatusEnumMap = {
   TaskStatus.BLOCKED: 'BLOCKED',
   TaskStatus.DONE: 'DONE',
 };
+
+_TaskAssigneeModel _$TaskAssigneeModelFromJson(Map<String, dynamic> json) =>
+    _TaskAssigneeModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      avatar: json['avatar'] as String?,
+    );
+
+Map<String, dynamic> _$TaskAssigneeModelToJson(_TaskAssigneeModel instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'avatar': instance.avatar,
+    };

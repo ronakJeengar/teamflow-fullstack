@@ -25,5 +25,15 @@ abstract class TaskEntity with _$TaskEntity {
     @Default(false) bool isRecurring,
     String? recurrence,
     String? parentId,
+    TaskAssigneeEntity? assignedTo,
   }) = _TaskEntity;
+}
+
+@freezed
+abstract class TaskAssigneeEntity with _$TaskAssigneeEntity {
+  const factory TaskAssigneeEntity({
+    required String id,
+    required String name,
+    String? avatar,
+  }) = _TaskAssigneeEntity;
 }

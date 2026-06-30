@@ -44,21 +44,21 @@ class FakeGetTeamByIdUseCase implements GetTeamByIdUseCase {
   @override
   TeamsRepository get repository => throw UnimplementedError();
   @override
-  Future<Either<Failure, TeamEntity>> call(GetTeamByIdParams params) async => throw UnimplementedError();
+  Future<Either<Failure, TeamEntity>> call(GetTeamByIdParams params) async => const Left(ServerFailure('Test stub'));
 }
 
 class FakeGetMembersUseCase implements GetMembersUseCase {
   @override
   TeamMembersRepository get repository => throw UnimplementedError();
   @override
-  Future<Either<Failure, List<TeamMemberEntity>>> call(GetMembersParams params) async => throw UnimplementedError();
+  Future<Either<Failure, List<TeamMemberEntity>>> call(GetMembersParams params) async => const Left(ServerFailure('Test stub'));
 }
 
 class FakeGetProjectsByTeamUseCase implements GetProjectsByTeamUseCase {
   @override
   ProjectsRepository get repository => throw UnimplementedError();
   @override
-  Future<Either<Failure, List<ProjectEntity>>> call(GetProjectsByTeamParams params) async => throw UnimplementedError();
+  Future<Either<Failure, List<ProjectEntity>>> call(GetProjectsByTeamParams params) async => const Left(ServerFailure('Test stub'));
 }
 
 class FakeTeamDetailStateNotifier extends TeamDetailStateNotifier {

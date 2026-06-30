@@ -15,9 +15,13 @@ class StatsRemoteDataSourceImpl implements StatsRemoteDataSource {
   Future<DashboardStatsModel> getDashboardStats() async {
     final response = await apiService.get<DashboardStatsModel>(
       ApiEndpoints.dashboardStats,
-      fromJson: (json) => DashboardStatsModel.fromJson(json),
+      fromJson: (json) {
+        print('[Stats Raw Response] json=$json');
+        return DashboardStatsModel.fromJson(json);
+      },
     );
     if (response.status && response.data != null) {
+      print('[Stats Mapped Values] tasksDueToday=${response.data!.tasksDueToday}, inProgress=${response.data!.inProgress}, inReview=${response.data!.inReview}, blocked=${response.data!.blocked}');
       return response.data!;
     }
     throw Exception(response.message);

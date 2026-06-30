@@ -46,7 +46,7 @@ class HomePage extends HookConsumerWidget {
     // Get all projects across all teams to populate "Recent Projects"
     final List<ProjectEntity> allProjects = teamsState.teams.expand((t) => t.projects).toList();
 
-    final activeTab = useState('All');
+    final activeTab = useState('Assigned');
     final isDesktop = MediaQuery.of(context).size.width > 800;
     final myTasksAsync = ref.watch(myTasksProvider);
     myTasksAsync.whenOrNull(
@@ -85,15 +85,9 @@ class HomePage extends HookConsumerWidget {
       final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
 
       int getCount(String tab) {
-        if (tab == 'All') return tasksList.length;
-        if (tab == 'Due Today') {
-          return tasksList.where((task) {
-            if (task.status == TaskStatus.DONE) return false;
-            if (task.dueDate == null) return false;
-            final localDue = task.dueDate!.toLocal();
-            return localDue.isAfter(todayStart.subtract(const Duration(milliseconds: 1))) &&
-                   localDue.isBefore(todayEnd.add(const Duration(milliseconds: 1)));
-          }).length;
+        if (tab == 'Assigned') return tasksList.length;
+        if (tab == 'In Progress') {
+          return tasksList.where((task) => task.status == TaskStatus.IN_PROGRESS).length;
         }
         if (tab == 'Upcoming') {
           return tasksList.where((task) {
@@ -103,13 +97,21 @@ class HomePage extends HookConsumerWidget {
             return localDue.isAfter(todayEnd);
           }).length;
         }
+        if (tab == 'Overdue') {
+          return tasksList.where((task) {
+            if (task.status == TaskStatus.DONE) return false;
+            if (task.dueDate == null) return false;
+            final localDue = task.dueDate!.toLocal();
+            return localDue.isBefore(todayStart);
+          }).length;
+        }
         if (tab == 'Completed') {
           return tasksList.where((task) => task.status == TaskStatus.DONE).length;
         }
         return 0;
       }
 
-      final tabs = ['All', 'Due Today', 'Upcoming', 'Completed'];
+      final tabs = ['Assigned', 'In Progress', 'Upcoming', 'Overdue', 'Completed'];
       return Container(
         height: 36,
         decoration: const BoxDecoration(
@@ -447,6 +449,7 @@ class HomePage extends HookConsumerWidget {
                 final inProgressSpark = statsData.sparklines?['inProgress']?.map((e) => e.toDouble()).toList();
                 final inReviewSpark = statsData.sparklines?['inReview']?.map((e) => e.toDouble()).toList();
                 final blockedSpark = statsData.sparklines?['blocked']?.map((e) => e.toDouble()).toList();
+                print('[Stats UI Values] tasksDueToday=${statsData.tasksDueToday}, inProgress=${statsData.inProgress}, inReview=${statsData.inReview}, blocked=${statsData.blocked}');
 
                 return StatBlockRow(cards: [
                   StatCard(
@@ -499,7 +502,7 @@ class HomePage extends HookConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'My Tasks',
+                    'My Work',
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -522,19 +525,21 @@ class HomePage extends HookConsumerWidget {
                 final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
 
                 final filtered = tasksList.where((task) {
-                  if (activeTab.value == 'All') return true;
-                  if (activeTab.value == 'Due Today') {
-                    if (task.status == TaskStatus.DONE) return false;
-                    if (task.dueDate == null) return false;
-                    final localDue = task.dueDate!.toLocal();
-                    return localDue.isAfter(todayStart.subtract(const Duration(milliseconds: 1))) &&
-                           localDue.isBefore(todayEnd.add(const Duration(milliseconds: 1)));
+                  if (activeTab.value == 'Assigned') return true;
+                  if (activeTab.value == 'In Progress') {
+                    return task.status == TaskStatus.IN_PROGRESS;
                   }
                   if (activeTab.value == 'Upcoming') {
                     if (task.status == TaskStatus.DONE) return false;
                     if (task.dueDate == null) return false;
                     final localDue = task.dueDate!.toLocal();
                     return localDue.isAfter(todayEnd);
+                  }
+                  if (activeTab.value == 'Overdue') {
+                    if (task.status == TaskStatus.DONE) return false;
+                    if (task.dueDate == null) return false;
+                    final localDue = task.dueDate!.toLocal();
+                    return localDue.isBefore(todayStart);
                   }
                   if (activeTab.value == 'Completed') {
                     return task.status == TaskStatus.DONE;
@@ -543,12 +548,24 @@ class HomePage extends HookConsumerWidget {
                 }).toList();
 
                 if (filtered.isEmpty) {
-                  return const SizedBox(
-                    height: 220,
+                  final String emptyTitle;
+                  final String emptySubtitle;
+                  if (activeTab.value == 'Assigned') {
+                    emptyTitle = 'No assigned tasks';
+                    emptySubtitle = 'You don\'t have any tasks assigned in this workspace.';
+                  } else if (activeTab.value == 'Completed') {
+                    emptyTitle = 'No completed tasks';
+                    emptySubtitle = 'Completed tasks will show up here.';
+                  } else {
+                    emptyTitle = 'No ${activeTab.value.toLowerCase()} tasks';
+                    emptySubtitle = 'You are all caught up on your ${activeTab.value.toLowerCase()} tasks!';
+                  }
+                  return SizedBox(
+                    height: 250,
                     child: AppEmptyState(
                       icon: Icons.check_circle_outline_rounded,
-                      title: 'No tasks found',
-                      subtitle: 'You are all caught up on your tasks!',
+                      title: emptyTitle,
+                      subtitle: emptySubtitle,
                     ),
                   );
                 }
@@ -648,7 +665,7 @@ class HomePage extends HookConsumerWidget {
 
             if (allProjects.isEmpty)
               const SizedBox(
-                height: 220,
+                height: 250,
                 child: AppEmptyState(
                   icon: Icons.folder_open_rounded,
                   title: 'No projects yet',

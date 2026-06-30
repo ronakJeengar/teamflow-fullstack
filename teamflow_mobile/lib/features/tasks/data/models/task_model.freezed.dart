@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TaskModel {
 
- String get id; String get title; String? get description; TaskStatus get status; String get projectId; String get createdById; String? get assignedToId; DateTime get createdAt; DateTime get updatedAt; String? get priority; DateTime? get dueDate; List<String>? get tags; String? get sprintId; int? get storyPoints; String? get backlogStatus; bool get isRecurring; String? get recurrence; String? get parentId;
+ String get id; String get title; String? get description; TaskStatus get status; String get projectId; String get createdById; String? get assignedToId; DateTime get createdAt; DateTime get updatedAt; String? get priority; DateTime? get dueDate; List<String>? get tags; String? get sprintId; int? get storyPoints; String? get backlogStatus; bool get isRecurring; String? get recurrence; String? get parentId; TaskAssigneeModel? get assignedTo;
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $TaskModelCopyWith<TaskModel> get copyWith => _$TaskModelCopyWithImpl<TaskModel>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.status, status) || other.status == status)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.assignedToId, assignedToId) || other.assignedToId == assignedToId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.sprintId, sprintId) || other.sprintId == sprintId)&&(identical(other.storyPoints, storyPoints) || other.storyPoints == storyPoints)&&(identical(other.backlogStatus, backlogStatus) || other.backlogStatus == backlogStatus)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.parentId, parentId) || other.parentId == parentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.status, status) || other.status == status)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.assignedToId, assignedToId) || other.assignedToId == assignedToId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&const DeepCollectionEquality().equals(other.tags, tags)&&(identical(other.sprintId, sprintId) || other.sprintId == sprintId)&&(identical(other.storyPoints, storyPoints) || other.storyPoints == storyPoints)&&(identical(other.backlogStatus, backlogStatus) || other.backlogStatus == backlogStatus)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.assignedTo, assignedTo) || other.assignedTo == assignedTo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,status,projectId,createdById,assignedToId,createdAt,updatedAt,priority,dueDate,const DeepCollectionEquality().hash(tags),sprintId,storyPoints,backlogStatus,isRecurring,recurrence,parentId);
+int get hashCode => Object.hashAll([runtimeType,id,title,description,status,projectId,createdById,assignedToId,createdAt,updatedAt,priority,dueDate,const DeepCollectionEquality().hash(tags),sprintId,storyPoints,backlogStatus,isRecurring,recurrence,parentId,assignedTo]);
 
 @override
 String toString() {
-  return 'TaskModel(id: $id, title: $title, description: $description, status: $status, projectId: $projectId, createdById: $createdById, assignedToId: $assignedToId, createdAt: $createdAt, updatedAt: $updatedAt, priority: $priority, dueDate: $dueDate, tags: $tags, sprintId: $sprintId, storyPoints: $storyPoints, backlogStatus: $backlogStatus, isRecurring: $isRecurring, recurrence: $recurrence, parentId: $parentId)';
+  return 'TaskModel(id: $id, title: $title, description: $description, status: $status, projectId: $projectId, createdById: $createdById, assignedToId: $assignedToId, createdAt: $createdAt, updatedAt: $updatedAt, priority: $priority, dueDate: $dueDate, tags: $tags, sprintId: $sprintId, storyPoints: $storyPoints, backlogStatus: $backlogStatus, isRecurring: $isRecurring, recurrence: $recurrence, parentId: $parentId, assignedTo: $assignedTo)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $TaskModelCopyWith<$Res>  {
   factory $TaskModelCopyWith(TaskModel value, $Res Function(TaskModel) _then) = _$TaskModelCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String? description, TaskStatus status, String projectId, String createdById, String? assignedToId, DateTime createdAt, DateTime updatedAt, String? priority, DateTime? dueDate, List<String>? tags, String? sprintId, int? storyPoints, String? backlogStatus, bool isRecurring, String? recurrence, String? parentId
+ String id, String title, String? description, TaskStatus status, String projectId, String createdById, String? assignedToId, DateTime createdAt, DateTime updatedAt, String? priority, DateTime? dueDate, List<String>? tags, String? sprintId, int? storyPoints, String? backlogStatus, bool isRecurring, String? recurrence, String? parentId, TaskAssigneeModel? assignedTo
 });
 
 
-
+$TaskAssigneeModelCopyWith<$Res>? get assignedTo;
 
 }
 /// @nodoc
@@ -65,7 +65,7 @@ class _$TaskModelCopyWithImpl<$Res>
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? status = null,Object? projectId = null,Object? createdById = null,Object? assignedToId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? priority = freezed,Object? dueDate = freezed,Object? tags = freezed,Object? sprintId = freezed,Object? storyPoints = freezed,Object? backlogStatus = freezed,Object? isRecurring = null,Object? recurrence = freezed,Object? parentId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? status = null,Object? projectId = null,Object? createdById = null,Object? assignedToId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? priority = freezed,Object? dueDate = freezed,Object? tags = freezed,Object? sprintId = freezed,Object? storyPoints = freezed,Object? backlogStatus = freezed,Object? isRecurring = null,Object? recurrence = freezed,Object? parentId = freezed,Object? assignedTo = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -85,10 +85,23 @@ as int?,backlogStatus: freezed == backlogStatus ? _self.backlogStatus : backlogS
 as String?,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
 as bool,recurrence: freezed == recurrence ? _self.recurrence : recurrence // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
-as String?,
+as String?,assignedTo: freezed == assignedTo ? _self.assignedTo : assignedTo // ignore: cast_nullable_to_non_nullable
+as TaskAssigneeModel?,
   ));
 }
+/// Create a copy of TaskModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TaskAssigneeModelCopyWith<$Res>? get assignedTo {
+    if (_self.assignedTo == null) {
+    return null;
+  }
 
+  return $TaskAssigneeModelCopyWith<$Res>(_self.assignedTo!, (value) {
+    return _then(_self.copyWith(assignedTo: value));
+  });
+}
 }
 
 
@@ -170,10 +183,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId,  TaskAssigneeModel? assignedTo)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TaskModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId);case _:
+return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId,_that.assignedTo);case _:
   return orElse();
 
 }
@@ -191,10 +204,10 @@ return $default(_that.id,_that.title,_that.description,_that.status,_that.projec
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId,  TaskAssigneeModel? assignedTo)  $default,) {final _that = this;
 switch (_that) {
 case _TaskModel():
-return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId);case _:
+return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId,_that.assignedTo);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -211,10 +224,10 @@ return $default(_that.id,_that.title,_that.description,_that.status,_that.projec
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String? description,  TaskStatus status,  String projectId,  String createdById,  String? assignedToId,  DateTime createdAt,  DateTime updatedAt,  String? priority,  DateTime? dueDate,  List<String>? tags,  String? sprintId,  int? storyPoints,  String? backlogStatus,  bool isRecurring,  String? recurrence,  String? parentId,  TaskAssigneeModel? assignedTo)?  $default,) {final _that = this;
 switch (_that) {
 case _TaskModel() when $default != null:
-return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId);case _:
+return $default(_that.id,_that.title,_that.description,_that.status,_that.projectId,_that.createdById,_that.assignedToId,_that.createdAt,_that.updatedAt,_that.priority,_that.dueDate,_that.tags,_that.sprintId,_that.storyPoints,_that.backlogStatus,_that.isRecurring,_that.recurrence,_that.parentId,_that.assignedTo);case _:
   return null;
 
 }
@@ -226,7 +239,7 @@ return $default(_that.id,_that.title,_that.description,_that.status,_that.projec
 @JsonSerializable()
 
 class _TaskModel implements TaskModel {
-  const _TaskModel({required this.id, required this.title, this.description, required this.status, required this.projectId, required this.createdById, this.assignedToId, required this.createdAt, required this.updatedAt, this.priority, this.dueDate, final  List<String>? tags, this.sprintId, this.storyPoints, this.backlogStatus, this.isRecurring = false, this.recurrence, this.parentId}): _tags = tags;
+  const _TaskModel({required this.id, required this.title, this.description, required this.status, required this.projectId, required this.createdById, this.assignedToId, required this.createdAt, required this.updatedAt, this.priority, this.dueDate, final  List<String>? tags, this.sprintId, this.storyPoints, this.backlogStatus, this.isRecurring = false, this.recurrence, this.parentId, this.assignedTo}): _tags = tags;
   factory _TaskModel.fromJson(Map<String, dynamic> json) => _$TaskModelFromJson(json);
 
 @override final  String id;
@@ -255,6 +268,7 @@ class _TaskModel implements TaskModel {
 @override@JsonKey() final  bool isRecurring;
 @override final  String? recurrence;
 @override final  String? parentId;
+@override final  TaskAssigneeModel? assignedTo;
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
@@ -269,16 +283,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.status, status) || other.status == status)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.assignedToId, assignedToId) || other.assignedToId == assignedToId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.sprintId, sprintId) || other.sprintId == sprintId)&&(identical(other.storyPoints, storyPoints) || other.storyPoints == storyPoints)&&(identical(other.backlogStatus, backlogStatus) || other.backlogStatus == backlogStatus)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.parentId, parentId) || other.parentId == parentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskModel&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.description, description) || other.description == description)&&(identical(other.status, status) || other.status == status)&&(identical(other.projectId, projectId) || other.projectId == projectId)&&(identical(other.createdById, createdById) || other.createdById == createdById)&&(identical(other.assignedToId, assignedToId) || other.assignedToId == assignedToId)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt)&&(identical(other.priority, priority) || other.priority == priority)&&(identical(other.dueDate, dueDate) || other.dueDate == dueDate)&&const DeepCollectionEquality().equals(other._tags, _tags)&&(identical(other.sprintId, sprintId) || other.sprintId == sprintId)&&(identical(other.storyPoints, storyPoints) || other.storyPoints == storyPoints)&&(identical(other.backlogStatus, backlogStatus) || other.backlogStatus == backlogStatus)&&(identical(other.isRecurring, isRecurring) || other.isRecurring == isRecurring)&&(identical(other.recurrence, recurrence) || other.recurrence == recurrence)&&(identical(other.parentId, parentId) || other.parentId == parentId)&&(identical(other.assignedTo, assignedTo) || other.assignedTo == assignedTo));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,description,status,projectId,createdById,assignedToId,createdAt,updatedAt,priority,dueDate,const DeepCollectionEquality().hash(_tags),sprintId,storyPoints,backlogStatus,isRecurring,recurrence,parentId);
+int get hashCode => Object.hashAll([runtimeType,id,title,description,status,projectId,createdById,assignedToId,createdAt,updatedAt,priority,dueDate,const DeepCollectionEquality().hash(_tags),sprintId,storyPoints,backlogStatus,isRecurring,recurrence,parentId,assignedTo]);
 
 @override
 String toString() {
-  return 'TaskModel(id: $id, title: $title, description: $description, status: $status, projectId: $projectId, createdById: $createdById, assignedToId: $assignedToId, createdAt: $createdAt, updatedAt: $updatedAt, priority: $priority, dueDate: $dueDate, tags: $tags, sprintId: $sprintId, storyPoints: $storyPoints, backlogStatus: $backlogStatus, isRecurring: $isRecurring, recurrence: $recurrence, parentId: $parentId)';
+  return 'TaskModel(id: $id, title: $title, description: $description, status: $status, projectId: $projectId, createdById: $createdById, assignedToId: $assignedToId, createdAt: $createdAt, updatedAt: $updatedAt, priority: $priority, dueDate: $dueDate, tags: $tags, sprintId: $sprintId, storyPoints: $storyPoints, backlogStatus: $backlogStatus, isRecurring: $isRecurring, recurrence: $recurrence, parentId: $parentId, assignedTo: $assignedTo)';
 }
 
 
@@ -289,11 +303,11 @@ abstract mixin class _$TaskModelCopyWith<$Res> implements $TaskModelCopyWith<$Re
   factory _$TaskModelCopyWith(_TaskModel value, $Res Function(_TaskModel) _then) = __$TaskModelCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String? description, TaskStatus status, String projectId, String createdById, String? assignedToId, DateTime createdAt, DateTime updatedAt, String? priority, DateTime? dueDate, List<String>? tags, String? sprintId, int? storyPoints, String? backlogStatus, bool isRecurring, String? recurrence, String? parentId
+ String id, String title, String? description, TaskStatus status, String projectId, String createdById, String? assignedToId, DateTime createdAt, DateTime updatedAt, String? priority, DateTime? dueDate, List<String>? tags, String? sprintId, int? storyPoints, String? backlogStatus, bool isRecurring, String? recurrence, String? parentId, TaskAssigneeModel? assignedTo
 });
 
 
-
+@override $TaskAssigneeModelCopyWith<$Res>? get assignedTo;
 
 }
 /// @nodoc
@@ -306,7 +320,7 @@ class __$TaskModelCopyWithImpl<$Res>
 
 /// Create a copy of TaskModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? status = null,Object? projectId = null,Object? createdById = null,Object? assignedToId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? priority = freezed,Object? dueDate = freezed,Object? tags = freezed,Object? sprintId = freezed,Object? storyPoints = freezed,Object? backlogStatus = freezed,Object? isRecurring = null,Object? recurrence = freezed,Object? parentId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? description = freezed,Object? status = null,Object? projectId = null,Object? createdById = null,Object? assignedToId = freezed,Object? createdAt = null,Object? updatedAt = null,Object? priority = freezed,Object? dueDate = freezed,Object? tags = freezed,Object? sprintId = freezed,Object? storyPoints = freezed,Object? backlogStatus = freezed,Object? isRecurring = null,Object? recurrence = freezed,Object? parentId = freezed,Object? assignedTo = freezed,}) {
   return _then(_TaskModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -326,6 +340,288 @@ as int?,backlogStatus: freezed == backlogStatus ? _self.backlogStatus : backlogS
 as String?,isRecurring: null == isRecurring ? _self.isRecurring : isRecurring // ignore: cast_nullable_to_non_nullable
 as bool,recurrence: freezed == recurrence ? _self.recurrence : recurrence // ignore: cast_nullable_to_non_nullable
 as String?,parentId: freezed == parentId ? _self.parentId : parentId // ignore: cast_nullable_to_non_nullable
+as String?,assignedTo: freezed == assignedTo ? _self.assignedTo : assignedTo // ignore: cast_nullable_to_non_nullable
+as TaskAssigneeModel?,
+  ));
+}
+
+/// Create a copy of TaskModel
+/// with the given fields replaced by the non-null parameter values.
+@override
+@pragma('vm:prefer-inline')
+$TaskAssigneeModelCopyWith<$Res>? get assignedTo {
+    if (_self.assignedTo == null) {
+    return null;
+  }
+
+  return $TaskAssigneeModelCopyWith<$Res>(_self.assignedTo!, (value) {
+    return _then(_self.copyWith(assignedTo: value));
+  });
+}
+}
+
+
+/// @nodoc
+mixin _$TaskAssigneeModel {
+
+ String get id; String get name; String? get avatar;
+/// Create a copy of TaskAssigneeModel
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$TaskAssigneeModelCopyWith<TaskAssigneeModel> get copyWith => _$TaskAssigneeModelCopyWithImpl<TaskAssigneeModel>(this as TaskAssigneeModel, _$identity);
+
+  /// Serializes this TaskAssigneeModel to a JSON map.
+  Map<String, dynamic> toJson();
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TaskAssigneeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatar, avatar) || other.avatar == avatar));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,avatar);
+
+@override
+String toString() {
+  return 'TaskAssigneeModel(id: $id, name: $name, avatar: $avatar)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $TaskAssigneeModelCopyWith<$Res>  {
+  factory $TaskAssigneeModelCopyWith(TaskAssigneeModel value, $Res Function(TaskAssigneeModel) _then) = _$TaskAssigneeModelCopyWithImpl;
+@useResult
+$Res call({
+ String id, String name, String? avatar
+});
+
+
+
+
+}
+/// @nodoc
+class _$TaskAssigneeModelCopyWithImpl<$Res>
+    implements $TaskAssigneeModelCopyWith<$Res> {
+  _$TaskAssigneeModelCopyWithImpl(this._self, this._then);
+
+  final TaskAssigneeModel _self;
+  final $Res Function(TaskAssigneeModel) _then;
+
+/// Create a copy of TaskAssigneeModel
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? avatar = freezed,}) {
+  return _then(_self.copyWith(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,avatar: freezed == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
+}
+
+
+/// Adds pattern-matching-related methods to [TaskAssigneeModel].
+extension TaskAssigneeModelPatterns on TaskAssigneeModel {
+/// A variant of `map` that fallback to returning `orElse`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _TaskAssigneeModel value)?  $default,{required TResult orElse(),}){
+final _that = this;
+switch (_that) {
+case _TaskAssigneeModel() when $default != null:
+return $default(_that);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// Callbacks receives the raw object, upcasted.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case final Subclass2 value:
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _TaskAssigneeModel value)  $default,){
+final _that = this;
+switch (_that) {
+case _TaskAssigneeModel():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `map` that fallback to returning `null`.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case final Subclass value:
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _TaskAssigneeModel value)?  $default,){
+final _that = this;
+switch (_that) {
+case _TaskAssigneeModel() when $default != null:
+return $default(_that);case _:
+  return null;
+
+}
+}
+/// A variant of `when` that fallback to an `orElse` callback.
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return orElse();
+/// }
+/// ```
+
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  String? avatar)?  $default,{required TResult orElse(),}) {final _that = this;
+switch (_that) {
+case _TaskAssigneeModel() when $default != null:
+return $default(_that.id,_that.name,_that.avatar);case _:
+  return orElse();
+
+}
+}
+/// A `switch`-like method, using callbacks.
+///
+/// As opposed to `map`, this offers destructuring.
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case Subclass2(:final field2):
+///     return ...;
+/// }
+/// ```
+
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  String? avatar)  $default,) {final _that = this;
+switch (_that) {
+case _TaskAssigneeModel():
+return $default(_that.id,_that.name,_that.avatar);case _:
+  throw StateError('Unexpected subclass');
+
+}
+}
+/// A variant of `when` that fallback to returning `null`
+///
+/// It is equivalent to doing:
+/// ```dart
+/// switch (sealedClass) {
+///   case Subclass(:final field):
+///     return ...;
+///   case _:
+///     return null;
+/// }
+/// ```
+
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  String? avatar)?  $default,) {final _that = this;
+switch (_that) {
+case _TaskAssigneeModel() when $default != null:
+return $default(_that.id,_that.name,_that.avatar);case _:
+  return null;
+
+}
+}
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _TaskAssigneeModel implements TaskAssigneeModel {
+  const _TaskAssigneeModel({required this.id, required this.name, this.avatar});
+  factory _TaskAssigneeModel.fromJson(Map<String, dynamic> json) => _$TaskAssigneeModelFromJson(json);
+
+@override final  String id;
+@override final  String name;
+@override final  String? avatar;
+
+/// Create a copy of TaskAssigneeModel
+/// with the given fields replaced by the non-null parameter values.
+@override @JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TaskAssigneeModelCopyWith<_TaskAssigneeModel> get copyWith => __$TaskAssigneeModelCopyWithImpl<_TaskAssigneeModel>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$TaskAssigneeModelToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TaskAssigneeModel&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.avatar, avatar) || other.avatar == avatar));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,id,name,avatar);
+
+@override
+String toString() {
+  return 'TaskAssigneeModel(id: $id, name: $name, avatar: $avatar)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TaskAssigneeModelCopyWith<$Res> implements $TaskAssigneeModelCopyWith<$Res> {
+  factory _$TaskAssigneeModelCopyWith(_TaskAssigneeModel value, $Res Function(_TaskAssigneeModel) _then) = __$TaskAssigneeModelCopyWithImpl;
+@override @useResult
+$Res call({
+ String id, String name, String? avatar
+});
+
+
+
+
+}
+/// @nodoc
+class __$TaskAssigneeModelCopyWithImpl<$Res>
+    implements _$TaskAssigneeModelCopyWith<$Res> {
+  __$TaskAssigneeModelCopyWithImpl(this._self, this._then);
+
+  final _TaskAssigneeModel _self;
+  final $Res Function(_TaskAssigneeModel) _then;
+
+/// Create a copy of TaskAssigneeModel
+/// with the given fields replaced by the non-null parameter values.
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? avatar = freezed,}) {
+  return _then(_TaskAssigneeModel(
+id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
+as String,avatar: freezed == avatar ? _self.avatar : avatar // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }

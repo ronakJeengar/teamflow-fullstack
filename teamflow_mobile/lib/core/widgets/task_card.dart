@@ -114,6 +114,8 @@ class _TaskCardState extends State<TaskCard> {
   Widget build(BuildContext context) {
     final statusColor = _statusColor;
     final isCompleted = widget.task.status == TaskStatus.DONE;
+    final name = widget.assigneeName ?? widget.task.assignedTo?.name;
+    debugPrint('[Task Assignment Log] Task ID: ${widget.task.id}, Raw Assignee ID: ${widget.task.assignedToId}, Parsed Assignee Name: ${widget.task.assignedTo?.name}, Rendered: ${name ?? "Assign task"}');
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -312,15 +314,15 @@ class _TaskCardState extends State<TaskCard> {
                           Expanded(
                             child: Row(
                               children: [
-                                if (widget.assigneeName != null) ...[
+                                if ((widget.assigneeName ?? widget.task.assignedTo?.name) != null) ...[
                                   AppAvatar(
-                                    name: widget.assigneeName!,
+                                    name: widget.assigneeName ?? widget.task.assignedTo!.name,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: Text(
-                                      widget.assigneeName!,
+                                      widget.assigneeName ?? widget.task.assignedTo!.name,
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.textSecondary,
@@ -334,7 +336,7 @@ class _TaskCardState extends State<TaskCard> {
                                   const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      'Unassigned',
+                                      'Assign task',
                                       style: GoogleFonts.inter(
                                         fontSize: 11,
                                         color: AppColors.muted,
