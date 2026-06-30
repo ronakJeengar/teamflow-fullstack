@@ -5,6 +5,38 @@ import { successResponse, errorResponse } from "../utils/response.js";
 import { NotificationType } from "@prisma/client";
 import { io } from "../server.js";
 
+const getWorkspaceObjectIds = async (activeWorkspaceId: string) => {
+  const teams = await prisma.team.findMany({
+    where: { workspaceId: activeWorkspaceId },
+    select: { id: true },
+  });
+  const teamIds = teams.map((t) => t.id);
+
+  const projects = await prisma.project.findMany({
+    where: {
+      team: {
+        workspaceId: activeWorkspaceId,
+      },
+    },
+    select: { id: true },
+  });
+  const projectIds = projects.map((p) => p.id);
+
+  const tasks = await prisma.task.findMany({
+    where: {
+      project: {
+        team: {
+          workspaceId: activeWorkspaceId,
+        },
+      },
+    },
+    select: { id: true },
+  });
+  const taskIds = tasks.map((t) => t.id);
+
+  return { teamIds, projectIds, taskIds };
+};
+
 // GET /notifications — paginated, grouped by date for current user
 export const getNotifications = async (req: AuthRequest, res: Response) => {
   try {
@@ -12,9 +44,32 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const skip = (page - 1) * limit;
+    let activeWorkspaceId = req.user?.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      activeWorkspaceId = workspaceMember?.workspaceId;
+    }
+
+    const whereClause: any = { userId };
+    if (activeWorkspaceId) {
+      const { teamIds, projectIds, taskIds } = await getWorkspaceObjectIds(activeWorkspaceId);
+      whereClause.OR = [
+        { teamId: { in: teamIds } },
+        { projectId: { in: projectIds } },
+        { taskId: { in: taskIds } },
+        {
+          teamId: null,
+          projectId: null,
+          taskId: null,
+        },
+      ];
+    }
 
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: whereClause,
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
@@ -61,8 +116,32 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
 export const getUnreadCount = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
+    let activeWorkspaceId = req.user?.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      activeWorkspaceId = workspaceMember?.workspaceId;
+    }
+
+    const whereClause: any = { userId, isRead: false };
+    if (activeWorkspaceId) {
+      const { teamIds, projectIds, taskIds } = await getWorkspaceObjectIds(activeWorkspaceId);
+      whereClause.OR = [
+        { teamId: { in: teamIds } },
+        { projectId: { in: projectIds } },
+        { taskId: { in: taskIds } },
+        {
+          teamId: null,
+          projectId: null,
+          taskId: null,
+        },
+      ];
+    }
+
     const count = await prisma.notification.count({
-      where: { userId, isRead: false },
+      where: whereClause,
     });
     return successResponse(res, { count });
   } catch (error) {
@@ -101,9 +180,32 @@ export const markAsRead = async (req: AuthRequest, res: Response) => {
 export const markAllAsRead = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
+    let activeWorkspaceId = req.user?.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      activeWorkspaceId = workspaceMember?.workspaceId;
+    }
+
+    const whereClause: any = { userId, isRead: false };
+    if (activeWorkspaceId) {
+      const { teamIds, projectIds, taskIds } = await getWorkspaceObjectIds(activeWorkspaceId);
+      whereClause.OR = [
+        { teamId: { in: teamIds } },
+        { projectId: { in: projectIds } },
+        { taskId: { in: taskIds } },
+        {
+          teamId: null,
+          projectId: null,
+          taskId: null,
+        },
+      ];
+    }
 
     await prisma.notification.updateMany({
-      where: { userId, isRead: false },
+      where: whereClause,
       data: { isRead: true },
     });
 

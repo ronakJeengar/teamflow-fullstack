@@ -11,6 +11,14 @@ export const getMyTasks = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
     const { status, tab } = req.query;
+    let activeWorkspaceId = req.user?.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      activeWorkspaceId = workspaceMember?.workspaceId;
+    }
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -20,6 +28,14 @@ export const getMyTasks = async (req: AuthRequest, res: Response) => {
     const whereClause: any = {
       assignedToId: userId,
     };
+
+    if (activeWorkspaceId) {
+      whereClause.project = {
+        team: {
+          workspaceId: activeWorkspaceId,
+        },
+      };
+    }
 
     if (status) {
       whereClause.status = status;
@@ -212,6 +228,12 @@ export const createTask = async (req: AuthRequest, res: Response) => {
       tags,
       projectId,
       assignedToId,
+      sprintId,
+      storyPoints,
+      backlogStatus,
+      isRecurring,
+      recurrence,
+      parentId,
     } = validation.data;
 
     const project = await prisma.project.findUnique({
@@ -220,6 +242,15 @@ export const createTask = async (req: AuthRequest, res: Response) => {
 
     if (!project) {
       return errorResponse(res, "Project not found", 404);
+    }
+
+    if (sprintId) {
+      const sprint = await prisma.sprint.findUnique({
+        where: { id: sprintId },
+      });
+      if (sprint && sprint.status === "COMPLETED") {
+        return errorResponse(res, "Cannot assign tasks to a completed sprint", 400);
+      }
     }
 
     const member = await prisma.teamMember.findFirst({
@@ -247,6 +278,12 @@ export const createTask = async (req: AuthRequest, res: Response) => {
         projectId,
         createdById: userId,
         assignedToId: assignedToId || null,
+        sprintId: sprintId || null,
+        storyPoints: storyPoints || null,
+        backlogStatus: backlogStatus || "UNGROOMED",
+        isRecurring: isRecurring || false,
+        recurrence: recurrence || null,
+        parentId: parentId || null,
       },
     });
 
@@ -341,6 +378,18 @@ export const getTasks = async (req: AuthRequest, res: Response) => {
   }
 };
 
+function getNextDueDate(currentDate: Date, recurrence: "DAILY" | "WEEKLY" | "MONTHLY"): Date {
+  const next = new Date(currentDate);
+  if (recurrence === "DAILY") {
+    next.setDate(next.getDate() + 1);
+  } else if (recurrence === "WEEKLY") {
+    next.setDate(next.getDate() + 7);
+  } else if (recurrence === "MONTHLY") {
+    next.setMonth(next.getMonth() + 1);
+  }
+  return next;
+}
+
 // PATCH /tasks/:id — update task
 export const updateTask = async (req: AuthRequest, res: Response) => {
   try {
@@ -389,7 +438,27 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
       dueDate,
       tags,
       assignedToId,
+      sprintId,
+      storyPoints,
+      backlogStatus,
+      isRecurring,
+      recurrence,
+      parentId,
     } = validation.data;
+
+    if (task.sprintId) {
+      const sprint = await prisma.sprint.findUnique({ where: { id: task.sprintId } });
+      if (sprint && sprint.status === "COMPLETED") {
+        return errorResponse(res, "Tasks in completed sprints are read-only", 400);
+      }
+    }
+
+    if (sprintId) {
+      const sprint = await prisma.sprint.findUnique({ where: { id: sprintId } });
+      if (sprint && sprint.status === "COMPLETED") {
+        return errorResponse(res, "Cannot assign tasks to a completed sprint", 400);
+      }
+    }
 
     // Track changed fields to log activity & notify
     const activitiesToLog: string[] = [];
@@ -421,6 +490,14 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
         activitiesToLog.push(`removed assignee`);
       }
     }
+    if (sprintId !== undefined && sprintId !== task.sprintId) {
+      if (sprintId) {
+        const sprint = await prisma.sprint.findUnique({ where: { id: sprintId } });
+        activitiesToLog.push(`assigned task to sprint "${sprint ? sprint.name : sprintId}"`);
+      } else {
+        activitiesToLog.push("removed task from sprint");
+      }
+    }
 
     const parsedDueDate = dueDate === null ? null : dueDate ? new Date(dueDate) : undefined;
 
@@ -434,8 +511,45 @@ export const updateTask = async (req: AuthRequest, res: Response) => {
         dueDate: parsedDueDate,
         tags,
         assignedToId,
+        sprintId,
+        storyPoints,
+        backlogStatus,
+        isRecurring,
+        recurrence,
+        parentId,
       },
     });
+
+    // Handle recurring tasks completion
+    if (status === "DONE" && task.status !== "DONE") {
+      const checkRecurring = isRecurring !== undefined ? isRecurring : task.isRecurring;
+      const checkRecurrence = recurrence !== undefined ? recurrence : task.recurrence;
+
+      if (checkRecurring && checkRecurrence) {
+        const baseDate = task.dueDate ? new Date(task.dueDate) : new Date();
+        const nextDueDate = getNextDueDate(baseDate, checkRecurrence);
+
+        await prisma.task.create({
+          data: {
+            title: task.title,
+            description: task.description,
+            status: "TODO",
+            priority: task.priority,
+            dueDate: nextDueDate,
+            tags: task.tags,
+            projectId: task.projectId,
+            createdById: task.createdById,
+            assignedToId: task.assignedToId,
+            sprintId: null, // default to backlog
+            storyPoints: task.storyPoints,
+            backlogStatus: "UNGROOMED",
+            isRecurring: true,
+            recurrence: checkRecurrence,
+            parentId: task.id, // link history
+          },
+        });
+      }
+    }
 
     // Write activity logs
     if (activitiesToLog.length > 0) {
@@ -504,6 +618,13 @@ export const deleteTask = async (req: AuthRequest, res: Response) => {
     const task = await prisma.task.findUnique({ where: { id } });
     if (!task) {
       return errorResponse(res, "Task not found", 404);
+    }
+
+    if (task.sprintId) {
+      const sprint = await prisma.sprint.findUnique({ where: { id: task.sprintId } });
+      if (sprint && sprint.status === "COMPLETED") {
+        return errorResponse(res, "Tasks in completed sprints cannot be deleted", 400);
+      }
     }
 
     const project = await prisma.project.findUnique({

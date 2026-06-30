@@ -7,6 +7,15 @@ import { successResponse, errorResponse } from "../utils/response.js";
 export const getDashboardStats = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
+    let activeWorkspaceId = req.user?.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      // Fallback: find user's first workspace membership or ownership
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      activeWorkspaceId = workspaceMember?.workspaceId;
+    }
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -16,15 +25,24 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     const weekStart = new Date(todayStart);
     weekStart.setDate(todayStart.getDate() - 6);
 
+    const taskFilter: any = { assignedToId: userId };
+    if (activeWorkspaceId) {
+      taskFilter.project = {
+        team: {
+          workspaceId: activeWorkspaceId,
+        },
+      };
+    }
+
     const [statusGroups, tasksDueToday, completedThisWeek, sparklineTasks] = await Promise.all([
       prisma.task.groupBy({
         by: ['status'],
-        where: { assignedToId: userId },
+        where: taskFilter,
         _count: { _all: true },
       }),
       prisma.task.count({
         where: {
-          assignedToId: userId,
+          ...taskFilter,
           dueDate: {
             gte: todayStart,
             lte: todayEnd,
@@ -33,7 +51,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       }),
       prisma.task.count({
         where: {
-          assignedToId: userId,
+          ...taskFilter,
           status: "DONE",
           updatedAt: {
             gte: weekStart,
@@ -42,7 +60,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       }),
       prisma.task.findMany({
         where: {
-          assignedToId: userId,
+          ...taskFilter,
           OR: [
             {
               dueDate: {
@@ -114,8 +132,15 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     }
 
     // Aggregations for workspace and project metrics
+    const teamWhereClause: any = { userId };
+    if (activeWorkspaceId) {
+      teamWhereClause.team = {
+        workspaceId: activeWorkspaceId,
+      };
+    }
+
     const userTeams = await prisma.teamMember.findMany({
-      where: { userId },
+      where: teamWhereClause,
       select: { teamId: true },
     });
     const teamIds = userTeams.map((ut) => ut.teamId);
@@ -148,11 +173,88 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     }));
 
     const active_tasks_count = await prisma.task.count({
-      where: { assignedToId: userId, NOT: { status: "DONE" } },
+      where: {
+        assignedToId: userId,
+        NOT: { status: "DONE" },
+        project: activeWorkspaceId
+          ? {
+              team: {
+                workspaceId: activeWorkspaceId,
+              },
+            }
+          : undefined,
+      },
     });
     const completed_tasks_count = await prisma.task.count({
-      where: { assignedToId: userId, status: "DONE" },
+      where: {
+        assignedToId: userId,
+        status: "DONE",
+        project: activeWorkspaceId
+          ? {
+              team: {
+                workspaceId: activeWorkspaceId,
+              },
+            }
+          : undefined,
+      },
     });
+
+    // Sprint Dashboard Integration
+    const currentActiveSprint = activeWorkspaceId
+      ? await prisma.sprint.findFirst({
+          where: {
+            status: "ACTIVE",
+            workspaceId: activeWorkspaceId,
+          },
+          include: {
+            tasks: true,
+          },
+        })
+      : null;
+
+    let sprintProgress: any = null;
+    let sprintVelocity = 0;
+
+    if (currentActiveSprint) {
+      const totalTasks = currentActiveSprint.tasks.length;
+      const completedTasks = currentActiveSprint.tasks.filter((t) => t.status === "DONE").length;
+      const completionPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+      sprintProgress = {
+        totalTasks,
+        completedTasks,
+        completionPercentage,
+      };
+
+      const completedSprints = await prisma.sprint.findMany({
+        where: {
+          teamId: currentActiveSprint.teamId,
+          status: "COMPLETED",
+        },
+        include: {
+          tasks: {
+            where: { status: "DONE" },
+          },
+        },
+      });
+
+      const priorityWeights: Record<string, number> = {
+        LOW: 1,
+        MEDIUM: 3,
+        HIGH: 5,
+        URGENT: 8,
+      };
+
+      const totalCompletedPoints = completedSprints.reduce((sum, s) => {
+        return sum + s.tasks.reduce((tsum: number, t) => tsum + (priorityWeights[t.priority] || 3), 0);
+      }, 0);
+
+      sprintVelocity = completedSprints.length > 0 ? Math.round(totalCompletedPoints / completedSprints.length) : 0;
+    }
+
+    const team_count = activeWorkspaceId
+      ? await prisma.team.count({ where: { workspaceId: activeWorkspaceId } })
+      : 0;
 
     return successResponse(res, {
       tasksDueToday,
@@ -163,10 +265,14 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
       sparklines,
       project_count,
       member_count,
+      team_count,
       task_count,
       task_count_per_project,
       active_tasks_count,
       completed_tasks_count,
+      currentSprint: currentActiveSprint,
+      sprintProgress,
+      sprintVelocity,
     });
   } catch (error) {
     console.error("Error calculating dashboard stats:", error);

@@ -17,6 +17,7 @@ model Task {
   projectId    String
   createdById  String
   assignedToId String?
+  sprintId     String?
   
   // NEW
   comments     Comment[]
@@ -25,6 +26,19 @@ model Task {
   createdBy    User       @relation("UserTasks", fields: [createdById], references: [id])
   assignedTo   User?      @relation("AssignedTasks", fields: [assignedToId], references: [id])
   project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sprint       Sprint?    @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+  
+  // Backlog & Planning
+  storyPoints   Int?
+  backlogStatus BacklogStatus? @default(UNGROOMED)
+  
+  // Recurring Tasks
+  isRecurring   Boolean        @default(false)
+  recurrence    Recurrence?
+  parentId      String?
+  parent        Task?          @relation("TaskHistory", fields: [parentId], references: [id], onDelete: SetNull)
+  children      Task[]         @relation("TaskHistory")
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   
@@ -33,6 +47,20 @@ model Task {
   @@index([status])
   @@index([dueDate])
   @@index([createdById])
+  @@index([sprintId])
+  @@index([parentId])
+}
+
+enum BacklogStatus {
+  UNGROOMED
+  READY
+  BLOCKED
+}
+
+enum Recurrence {
+  DAILY
+  WEEKLY
+  MONTHLY
 }
 
 enum TaskStatus {
@@ -63,6 +91,8 @@ model Project {
   status      ProjectStatus @default(ACTIVE)
   visibility  Visibility    @default(PRIVATE)
   tasks       Task[]
+  sprintId    String?
+  sprint      Sprint?       @relation(fields: [sprintId], references: [id], onDelete: SetNull)
   startDate   DateTime?
   dueDate     DateTime?
   createdAt   DateTime      @default(now())
@@ -71,6 +101,7 @@ model Project {
   @@index([teamId])
   @@index([ownerId])
   @@index([status])
+  @@index([sprintId])
 }
 
 enum ProjectStatus {
@@ -98,6 +129,7 @@ model User {
   projects          Project[]
   tasks             Task[]            @relation("UserTasks")
   assignedTasks     Task[]            @relation("AssignedTasks")
+  sprints           Sprint[]          @relation("UserSprints")
   sentInvitations   TeamInvitation[]  @relation("InvitationSender")
   
   comments          Comment[]
@@ -144,6 +176,7 @@ model Team {
 
   members     TeamMember[]
   projects    Project[]
+  sprints     Sprint[]
   invitations TeamInvitation[]
 
   workspaceId String?
@@ -206,17 +239,24 @@ enum InvitationStatus {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
-  content   String
-  taskId    String
-  userId    String
-  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String    @id @default(uuid())
+  taskId          String
+  authorId        String
+  message         String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  editedAt        DateTime?
+  deletedAt       DateTime?
+  parentCommentId String?
+  mentions        String[]  @default([])
+
+  task            Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author          User      @relation(fields: [authorId], references: [id])
+  parentComment   Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [id], onDelete: Cascade)
+  replies         Comment[] @relation("CommentReplies")
 
   @@index([taskId])
-  @@index([userId])
+  @@index([authorId])
 }
 
 model Notification {
@@ -245,6 +285,10 @@ enum NotificationType {
   PROJECT_ADDED
   TEAM_INVITED
   MENTION
+  SPRINT_STARTED
+  SPRINT_COMPLETED
+  TASK_MOVED_TO_SPRINT
+  SPRINT_ENDING
 }
 
 model Workspace {
@@ -256,6 +300,7 @@ model Workspace {
   owner       User     @relation("WorkspaceOwner", fields: [ownerId], references: [id])
   members     WorkspaceMember[]
   teams       Team[]
+  sprints     Sprint[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -273,4 +318,36 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
   @@index([userId])
+}
+
+model Sprint {
+  id          String       @id @default(uuid())
+  name        String
+  goal        String?
+  startDate   DateTime
+  endDate     DateTime
+  status      SprintStatus @default(PLANNED)
+  teamId      String
+  workspaceId String
+  createdById String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy   User         @relation("UserSprints", fields: [createdById], references: [id])
+  tasks       Task[]
+  projects    Project[]
+
+  @@index([teamId])
+  @@index([workspaceId])
+  @@index([createdById])
+  @@index([status])
+}
+
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }

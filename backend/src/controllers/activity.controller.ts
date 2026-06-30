@@ -111,3 +111,110 @@ export const getProjectActivities = async (req: AuthRequest, res: Response) => {
     return errorResponse(res, "Internal server error", 500);
   }
 };
+
+// GET /activities/workspaces/:workspaceId — workspace-level timeline
+export const getWorkspaceActivities = async (req: AuthRequest, res: Response) => {
+  try {
+    const { workspaceId } = req.params;
+    const userId = req.user!.userId;
+
+    const isMember = await prisma.workspaceMember.findUnique({
+      where: {
+        workspaceId_userId: {
+          workspaceId,
+          userId,
+        },
+      },
+    });
+
+    if (!isMember) {
+      return errorResponse(res, "Access denied. Not a workspace member.", 403);
+    }
+
+    const teams = await prisma.team.findMany({ where: { workspaceId } });
+    const teamIds = teams.map(t => t.id);
+
+    const projects = await prisma.project.findMany({ where: { teamId: { in: teamIds } } });
+    const projectIds = projects.map(p => p.id);
+
+    const tasks = await prisma.task.findMany({ where: { projectId: { in: projectIds } } });
+    const taskIds = tasks.map(t => t.id);
+
+    const activities = await prisma.activityLog.findMany({
+      where: {
+        OR: [
+          { teamId: { in: teamIds } },
+          { projectId: { in: projectIds } },
+          { taskId: { in: taskIds } },
+        ],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return successResponse(res, activities);
+  } catch (error: any) {
+    return errorResponse(res, error.message);
+  }
+};
+
+// GET /activities/teams/:teamId — team-level timeline
+export const getTeamActivities = async (req: AuthRequest, res: Response) => {
+  try {
+    const { teamId } = req.params;
+    const userId = req.user!.userId;
+
+    const isMember = await prisma.teamMember.findUnique({
+      where: {
+        teamId_userId: {
+          teamId,
+          userId,
+        },
+      },
+    });
+
+    if (!isMember) {
+      return errorResponse(res, "Access denied. Not a team member.", 403);
+    }
+
+    const projects = await prisma.project.findMany({ where: { teamId } });
+    const projectIds = projects.map(p => p.id);
+
+    const tasks = await prisma.task.findMany({ where: { projectId: { in: projectIds } } });
+    const taskIds = tasks.map(t => t.id);
+
+    const activities = await prisma.activityLog.findMany({
+      where: {
+        OR: [
+          { teamId },
+          { projectId: { in: projectIds } },
+          { taskId: { in: taskIds } },
+        ],
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return successResponse(res, activities);
+  } catch (error: any) {
+    return errorResponse(res, error.message);
+  }
+};

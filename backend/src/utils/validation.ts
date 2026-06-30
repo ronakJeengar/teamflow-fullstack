@@ -9,12 +9,21 @@ export const createTaskSchema = z.object({
   tags: z.array(z.string()).optional(),
   projectId: z.string().uuid(),
   assignedToId: z.string().uuid().optional().nullable(),
+  sprintId: z.string().uuid().optional().nullable(),
+  storyPoints: z.number().refine(val => [1, 2, 3, 5, 8, 13, 21].includes(val), {
+    message: "Story points must be one of the Fibonacci sequence: 1, 2, 3, 5, 8, 13, 21"
+  }).optional().nullable(),
+  backlogStatus: z.enum(['UNGROOMED', 'READY', 'BLOCKED']).optional().nullable(),
+  isRecurring: z.boolean().optional(),
+  recurrence: z.enum(['DAILY', 'WEEKLY', 'MONTHLY']).optional().nullable(),
+  parentId: z.string().uuid().optional().nullable(),
 })
 
 export const updateTaskSchema = createTaskSchema.partial().omit({ projectId: true })
 
 export const createCommentSchema = z.object({
-  content: z.string().min(1).max(2000),
+  message: z.string().min(1).max(2000),
+  parentCommentId: z.string().uuid().optional().nullable(),
 })
 
 export const createWorkspaceSchema = z.object({
@@ -24,6 +33,6 @@ export const createWorkspaceSchema = z.object({
 
 export const searchSchema = z.object({
   q: z.string().min(1).max(100),
-  type: z.enum(['all', 'tasks', 'projects', 'teams']).optional().default('all'),
+  type: z.enum(['all', 'tasks', 'projects', 'teams', 'sprints', 'comments', 'workspaces']).optional().default('all'),
   limit: z.coerce.number().min(1).max(50).optional().default(10),
 })

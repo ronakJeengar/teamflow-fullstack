@@ -49,3 +49,23 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+import { prisma } from "./prisma/client.js";
+
+const gracefulShutdown = () => {
+  console.log("Received termination signal, shutting down gracefully...");
+  server.close(async () => {
+    console.log("Closed remaining server connections.");
+    await prisma.$disconnect();
+    console.log("Database disconnected cleanly. Exiting.");
+    process.exit(0);
+  });
+
+  setTimeout(() => {
+    console.error("Forcefully shutting down server due to timeout.");
+    process.exit(1);
+  }, 10000);
+};
+
+process.on("SIGTERM", gracefulShutdown);
+process.on("SIGINT", gracefulShutdown);

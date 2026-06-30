@@ -30,22 +30,57 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      },
+    const workspaceName = `${name}'s Workspace`;
+    let slug = workspaceName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)+/g, "");
+    
+    if (!slug) {
+      slug = "workspace";
+    }
+
+    const count = await prisma.workspace.count({ where: { slug } });
+    if (count > 0) {
+      slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const u = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+        },
+      });
+
+      await tx.workspace.create({
+        data: {
+          name: workspaceName,
+          slug,
+          color: "#7C5CFF",
+          ownerId: u.id,
+          members: {
+            create: {
+              userId: u.id,
+              role: "OWNER",
+            },
+          },
+        },
+      });
+
+      return u;
     });
 
-    successResponse(res, user, "Registration successful", 201);
+    const userResponse = {
+      id: result.id,
+      name: result.name,
+      email: result.email,
+      role: result.role,
+      createdAt: result.createdAt,
+    };
+
+    successResponse(res, userResponse, "Registration successful", 201);
   } catch (error) {
     console.error("Register error:", error);
     errorResponse(res, "Internal server error", 500);
@@ -74,11 +109,47 @@ export const login = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Default to the first workspace owned or member of, if none switch activeWorkspaceId will be done later
-    const workspaceMember = await prisma.workspaceMember.findFirst({
+    // Default to the first workspace owned or member of, if none auto-create
+    let workspaceMember = await prisma.workspaceMember.findFirst({
       where: { userId: user.id },
       orderBy: { joinedAt: "asc" },
     });
+
+    if (!workspaceMember) {
+      const workspaceName = `${user.name}'s Workspace`;
+      let slug = workspaceName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+      
+      if (!slug) {
+        slug = "workspace";
+      }
+
+      const count = await prisma.workspace.count({ where: { slug } });
+      if (count > 0) {
+        slug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+      }
+
+      const newWs = await prisma.workspace.create({
+        data: {
+          name: workspaceName,
+          slug,
+          color: "#7C5CFF",
+          ownerId: user.id,
+          members: {
+            create: {
+              userId: user.id,
+              role: "OWNER",
+            },
+          },
+        },
+      });
+
+      workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId: user.id, workspaceId: newWs.id },
+      });
+    }
 
     const activeWorkspaceId = workspaceMember ? workspaceMember.workspaceId : undefined;
 
@@ -153,7 +224,10 @@ export const getCurrentUser = async (
       return;
     }
 
-    successResponse(res, user, "User fetched successfully");
+    successResponse(res, {
+      ...user,
+      activeWorkspaceId: req.user.activeWorkspaceId,
+    }, "User fetched successfully");
   } catch (error) {
     console.error("Get current user error:", error);
     errorResponse(res, "Internal server error", 500);
