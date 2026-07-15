@@ -71,7 +71,7 @@ class SprintDetailPage extends HookConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: TeamFlowLoader()),
         error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
@@ -382,7 +382,7 @@ class SprintDetailPage extends HookConsumerWidget {
                 ],
               );
             },
-            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: TeamFlowLoader(size: 36))),
             error: (err, stack) => Text('Error loading stats: $err'),
           ),
           const SizedBox(height: 24),
@@ -431,7 +431,7 @@ class SprintDetailPage extends HookConsumerWidget {
                 ),
               );
             },
-            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: TeamFlowLoader(size: 36))),
             error: (err, stack) => Text('Error loading burndown: $err'),
           ),
           const SizedBox(height: 24),
@@ -485,7 +485,7 @@ class SprintDetailPage extends HookConsumerWidget {
                 ],
               );
             },
-            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+            loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: TeamFlowLoader(size: 36))),
             error: (err, stack) => Text('Error loading velocity: $err'),
           ),
         ],

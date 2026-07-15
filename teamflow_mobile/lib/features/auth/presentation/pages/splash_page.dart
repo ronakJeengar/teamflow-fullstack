@@ -29,16 +29,31 @@ class _SplashPageState extends State<SplashPage> {
       body: Center(
         child: AnimatedOpacity(
           opacity: _opacity,
-          duration: const Duration(milliseconds: 140),
-          curve: const Cubic(0.2, 0.0, 0.0, 1.0),
-          child: Text(
-            'TeamFlow',
-            style: GoogleFonts.inter(
-              fontSize: 32,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              letterSpacing: -1.0,
-            ),
+          duration: const Duration(milliseconds: 800),
+          curve: Curves.easeInOutCubic,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(22),
+                child: Image.asset(
+                  'assets/logos/2_monogram_tf.png',
+                  width: 96,
+                  height: 96,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'TeamFlow',
+                style: GoogleFonts.inter(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -1.0,
+                ),
+              ),
+            ],
           ),
         ),
       ),

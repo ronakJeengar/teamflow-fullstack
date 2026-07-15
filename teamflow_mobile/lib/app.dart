@@ -14,7 +14,7 @@ class MyApp extends ConsumerWidget {
     return MaterialApp.router(
       debugShowCheckedModeBanner: false ,
       routerConfig: router,
-      title: 'Flutter Clean Auth',
+      title: 'TeamFlow',
       theme: AppTheme.dark,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,

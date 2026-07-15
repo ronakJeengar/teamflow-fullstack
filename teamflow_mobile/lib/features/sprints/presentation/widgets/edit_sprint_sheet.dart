@@ -68,8 +68,13 @@ class EditSprintSheet extends HookConsumerWidget {
       if (success && context.mounted) {
         showAppSnackBar(context, 'Sprint updated successfully');
         Navigator.pop(context);
-      } else if (context.mounted && controllerState.hasError) {
-        showAppSnackBar(context, controllerState.error.toString());
+      } else if (context.mounted) {
+        final latestState = ref.read(sprintControllerProvider);
+        final errorMsg = latestState.maybeWhen(
+          error: (err, _) => err.toString(),
+          orElse: () => 'Failed to update sprint',
+        );
+        showAppSnackBar(context, errorMsg);
       }
     }
 

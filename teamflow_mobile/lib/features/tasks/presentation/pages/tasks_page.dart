@@ -19,6 +19,7 @@ import 'package:teamflow_mobile/features/teams/domain/entities/team_member_entit
 import 'package:teamflow_mobile/features/teams/presentation/providers/team_details_providers.dart';
 import 'package:teamflow_mobile/features/teams/presentation/providers/teams_providers.dart';
 import 'package:teamflow_mobile/features/projects/domain/entitties/project_entity.dart';
+import 'package:teamflow_mobile/features/teams/domain/entities/team_entity.dart';
 import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
 import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
 import '../../../sprints/presentation/widgets/sprint_list_view.dart';
@@ -112,6 +113,12 @@ class TasksPage extends HookConsumerWidget {
     );
     final projectName = project?.name ?? 'Project';
 
+    final team = teamsState.teams.cast<TeamEntity?>().firstWhere(
+      (t) => t?.id == teamId,
+      orElse: () => null,
+    );
+    final teamName = team?.name ?? 'Project Team';
+
     // Direct lookup using the passed teamId — no reverse project search needed
     final membership = memberships.firstWhere(
           (m) => m.team.id == teamId,
@@ -135,154 +142,86 @@ class TasksPage extends HookConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppTokens.bg,
-      body: viewMode.value == 'tasks'
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _TopBar(
-                  activeTab: activeTab.value,
-                  counts: tasksByStatus.map((l) => l.length).toList(),
-                  dragTarget: dragTarget.value,
-                  isViewer: isViewer,
-                  viewMode: viewMode,
-                  onTabChanged: (i) {
-                    activeTab.value = i;
-                    HapticFeedback.selectionClick();
-                  },
-                  onDragOver: (i) => dragTarget.value = i,
-                  onDragLeft: () => dragTarget.value = null,
-                  onDropped: isViewer ? (_, __) {} : (task, i) {
-                    dragTarget.value = null;
-                    final newStatus = _columns[i].status;
-                    if (task.status == newStatus) return;
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _TopBar(
+            projectName: projectName,
+            teamName: teamName,
+            activeTab: activeTab.value,
+            counts: tasksByStatus.map((l) => l.length).toList(),
+            dragTarget: dragTarget.value,
+            isViewer: isViewer,
+            viewMode: viewMode,
+            onTabChanged: (i) {
+              activeTab.value = i;
+              HapticFeedback.selectionClick();
+            },
+            onDragOver: (i) => dragTarget.value = i,
+            onDragLeft: () => dragTarget.value = null,
+            onDropped: isViewer ? (_, __) {} : (task, i) {
+              dragTarget.value = null;
+              final newStatus = _columns[i].status;
+              if (task.status == newStatus) return;
 
-                    // Verify permission
-                    final currentUserId = ref.read(authStateNotifierProvider).user?.id ?? '';
-                    final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(userRole);
-                    final isAssignee = task.assignedToId == currentUserId;
+              // Verify permission
+              final currentUserId = ref.read(authStateNotifierProvider).user?.id ?? '';
+              final isOwnerOrAdminOrManager = ['OWNER', 'ADMIN', 'MANAGER'].contains(userRole);
+              final isAssignee = task.assignedToId == currentUserId;
 
-                    if (!isOwnerOrAdminOrManager && !isAssignee) {
-                      showAppSnackBar(context, "You don't have permission to modify this task");
-                      return;
-                    }
+              if (!isOwnerOrAdminOrManager && !isAssignee) {
+                showAppSnackBar(context, "You don't have permission to modify this task");
+                return;
+              }
 
-                    activeTab.value = i;
-                    ref
-                        .read(updateTaskControllerProvider.notifier)
-                        .moveTask(taskId: task.id, newStatus: newStatus);
-                  },
-                  onLogoutTap: () => showModalBottomSheet(
-                    context: context,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => const LogoutSheet(),
-                  ),
-                ),
-                Expanded(
-                  child: _Body(
-                    config: _columns[activeTab.value],
-                    tasks: tasksByStatus[activeTab.value],
-                    tabKey: activeTab.value,
-                    userRole: userRole,
-                    teamId: teamId,
-                    projectName: projectName,
-                  ),
-                ),
-              ],
-            )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + AppTokens.s16,
-                    left: AppTokens.s20,
-                    right: AppTokens.s20,
-                    bottom: AppTokens.s12,
-                  ),
-                  child: Row(
-                    children: [
-                      AppIconButton(
-                        icon: Icons.arrow_back_ios_new_rounded,
-                        onTap: () => Navigator.of(context).pop(),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          viewMode.value == 'sprints'
-                              ? '$projectName Sprints'
-                              : viewMode.value == 'backlog'
-                                  ? '$projectName Backlog'
-                                  : '$projectName Planning',
-                          style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      AppIconButton(
-                        icon: Icons.dashboard_outlined,
-                        color: viewMode.value == 'tasks' ? AppColors.primary : AppColors.muted,
-                        onTap: () {
-                          viewMode.value = 'tasks';
-                          HapticFeedback.selectionClick();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      AppIconButton(
-                        icon: Icons.calendar_today_rounded,
-                        color: viewMode.value == 'sprints' ? AppColors.primary : AppColors.muted,
-                        onTap: () {
-                          viewMode.value = 'sprints';
-                          HapticFeedback.selectionClick();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      AppIconButton(
-                        icon: Icons.all_inbox_rounded,
-                        color: viewMode.value == 'backlog' ? AppColors.primary : AppColors.muted,
-                        onTap: () {
-                          viewMode.value = 'backlog';
-                          HapticFeedback.selectionClick();
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      AppIconButton(
-                        icon: Icons.playlist_add_check_rounded,
-                        color: viewMode.value == 'sprint-planning' ? AppColors.primary : AppColors.muted,
-                        onTap: () {
-                          viewMode.value = 'sprint-planning';
-                          HapticFeedback.selectionClick();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(color: AppColors.border, height: 1),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: viewMode.value == 'sprints'
+              activeTab.value = i;
+              ref
+                  .read(updateTaskControllerProvider.notifier)
+                  .moveTask(taskId: task.id, newStatus: newStatus);
+            },
+            onLogoutTap: () => showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const LogoutSheet(),
+            ),
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: viewMode.value == 'tasks'
+                  ? _Body(
+                      key: ValueKey('tasks_${activeTab.value}'),
+                      config: _columns[activeTab.value],
+                      tasks: tasksByStatus[activeTab.value],
+                      tabKey: activeTab.value,
+                      userRole: userRole,
+                      teamId: teamId,
+                      projectName: projectName,
+                    )
+                  : viewMode.value == 'sprints'
                       ? SprintListView(
+                          key: const ValueKey('sprints'),
                           projectId: projectId,
                           teamId: teamId,
                           isViewer: isViewer,
                         )
                       : viewMode.value == 'backlog'
                           ? BacklogView(
+                              key: const ValueKey('backlog'),
                               projectId: projectId,
                               teamId: teamId,
                               isViewer: isViewer,
                             )
                           : SprintPlanningView(
+                              key: const ValueKey('planning'),
                               projectId: projectId,
                               teamId: teamId,
                               isViewer: isViewer,
                             ),
-                ),
-              ],
             ),
+          ),
+        ],
+      ),
       floatingActionButton: (screenWidth < 768 && !isViewer && viewMode.value == 'tasks')
           ? _Fab(projectId: projectId, teamId: teamId)
           : null,
@@ -291,6 +230,8 @@ class TasksPage extends HookConsumerWidget {
 }
 
 class _TopBar extends StatelessWidget {
+  final String projectName;
+  final String teamName;
   final int activeTab;
   final List<int> counts;
   final int? dragTarget;
@@ -303,6 +244,8 @@ class _TopBar extends StatelessWidget {
   final ValueNotifier<String> viewMode;
 
   const _TopBar({
+    required this.projectName,
+    required this.teamName,
     required this.activeTab,
     required this.counts,
     required this.dragTarget,
@@ -314,6 +257,52 @@ class _TopBar extends StatelessWidget {
     required this.isViewer,
     required this.viewMode,
   });
+
+  Widget _buildViewTab({
+    required String label,
+    required IconData icon,
+    required String mode,
+  }) {
+    final isActive = viewMode.value == mode;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          viewMode.value = mode;
+          HapticFeedback.selectionClick();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: BoxDecoration(
+            color: isActive ? AppColors.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(
+              color: isActive ? AppColors.border : Colors.transparent,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: isActive ? AppColors.primary : AppColors.muted,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                  color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -332,226 +321,205 @@ class _TopBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: top + AppTokens.s16),
+          SizedBox(height: top + AppTokens.s12),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppIconButton(
                   icon: Icons.arrow_back_ios_new_rounded,
                   onTap: () => Navigator.of(context).pop(),
                 ),
-                SizedBox(width: AppTokens.s16),
-
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 220),
-                        switchInCurve: Curves.easeOut,
-                        transitionBuilder: (child, anim) => FadeTransition(
-                          opacity: anim,
-                          child: SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(-0.1, 0),
-                              end: Offset.zero,
-                            ).animate(
-                              CurvedAnimation(parent: anim, curve: Curves.easeOut),
-                            ),
-                            child: child,
-                          ),
+                      Text(
+                        projectName,
+                        style: GoogleFonts.inter(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
-                        child: _StatusPill(config: col, key: ValueKey(activeTab)),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-
-                      SizedBox(height: AppTokens.s8),
-
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            child: AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 260),
-                              switchInCurve: Curves.easeOut,
-                              transitionBuilder: (child, anim) => FadeTransition(
-                                opacity: anim,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0, 0.12),
-                                    end: Offset.zero,
-                                  ).animate(
-                                    CurvedAnimation(parent: anim, curve: Curves.easeOut),
-                                  ),
-                                  child: child,
-                                ),
-                              ),
-                              child: Text(
-                                col.title,
-                                key: ValueKey('title_$activeTab'),
-                                style: AppTokens.displayLg,
-                              ),
-                            ),
-                          ),
-                          AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 280),
-                            transitionBuilder: (c, a) =>
-                                ScaleTransition(scale: a, child: c),
-                            child: Text(
-                              '${counts[activeTab]}',
-                              key: ValueKey('cnt_$activeTab${counts[activeTab]}'),
-                              style: GoogleFonts.inter(
-                                fontSize: 52,
-                                fontWeight: FontWeight.w800,
-                                color: col.accent.withOpacity(0.10),
-                                letterSpacing: -2,
-                                height: 0.9,
-                              ),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 2),
+                      Text(
+                        teamName,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.muted,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-
-                      SizedBox(height: AppTokens.s4),
-                      Text(col.subtitle, style: AppTokens.bodySm),
                     ],
                   ),
                 ),
-                const SizedBox(width: 8),
                 AppIconButton(
-                  icon: Icons.calendar_today_rounded,
-                  color: viewMode.value == 'sprints' ? AppColors.primary : AppColors.muted,
-                  onTap: () {
-                    viewMode.value = 'sprints';
-                    HapticFeedback.selectionClick();
-                  },
+                  icon: Icons.logout_rounded,
+                  onTap: onLogoutTap,
+                  color: AppColors.muted,
                 ),
-                const SizedBox(width: 8),
-                AppIconButton(
-                  icon: Icons.all_inbox_rounded,
-                  color: viewMode.value == 'backlog' ? AppColors.primary : AppColors.muted,
-                  onTap: () {
-                    viewMode.value = 'backlog';
-                    HapticFeedback.selectionClick();
-                  },
-                ),
-                const SizedBox(width: 8),
-                AppIconButton(
-                  icon: Icons.playlist_add_check_rounded,
-                  color: viewMode.value == 'sprint-planning' ? AppColors.primary : AppColors.muted,
-                  onTap: () {
-                    viewMode.value = 'sprint-planning';
-                    HapticFeedback.selectionClick();
-                  },
-                ),
-                const SizedBox(width: 8),
-                AppIconButton(icon: Icons.logout_rounded, onTap: onLogoutTap, color: AppColors.muted),
               ],
             ),
           ),
-
-          SizedBox(height: AppTokens.s24),
-
-          SizedBox(
-            height: 52,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
-              itemCount: _columns.length,
-              separatorBuilder: (_, __) => SizedBox(width: AppTokens.s8),
-              itemBuilder: (_, i) {
-                final c = _columns[i];
-                final isActive = activeTab == i;
-                final isDragHover = dragTarget == i;
-
-                return DragTarget<TaskEntity>(
-                  onWillAcceptWithDetails: (d) {
-                    if (isViewer) return false;
-                    if (d.data.status == c.status) return false;
-                    onDragOver(i);
-                    return true;
-                  },
-                  onLeave: (_) => onDragLeft(),
-                  onAcceptWithDetails: (d) {
-                    HapticFeedback.mediumImpact();
-                    onDropped(d.data, i);
-                  },
-                  builder: (_, candidates, __) {
-                    final hovering = candidates.isNotEmpty || isDragHover;
-
-                    return GestureDetector(
-                      onTap: () => onTabChanged(i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 120),
-                        curve: Curves.easeOut,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTokens.s16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: hovering
-                              ? c.accentSurface
-                              : isActive
-                              ? AppTokens.surface
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(AppTokens.r8),
-                          border: Border.all(
-                            color: hovering
-                                ? c.accent
-                                : isActive
-                                ? AppTokens.brand
-                                : AppTokens.border,
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 180),
-                              child: Icon(
-                                hovering ? Icons.add_circle_rounded : c.icon,
-                                key: ValueKey(hovering),
-                                size: 15,
-                                color: isActive && !hovering
-                                    ? AppTokens.brand
-                                    : hovering
-                                    ? c.accent
-                                    : AppTokens.textSecondary,
-                              ),
-                            ),
-                            SizedBox(width: AppTokens.s6),
-                            Text(
-                              c.title,
-                              style: GoogleFonts.inter(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.1,
-                                color: isActive && !hovering
-                                    ? AppTokens.textPrimary
-                                    : hovering
-                                    ? c.accent
-                                    : AppTokens.textSecondary,
-                              ),
-                            ),
-                            SizedBox(width: AppTokens.s8),
-                            _CountBadge(
-                              count: counts[i],
-                              isActive: isActive && !hovering,
-                              color: c.accent,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
+            child: Container(
+              height: 40,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  _buildViewTab(
+                    label: 'Board',
+                    icon: Icons.grid_view_rounded,
+                    mode: 'tasks',
+                  ),
+                  _buildViewTab(
+                    label: 'Sprints',
+                    icon: Icons.rotate_right_rounded,
+                    mode: 'sprints',
+                  ),
+                  _buildViewTab(
+                    label: 'Backlog',
+                    icon: Icons.all_inbox_rounded,
+                    mode: 'backlog',
+                  ),
+                  _buildViewTab(
+                    label: 'Planning',
+                    icon: Icons.playlist_add_check_rounded,
+                    mode: 'sprint-planning',
+                  ),
+                ],
+              ),
             ),
           ),
+          if (viewMode.value == 'tasks') ...[
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _StatusPill(config: col),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      col.subtitle,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.muted,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 48,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppTokens.s20),
+                itemCount: _columns.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (_, i) {
+                  final c = _columns[i];
+                  final isActive = activeTab == i;
+                  final isDragHover = dragTarget == i;
 
-          SizedBox(height: AppTokens.s20),
-          Container(height: 1, color: AppTokens.border),
+                  return DragTarget<TaskEntity>(
+                    onWillAcceptWithDetails: (d) {
+                      if (isViewer) return false;
+                      if (d.data.status == c.status) return false;
+                      onDragOver(i);
+                      return true;
+                    },
+                    onLeave: (_) => onDragLeft(),
+                    onAcceptWithDetails: (d) {
+                      HapticFeedback.mediumImpact();
+                      onDropped(d.data, i);
+                    },
+                    builder: (_, candidates, __) {
+                      final hovering = candidates.isNotEmpty || isDragHover;
+
+                      return GestureDetector(
+                        onTap: () => onTabChanged(i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 120),
+                          curve: Curves.easeOut,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: hovering
+                                ? c.accentSurface
+                                : isActive
+                                ? AppColors.surface
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: hovering
+                                  ? c.accent
+                                  : isActive
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 180),
+                                child: Icon(
+                                  hovering ? Icons.add_circle_rounded : c.icon,
+                                  key: ValueKey(hovering),
+                                  size: 15,
+                                  color: isActive && !hovering
+                                      ? AppColors.primary
+                                      : hovering
+                                      ? c.accent
+                                      : AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                c.title,
+                                style: GoogleFonts.inter(
+                                  fontSize: 13,
+                                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                                  color: isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              _CountBadge(
+                                count: counts[i],
+                                isActive: isActive && !hovering,
+                                color: c.accent,
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
         ],
       ),
     );
@@ -648,6 +616,7 @@ class _Body extends StatelessWidget {
   final String projectName;
 
   const _Body({
+    super.key,
     required this.config,
     required this.tasks,
     required this.tabKey,

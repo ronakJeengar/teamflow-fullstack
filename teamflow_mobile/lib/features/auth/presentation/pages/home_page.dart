@@ -357,7 +357,7 @@ class HomePage extends HookConsumerWidget {
                             ],
                           );
                         },
-                        orElse: () => const Center(child: CircularProgressIndicator()),
+                        orElse: () => const Center(child: TeamFlowLoader(size: 40)),
                       ),
                     ],
                   ),
@@ -486,7 +486,7 @@ class HomePage extends HookConsumerWidget {
                   ),
                 ]);
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: TeamFlowLoader()),
               error: (err, stack) => const StatBlockRow(cards: [
                 StatCard(value: '0', label: 'Tasks today', color: AppColors.primary, trendText: 'Error loading', trendIsPositive: false),
                 StatCard(value: '0', label: 'In Progress', color: AppColors.warning, trendText: 'Error loading', trendIsPositive: false),
@@ -610,7 +610,7 @@ class HomePage extends HookConsumerWidget {
               loading: () => const Center(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 24),
-                  child: CircularProgressIndicator(),
+                  child: TeamFlowLoader(size: 40),
                 ),
               ),
               error: (err, stack) => Center(

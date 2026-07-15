@@ -841,7 +841,7 @@ class TaskDetailPage extends HookConsumerWidget {
                             }).toList(),
                           );
                         },
-                        loading: () => const Center(child: CircularProgressIndicator()),
+                        loading: () => const Center(child: TeamFlowLoader(size: 32)),
                         error: (err, stack) => Text('Error loading activities', style: GoogleFonts.inter(color: AppColors.danger)),
                       )
                     else

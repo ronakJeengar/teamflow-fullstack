@@ -4,6 +4,7 @@ import '../../../../core/utils/failure_mapper.dart';
 import '../../../dashboard/presentation/providers/stats_providers.dart';
 import '../../../tasks/presentation/providers/task_providers.dart';
 import '../../../notifications/presentation/providers/notifications_providers.dart';
+import '../../../auth/presentation/providers/providers.dart';
 import '../../domain/usecases/update_team_usecase.dart';
 import 'teams_state_notifier.dart';
 
@@ -25,16 +26,17 @@ class UpdateTeamController extends StateNotifier<AsyncValue<void>> {
       UpdateTeamParams(teamId: id, name: name),
     );
 
-    result.fold(
-      (failure) =>
+    await result.fold(
+      (failure) async =>
           state = AsyncError(mapFailureToMessage(failure), StackTrace.current),
-      (team) {
+      (team) async {
         teamsStateNotifier.replaceTeam(team);
         if (ref != null) {
           ref!.invalidate(myTasksProvider);
           ref!.invalidate(dashboardStatsProvider);
           ref!.invalidate(unreadNotificationsCountProvider);
           ref!.invalidate(notificationsListProvider);
+          await ref!.read(authStateNotifierProvider.notifier).refreshMemberships();
         }
         state = const AsyncData(null);
       },

@@ -13,20 +13,20 @@ class AppBrandMark extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 38,
-          height: 38,
-          decoration: BoxDecoration(
-            color: AppTokens.brand,
-            borderRadius: BorderRadius.circular(AppTokens.r8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppTokens.r8),
+          child: Image.asset(
+            'assets/logos/2_monogram_tf.png',
+            width: 38,
+            height: 38,
+            fit: BoxFit.cover,
           ),
-          child: Icon(Icons.hub_rounded, color: Colors.white, size: 20),
         ),
-        SizedBox(width: AppTokens.s10),
+        const SizedBox(width: AppTokens.s10),
         Text(
-          'teamflow',
+          'TeamFlow',
           style: GoogleFonts.inter(
-            fontSize: 18,
+            fontSize: 20,
             fontWeight: FontWeight.w800,
             color: AppTokens.textPrimary,
             letterSpacing: -0.8,
@@ -614,14 +614,7 @@ class AppLoadingView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              valueColor: AlwaysStoppedAnimation<Color>(AppTokens.brand),
-            ),
-          ),
+          const TeamFlowLoader(size: 40),
           SizedBox(height: AppTokens.s16),
           Text(message, style: AppTokens.bodySm),
         ],
@@ -838,13 +831,80 @@ void showAppSnackBar(
           color: Colors.white,
         ),
       ),
-      backgroundColor: backgroundColor ?? AppTokens.textPrimary,
+      backgroundColor: backgroundColor ?? AppColors.surface,
       behavior: SnackBarBehavior.floating,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.r12),
+        side: const BorderSide(color: AppColors.border),
       ),
       margin: const EdgeInsets.all(AppTokens.s16),
       duration: const Duration(seconds: 3),
     ),
   );
+}
+
+// ─── Custom Branding Loader ──────────────────────────────────────────────────
+
+class TeamFlowLoader extends StatefulWidget {
+  final double size;
+  const TeamFlowLoader({super.key, this.size = 50});
+
+  @override
+  State<TeamFlowLoader> createState() => _TeamFlowLoaderState();
+}
+
+class _TeamFlowLoaderState extends State<TeamFlowLoader> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double innerSize = widget.size * 0.64;
+    return Center(
+      child: SizedBox(
+        width: widget.size,
+        height: widget.size,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            RotationTransition(
+              turns: _controller,
+              child: SizedBox(
+                width: widget.size,
+                height: widget.size,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  backgroundColor: AppColors.border,
+                ),
+              ),
+            ),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(widget.size * 0.16),
+              child: Image.asset(
+                'assets/logos/2_monogram_tf.png',
+                width: innerSize,
+                height: innerSize,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

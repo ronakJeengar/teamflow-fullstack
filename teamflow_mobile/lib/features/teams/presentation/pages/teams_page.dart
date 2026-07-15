@@ -140,7 +140,7 @@ class TeamsPage extends HookConsumerWidget {
               ),
           ],
         ),
-        floatingActionButton: MediaQuery.of(context).size.width < 768
+        floatingActionButton: (MediaQuery.of(context).size.width < 768 && allTeams.isNotEmpty)
             ? _Fab(onTap: showCreate)
             : null,
       ),

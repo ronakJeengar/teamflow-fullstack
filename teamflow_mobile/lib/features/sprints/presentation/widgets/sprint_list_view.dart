@@ -95,7 +95,7 @@ class SprintListView extends HookConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: TeamFlowLoader(size: 40)),
               error: (err, stack) => Center(
                 child: Text('Error loading sprints: $err', style: GoogleFonts.inter(color: AppColors.danger)),
               ),

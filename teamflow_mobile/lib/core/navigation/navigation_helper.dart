@@ -2,6 +2,7 @@ import 'package:teamflow_mobile/core/theme/app_theme.dart';
 // lib/core/navigation/navigation_helper.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class NavigationHelper {
   NavigationHelper._();
@@ -101,10 +102,22 @@ class NavigationHelper {
     if (!canNavigate) return;
     ScaffoldMessenger.of(_context!).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
+          ),
+        ),
         duration: duration,
         action: action,
-        backgroundColor: backgroundColor,
+        backgroundColor: backgroundColor ?? AppColors.surface,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.border),
+        ),
       ),
     );
   }

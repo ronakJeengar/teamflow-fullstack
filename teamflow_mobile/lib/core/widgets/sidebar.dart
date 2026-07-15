@@ -218,18 +218,13 @@ class Sidebar extends ConsumerWidget {
               child: Row(
                 children: [
                   // Logo Mark
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.hexagon_rounded,
-                      size: 14,
-                      color: Colors.white,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset(
+                      'assets/logos/2_monogram_tf.png',
+                      width: 24,
+                      height: 24,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   if (!isIconOnly) ...[

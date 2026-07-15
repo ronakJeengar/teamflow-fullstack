@@ -111,7 +111,9 @@ class EditTaskSheet extends HookConsumerWidget {
                 borderSide: const BorderSide(color: AppColors.border),
               ),
             ),
-            value: selectedAssigneeId.value,
+            value: teamDetailState.members.any((m) => m.userId == selectedAssigneeId.value)
+                ? selectedAssigneeId.value
+                : null,
             hint: const Text('Unassigned', style: TextStyle(color: AppColors.textSecondary)),
             items: [
               const DropdownMenuItem<String?>(
@@ -204,7 +206,9 @@ class EditTaskSheet extends HookConsumerWidget {
                     borderSide: const BorderSide(color: AppColors.border),
                   ),
                 ),
-                value: selectedSprintId.value,
+                value: activeAndPlanned.any((s) => s.id == selectedSprintId.value)
+                    ? selectedSprintId.value
+                    : null,
                 hint: const Text('No Sprint', style: TextStyle(color: AppColors.textSecondary)),
                 items: [
                   const DropdownMenuItem<String?>(

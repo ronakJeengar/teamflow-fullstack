@@ -8,6 +8,7 @@ import '../../../tasks/presentation/providers/task_providers.dart';
 import '../../../tasks/presentation/widget/edit_task_sheet.dart';
 import '../../../tasks/domain/entitties/task_entity.dart';
 import '../../../sprints/presentation/providers/sprints_providers.dart';
+import 'package:teamflow_mobile/core/ui/shared_widgets.dart';
 
 class CalendarView extends HookConsumerWidget {
   const CalendarView({super.key});
@@ -244,7 +245,7 @@ class CalendarView extends HookConsumerWidget {
               ],
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(child: TeamFlowLoader(size: 40)),
           error: (e, __) => Center(child: Text('Error loading calendar: $e')),
         );
   }

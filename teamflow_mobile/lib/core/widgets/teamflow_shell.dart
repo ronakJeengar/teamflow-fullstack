@@ -517,7 +517,7 @@ class _TeamFlowShellState extends ConsumerState<TeamFlowShell> with WidgetsBindi
                 },
                 loading: () => const SizedBox(
                   height: 150,
-                  child: Center(child: CircularProgressIndicator()),
+                  child: Center(child: TeamFlowLoader(size: 32)),
                 ),
                 error: (err, stack) => Padding(
                   padding: const EdgeInsets.all(16.0),

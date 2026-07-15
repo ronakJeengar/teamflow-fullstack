@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:teamflow_mobile/core/theme/app_theme.dart';
+import 'package:teamflow_mobile/core/ui/shared_widgets.dart';
 import '../providers/search_providers.dart';
 import 'package:teamflow_mobile/core/navigation/navigation_helper.dart';
 import 'package:teamflow_mobile/core/navigation/app_navigation.dart';
@@ -167,7 +168,7 @@ class SearchDialog extends HookConsumerWidget {
                     ],
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: TeamFlowLoader(size: 32)),
                 error: (err, stack) => Center(
                   child: Text(
                     'Error: $err',

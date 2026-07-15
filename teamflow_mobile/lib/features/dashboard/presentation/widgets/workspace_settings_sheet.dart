@@ -478,7 +478,7 @@ class WorkspaceSettingsSheet extends HookConsumerWidget {
               },
             );
           },
-          loading: () => const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator())),
+          loading: () => const Center(child: Padding(padding: EdgeInsets.all(8.0), child: TeamFlowLoader(size: 32))),
           error: (err, stack) => Text('Error loading members: $err', style: GoogleFonts.inter(color: AppColors.danger)),
         ),
       ],

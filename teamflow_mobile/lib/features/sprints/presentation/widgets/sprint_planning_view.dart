@@ -221,7 +221,7 @@ class SprintPlanningView extends HookConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: TeamFlowLoader(size: 40)),
       error: (e, __) => Center(child: Text('Error loading planning view: $e')),
     );
   }

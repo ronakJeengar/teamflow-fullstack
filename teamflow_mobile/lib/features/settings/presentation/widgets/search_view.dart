@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../tasks/data/models/task_model.dart';
 import '../../../tasks/presentation/widget/edit_task_sheet.dart';
 import '../../../tasks/domain/entitties/task_entity.dart';
+import 'package:teamflow_mobile/core/ui/shared_widgets.dart';
 
 class SearchView extends HookConsumerWidget {
   const SearchView({super.key});
@@ -169,7 +170,7 @@ class SearchView extends HookConsumerWidget {
           const Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 24.0),
-              child: CircularProgressIndicator(),
+              child: TeamFlowLoader(size: 40),
             ),
           )
         else if (results.value.isEmpty)

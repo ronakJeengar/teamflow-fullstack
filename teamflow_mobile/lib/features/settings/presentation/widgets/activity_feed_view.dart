@@ -124,7 +124,7 @@ class ActivityFeedView extends HookConsumerWidget {
           loading: () => const Center(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 24.0),
-              child: CircularProgressIndicator(),
+              child: TeamFlowLoader(size: 40),
             ),
           ),
           error: (e, __) => Center(

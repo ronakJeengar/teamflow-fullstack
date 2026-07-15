@@ -42,41 +42,45 @@ class _TeamCardState extends State<TeamCard> {
     final visible = names.take(5).toList();
     final extra = names.length - visible.length;
 
-    return Flexible(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          for (int i = 0; i < visible.length; i++)
-            Align(
-              widthFactor: 0.75,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (int i = 0; i < visible.length; i++)
+          Align(
+            widthFactor: 0.72,
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppColors.surface,
+                  width: 1.5,
+                ),
+              ),
               child: AppAvatar(
                 name: visible[i],
                 size: 24,
               ),
             ),
-          if (extra > 0) ...[
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                '+$extra members',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.inter(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
-                ),
-              ),
+          ),
+        if (extra > 0) ...[
+          const SizedBox(width: 8),
+          Text(
+            '+$extra members',
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: AppColors.primary,
             ),
-          ],
+          ),
         ],
-      ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final memberCount = widget.team.members.length;
+    final projectCount = widget.team.projects.length;
     final memberNames = widget.team.members
         .map((m) => m.user?.name ?? 'Member')
         .toList();
@@ -85,40 +89,63 @@ class _TeamCardState extends State<TeamCard> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+        duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: _hovered
-                ? AppColors.primary.withOpacity(0.4)
+                ? AppColors.primary.withOpacity(0.5)
                 : AppColors.border,
-            width: 1,
+            width: 1.2,
           ),
+          boxShadow: _hovered
+              ? [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(12),
           child: InkWell(
             onTap: widget.onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Layer 1: Avatar + Team Name + Member count + Menu
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header section
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Team avatar: 36px, letter-based, workspace color
+                      // Team avatar with gradient
                       Container(
-                        width: 36,
-                        height: 36,
+                        width: 42,
+                        height: 42,
                         decoration: BoxDecoration(
-                          color: _accentColor,
-                          borderRadius: BorderRadius.circular(8),
+                          gradient: LinearGradient(
+                            colors: [
+                              _accentColor,
+                              _accentColor.withOpacity(0.75),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _accentColor.withOpacity(0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -126,13 +153,13 @@ class _TeamCardState extends State<TeamCard> {
                               ? widget.team.name[0].toUpperCase()
                               : 'T',
                           style: GoogleFonts.inter(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +167,7 @@ class _TeamCardState extends State<TeamCard> {
                             Text(
                               widget.team.name,
                               style: GoogleFonts.inter(
-                                fontSize: 14,
+                                fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: _hovered
                                     ? Colors.white
@@ -149,52 +176,28 @@ class _TeamCardState extends State<TeamCard> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 3),
                             Text(
-                              'Last active: 2 hours ago',
+                              widget.team.description?.isNotEmpty == true
+                                  ? widget.team.description!
+                                  : 'No description provided',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w400,
-                                color: AppColors.muted,
+                                color: AppColors.textSecondary,
                               ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
                       const SizedBox(width: 8),
-                      // Member count + Project count: 12px, right-aligned in header
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '$memberCount ${memberCount == 1 ? 'member' : 'members'}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${widget.team.projects.length} ${widget.team.projects.length == 1 ? 'project' : 'projects'}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 11,
-                                color: AppColors.muted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 4),
+                      // Menu action button
                       PopupMenuButton<String>(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.more_horiz_rounded,
-                          size: 16,
+                          size: 18,
                           color: AppColors.muted,
                         ),
                         padding: EdgeInsets.zero,
@@ -233,42 +236,94 @@ class _TeamCardState extends State<TeamCard> {
                       ),
                     ],
                   ),
-                ),
-
-                // Divider between info and member row: 1px border
-                const Divider(
-                  color: AppColors.border,
-                  height: 1,
-                  thickness: 1,
-                ),
-
-                // Layer 2: Member Avatars + Arrow
-                Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.background,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(8),
-                      bottomRight: Radius.circular(8),
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                  child: Row(
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Metadata Badges (Projects & Members)
+                  Row(
                     children: [
-                      _buildAvatarStack(memberNames),
-                      const Spacer(),
-                      // Arrow icon: 16px, muted, right edge
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 16,
-                        color: AppColors.muted,
+                      _buildMiniBadge(
+                        icon: Icons.folder_open_rounded,
+                        label: '$projectCount ${projectCount == 1 ? 'project' : 'projects'}',
+                        color: AppColors.primary,
+                      ),
+                      const SizedBox(width: 10),
+                      _buildMiniBadge(
+                        icon: Icons.people_outline_rounded,
+                        label: '$memberCount ${memberCount == 1 ? 'member' : 'members'}',
+                        color: AppColors.success,
                       ),
                     ],
                   ),
-                ),
-              ],
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Bottom section divider line
+                  Container(
+                    height: 1,
+                    color: AppColors.border.withOpacity(0.6),
+                  ),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Footer section
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildAvatarStack(memberNames),
+                      AnimatedOpacity(
+                        duration: const Duration(milliseconds: 150),
+                        opacity: _hovered ? 1.0 : 0.6,
+                        child: Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 16,
+                          color: _hovered ? AppColors.primary : AppColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMiniBadge({
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withOpacity(0.15),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 12,
+            color: color,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+            ),
+          ),
+        ],
       ),
     );
   }

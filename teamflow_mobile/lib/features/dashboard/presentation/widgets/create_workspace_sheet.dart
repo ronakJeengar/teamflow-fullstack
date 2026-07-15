@@ -50,8 +50,13 @@ class CreateWorkspaceSheet extends HookConsumerWidget {
       if (success && context.mounted) {
         showAppSnackBar(context, 'Workspace "$name" created successfully');
         Navigator.pop(context);
-      } else if (context.mounted && controllerState.hasError) {
-        showAppSnackBar(context, controllerState.error.toString());
+      } else if (context.mounted) {
+        final latestState = ref.read(workspaceControllerProvider);
+        final errorMsg = latestState.maybeWhen(
+          error: (err, _) => err.toString(),
+          orElse: () => 'Failed to create workspace',
+        );
+        showAppSnackBar(context, errorMsg);
       }
     }
 
