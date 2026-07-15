@@ -14,12 +14,18 @@ import {
   cancelSprint,
   getSprintStats,
   getSprintBurndown,
-  getSprintVelocity
+  getSprintVelocity,
+  getSprintsByProject,
+  createSprintByProject
 } from "../controllers/sprint.controller.js";
 
 const router = Router();
 
 router.use(authenticate);
+
+// Project scope sprints
+router.get("/projects/:projectId/sprints", getSprintsByProject);
+router.post("/projects/:projectId/sprints", createSprintByProject);
 
 // Workspace/Team scope sprints
 router.get("/sprints", getSprints);

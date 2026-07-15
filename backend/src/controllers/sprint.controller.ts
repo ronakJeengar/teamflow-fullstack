@@ -721,3 +721,79 @@ export const cancelSprint = async (req: AuthRequest, res: Response) => {
     return errorResponse(res, error.message);
   }
 };
+
+// GET /projects/:projectId/sprints
+export const getSprintsByProject = async (req: AuthRequest, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const activeWorkspaceId = req.user!.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      return errorResponse(res, "Active workspace not set", 400);
+    }
+
+    const sprints = await prisma.sprint.findMany({
+      where: {
+        workspaceId: activeWorkspaceId,
+        projects: { some: { id: projectId } }
+      },
+      orderBy: { startDate: "asc" }
+    });
+
+    return successResponse(res, sprints);
+  } catch (error: any) {
+    return errorResponse(res, error.message);
+  }
+};
+
+// POST /projects/:projectId/sprints
+export const createSprintByProject = async (req: AuthRequest, res: Response) => {
+  try {
+    const { projectId } = req.params;
+    const { name, goal, startDate, endDate } = req.body;
+    const activeWorkspaceId = req.user!.activeWorkspaceId;
+
+    if (!activeWorkspaceId) {
+      return errorResponse(res, "Active workspace not set", 400);
+    }
+    if (!name || !startDate || !endDate) {
+      return errorResponse(res, "Name, startDate, and endDate are required", 400);
+    }
+
+    // Look up project to find its teamId and verify it belongs to the active workspace
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, team: { workspaceId: activeWorkspaceId } },
+      include: { team: true }
+    });
+
+    if (!project) {
+      return errorResponse(res, "Project not found in active workspace", 404);
+    }
+
+    const teamId = project.teamId;
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (end < start) {
+      return errorResponse(res, "End date must be on or after start date", 400);
+    }
+
+    const sprint = await prisma.sprint.create({
+      data: {
+        name,
+        goal,
+        startDate: start,
+        endDate: end,
+        status: "PLANNED",
+        teamId,
+        workspaceId: activeWorkspaceId,
+        createdById: req.user!.userId,
+        projects: { connect: { id: projectId } }
+      }
+    });
+
+    return successResponse(res, sprint, "Sprint created successfully", 201);
+  } catch (error: any) {
+    return errorResponse(res, error.message);
+  }
+};

@@ -14,9 +14,18 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
       return errorResponse(res, "Team name is required", 400);
     }
 
-    if (workspaceId) {
+    let targetWorkspaceId = workspaceId || req.user?.activeWorkspaceId;
+
+    if (!targetWorkspaceId) {
+      const workspaceMember = await prisma.workspaceMember.findFirst({
+        where: { userId },
+      });
+      targetWorkspaceId = workspaceMember?.workspaceId;
+    }
+
+    if (targetWorkspaceId) {
       const workspace = await prisma.workspace.findUnique({
-        where: { id: workspaceId },
+        where: { id: targetWorkspaceId },
         include: {
           members: {
             where: { userId },
@@ -41,7 +50,7 @@ export const createTeam = async (req: AuthRequest, res: Response) => {
         description,
         avatar,
         ownerId: userId,
-        workspaceId: workspaceId || null,
+        workspaceId: targetWorkspaceId || null,
         members: {
           create: {
             userId,

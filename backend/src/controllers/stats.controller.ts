@@ -145,32 +145,41 @@ export const getDashboardStats = async (req: AuthRequest, res: Response) => {
     });
     const teamIds = userTeams.map((ut) => ut.teamId);
 
-    const projects = await prisma.project.findMany({
-      where: { teamId: { in: teamIds } },
-      select: { id: true },
-    });
-    const projectIds = projects.map((p) => p.id);
-    const project_count = projects.length;
+    let project_count = 0;
+    let member_count = 0;
+    let task_count = 0;
+    let task_count_per_project: any[] = [];
 
-    const membersCountResult = await prisma.teamMember.groupBy({
-      by: ['userId'],
-      where: { teamId: { in: teamIds } },
-    });
-    const member_count = membersCountResult.length;
+    if (teamIds.length > 0) {
+      const projects = await prisma.project.findMany({
+        where: { teamId: { in: teamIds } },
+        select: { id: true },
+      });
+      const projectIds = projects.map((p) => p.id);
+      project_count = projects.length;
 
-    const task_count = await prisma.task.count({
-      where: { projectId: { in: projectIds } },
-    });
+      const membersCountResult = await prisma.teamMember.groupBy({
+        by: ['userId'],
+        where: { teamId: { in: teamIds } },
+      });
+      member_count = membersCountResult.length;
 
-    const taskCountPerProjectQuery = await prisma.task.groupBy({
-      by: ['projectId'],
-      where: { projectId: { in: projectIds } },
-      _count: { id: true },
-    });
-    const task_count_per_project = taskCountPerProjectQuery.map((t) => ({
-      projectId: t.projectId,
-      count: t._count.id,
-    }));
+      if (projectIds.length > 0) {
+        task_count = await prisma.task.count({
+          where: { projectId: { in: projectIds } },
+        });
+
+        const taskCountPerProjectQuery = await prisma.task.groupBy({
+          by: ['projectId'],
+          where: { projectId: { in: projectIds } },
+          _count: { id: true },
+        });
+        task_count_per_project = taskCountPerProjectQuery.map((t) => ({
+          projectId: t.projectId,
+          count: t._count.id,
+        }));
+      }
+    }
 
     const active_tasks_count = await prisma.task.count({
       where: {
