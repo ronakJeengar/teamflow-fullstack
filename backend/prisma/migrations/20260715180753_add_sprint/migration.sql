@@ -1,10 +1,8 @@
 /*
   Warnings:
 
-  - You are about to drop the column `content` on the `Comment` table. All the data in the column will be lost.
-  - You are about to drop the column `userId` on the `Comment` table. All the data in the column will be lost.
-  - Added the required column `authorId` to the `Comment` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `message` to the `Comment` table without a default value. This is not possible if the table is not empty.
+  - Renamed the column `content` on the `Comment` table to `message`.
+  - Renamed the column `userId` on the `Comment` table to `authorId`.
 
 */
 -- CreateEnum
@@ -35,15 +33,38 @@ ALTER TABLE "Comment" DROP CONSTRAINT "Comment_userId_fkey";
 -- DropIndex
 DROP INDEX "Comment_userId_idx";
 
--- AlterTable
-ALTER TABLE "Comment" DROP COLUMN "content",
-DROP COLUMN "userId",
-ADD COLUMN     "authorId" TEXT NOT NULL,
-ADD COLUMN     "deletedAt" TIMESTAMP(3),
-ADD COLUMN     "editedAt" TIMESTAMP(3),
-ADD COLUMN     "mentions" TEXT[] DEFAULT ARRAY[]::TEXT[],
-ADD COLUMN     "message" TEXT NOT NULL,
-ADD COLUMN     "parentCommentId" TEXT;
+-- RenameColumn: preserve existing comment data instead of drop+recreate
+ALTER TABLE "Comment" RENAME COLUMN "userId" TO "authorId";
+ALTER TABLE "Comment" RENAME COLUMN "content" TO "message";
+
+-- AlterTable: add the genuinely new columns
+ALTER TABLE "Comment"
+  ADD COLUMN     "deletedAt" TIMESTAMP(3),
+  ADD COLUMN     "editedAt" TIMESTAMP(3),
+  ADD COLUMN     "mentions" TEXT[] DEFAULT ARRAY[]::TEXT[],
+  ADD COLUMN     "parentCommentId" TEXT;
+
+-- Safety net: in case any legacy rows already had a NULL userId/content
+-- before this migration ran, point them at a placeholder system user
+-- rather than failing the deploy.
+INSERT INTO "User" (id, name, email, password, role, "createdAt", "updatedAt")
+VALUES (
+  '00000000-0000-0000-0000-000000000000',
+  'Deleted User',
+  'deleted-user@system.internal',
+  '',
+  'USER',
+  now(),
+  now()
+)
+ON CONFLICT (id) DO NOTHING;
+
+UPDATE "Comment" SET "authorId" = '00000000-0000-0000-0000-000000000000' WHERE "authorId" IS NULL;
+UPDATE "Comment" SET "message" = '' WHERE "message" IS NULL;
+
+-- Now safe to enforce NOT NULL
+ALTER TABLE "Comment" ALTER COLUMN "authorId" SET NOT NULL;
+ALTER TABLE "Comment" ALTER COLUMN "message" SET NOT NULL;
 
 -- AlterTable
 ALTER TABLE "Project" ADD COLUMN     "sprintId" TEXT;
